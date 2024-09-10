@@ -1,0 +1,1 @@
+Strategy pattern allows to change algorithm at runtime.
