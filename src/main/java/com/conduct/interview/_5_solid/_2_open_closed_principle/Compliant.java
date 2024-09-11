@@ -1,4 +1,4 @@
-package com.conduct.interview._5_solid.open_closed_principle;
+package com.conduct.interview._5_solid._2_open_closed_principle;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -7,7 +7,7 @@ public class Compliant {
 
     public static void main(String[] args) {
         MyCalculator myCalculator = new MyCalculator();
-        AdditionOperation operation = new AdditionOperation(3, 3);
+        Operation operation = new AdditionOperation(3, 3);
         myCalculator.calculate(operation);
         System.out.println(operation.getResult());
     }
@@ -16,6 +16,8 @@ public class Compliant {
 
 interface Operation {
     void perform();
+
+    int getResult();
 }
 
 class MyCalculator {
@@ -57,5 +59,25 @@ class AdditionOperation implements Operation {
     @Override
     public void perform() {
         result = left + right;
+    }
+
+
+}
+
+@Getter
+@Setter
+class SubtractOperation implements Operation {
+    private double left;
+    private double right;
+    private double result = 0.0;
+
+    public SubtractOperation(double left, double right) {
+        this.left = left;
+        this.right = right;
+    }
+
+    @Override
+    public void perform() {
+        result = left - right;
     }
 }

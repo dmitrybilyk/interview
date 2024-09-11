@@ -1,4 +1,4 @@
-package com.conduct.interview._5_solid.open_closed_principle;
+package com.conduct.interview._5_solid._2_open_closed_principle;
 
 import lombok.Getter;
 import lombok.Setter;

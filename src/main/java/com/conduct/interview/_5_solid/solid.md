@@ -1,21 +1,31 @@
-S ingle responsibility - every class should have just single reason to be changed. It's easier to change, 
-test and read such a class. High cohesion should be achieved when module has all related actions 
-grouped in one place, not spread through the module.
-Note: Loose coupling correlates with high cohesion as tightly couple classes lead to the need to 
-make changes in many places when you make changes in one.
-- Class `Book` and Class `PrintSomething` (from the book) should be separate.
-We can re-use `PrintSomething` btw
+SOLID Principles
 
-O pen/Closed principle - open for extension and Closed for modification
-- Instead of modifying existing class we may extend it and change whatever we need.
-Adding of new features should be done by adding new code, not by editing existing.
+S - Single Responsibility Principle (SRP)
+Every class should have just one reason to be changed. It’s easier to change, test, 
+and read such classes. High cohesion is achieved when all related actions are grouped 
+in one place. Loose coupling correlates with high cohesion, as tightly coupled classes 
+lead to changes in many places when you change one thing.
 
-L iskov Substitution principle - We should be able to use the derived class anywhere 
-we can use it's parent.
+Example: Class Book and PrintSomething (which handles printing) should be separate. This also allows PrintSomething to be reused.
 
-I nterface Segregation - Should have more interfaces with less responsibility rather than to have single 
-with everything to avoid empty implementations.
 
-D ependency inversion principle - Classes should depend on abstractions, 
-not on particular implementations. In DIP polymorphism takes part and also DI 
-(which helps to implement IoC). With the abstractions it's easier to test, extend, deploy
+O - Open/Closed Principle (OCP)
+Classes should be open for extension but closed for modification. 
+Adding new features should be done by adding new code, not editing existing code.
+
+Example: Instead of modifying PrintSomething, extend it with FancyPrinter for additional 
+formatting.
+
+
+L - Liskov Substitution Principle (LSP)
+Derived classes should be able to replace their parent classes without altering the correctness of the program.
+
+Example: If FancyPrinter extends PrintSomething, you should be able to use FancyPrinter wherever PrintSomething is expected without breaking functionality.
+I - Interface Segregation Principle (ISP)
+Create smaller, focused interfaces with fewer responsibilities rather than a single broad interface. This avoids forcing classes to implement methods they don’t need.
+
+Example: Split a broad interface into smaller, specific interfaces to prevent empty implementations in unrelated classes.
+D - Dependency Inversion Principle (DIP)
+Depend on abstractions, not on concrete implementations. Polymorphism and Dependency Injection (DI) help achieve Inversion of Control (IoC). With abstractions, testing, extending, and deployment become easier.
+
+Example: Book should depend on an interface Printer instead of directly depending on ConsolePrinter.

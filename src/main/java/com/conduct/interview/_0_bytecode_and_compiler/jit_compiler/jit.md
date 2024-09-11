@@ -40,6 +40,9 @@ depending on the JVM configuration and environment.
 
 
 cd /home/dmytro/dev/projects/interview/src/main/java
+
 javac com/learn/interview/interviews/_0_bytecode_and_compiler/jit_compiler/JITExample.java
+
 java -Xcomp com.conduct.interview._0_bytecode_and_compiler.jit_compiler.JITExample
+
 java -Xint com.conduct.interview._0_bytecode_and_compiler.jit_compiler.JITExample
