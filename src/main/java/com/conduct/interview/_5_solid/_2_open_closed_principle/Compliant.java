@@ -7,17 +7,22 @@ public class Compliant {
 
     public static void main(String[] args) {
         MyCalculator myCalculator = new MyCalculator();
-        Operation operation = new AdditionOperation(3, 3);
+        Operation operation = new SubtractionOperation(3, 3);
         myCalculator.calculate(operation);
         System.out.println(operation.getResult());
     }
 
 }
 
-interface Operation {
-    void perform();
+@Getter
+@Setter
+abstract class Operation {
+    protected double result;
+    abstract void perform();
 
-    int getResult();
+    double getResult() {
+        return result;
+    };
 }
 
 class MyCalculator {
@@ -28,10 +33,9 @@ class MyCalculator {
 
 @Getter
 @Setter
-class SubtractionOperation implements Operation{
+class SubtractionOperation extends Operation{
     private double left;
     private double right;
-    private double result = 0.0;
 
     public SubtractionOperation(double left, double right) {
         this.left = left;
@@ -46,10 +50,9 @@ class SubtractionOperation implements Operation{
 
 @Getter
 @Setter
-class AdditionOperation implements Operation {
+class AdditionOperation extends Operation {
     private double left;
     private double right;
-    private double result = 0.0;
 
     public AdditionOperation(double left, double right) {
         this.left = left;
@@ -61,15 +64,13 @@ class AdditionOperation implements Operation {
         result = left + right;
     }
 
-
 }
 
 @Getter
 @Setter
-class SubtractOperation implements Operation {
+class SubtractOperation extends Operation {
     private double left;
     private double right;
-    private double result = 0.0;
 
     public SubtractOperation(double left, double right) {
         this.left = left;

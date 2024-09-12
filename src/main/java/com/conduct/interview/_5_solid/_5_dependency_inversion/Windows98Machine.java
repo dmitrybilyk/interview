@@ -1,4 +1,4 @@
-package com.conduct.interview._5_solid.dependency_inversion;
+package com.conduct.interview._5_solid._5_dependency_inversion;
 
 public class Windows98Machine {
 

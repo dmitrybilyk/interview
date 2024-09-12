@@ -1,4 +1,4 @@
-package com.conduct.interview._5_solid.liskov_principle.rules;
+package com.conduct.interview._5_solid._3_liskov_principle.rules;
 
 import java.io.FileNotFoundException;
 

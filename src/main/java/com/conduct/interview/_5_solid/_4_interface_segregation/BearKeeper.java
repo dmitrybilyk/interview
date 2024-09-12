@@ -1,4 +1,4 @@
-package com.conduct.interview._5_solid.interface_segregation;
+package com.conduct.interview._5_solid._4_interface_segregation;
 
 public interface BearKeeper {
     void washTheBear();

@@ -1,4 +1,4 @@
-package com.conduct.interview._5_solid.liskov_principle.rules;
+package com.conduct.interview._5_solid._3_liskov_principle.rules;
 
 //A Subtype Throws an Exception for a Behavior It Can’t Fulfill (not supported exception is thrown)
 //A Subtype Provides No Implementation for a Behavior It Can’t Fulfill (do nothing in override version)

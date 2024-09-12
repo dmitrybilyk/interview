@@ -1,4 +1,4 @@
-package com.conduct.interview._5_solid.liskov_principle;
+package com.conduct.interview._5_solid._3_liskov_principle;
 
 //Bad example
 public class Bird{

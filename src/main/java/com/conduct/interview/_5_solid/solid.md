@@ -1,31 +1,46 @@
-SOLID Principles
+# SOLID Principles
 
-S - Single Responsibility Principle (SRP)
-Every class should have just one reason to be changed. It’s easier to change, test, 
-and read such classes. High cohesion is achieved when all related actions are grouped 
-in one place. Loose coupling correlates with high cohesion, as tightly coupled classes 
-lead to changes in many places when you change one thing.
+**S - SRP:**  
+One reason to change.  
+Increases testability and cohesion.  
+*Example:* `Book` and `PrintSomething` (printing)  
+should be separate.
 
-Example: Class Book and PrintSomething (which handles printing) should be separate. This also allows PrintSomething to be reused.
+**O - OCP:**  
+Open for extension, closed for modification.  
 
+**L - LSP:**  
+It should be possible to use subtypes whenever base type 
+could be used.
 
-O - Open/Closed Principle (OCP)
-Classes should be open for extension but closed for modification. 
-Adding new features should be done by adding new code, not editing existing code.
+Ostrich is a bird but it can't fly.
 
-Example: Instead of modifying PrintSomething, extend it with FancyPrinter for additional 
-formatting.
+Whenever base Car has some speed restrictions it's child also
+must have those restrictions.
 
+Method in subtype should not declare more exception than
+method in parent.
 
-L - Liskov Substitution Principle (LSP)
-Derived classes should be able to replace their parent classes without altering the correctness of the program.
+Subtypes should maintain the constraints of the base class.
 
-Example: If FancyPrinter extends PrintSomething, you should be able to use FancyPrinter wherever PrintSomething is expected without breaking functionality.
-I - Interface Segregation Principle (ISP)
-Create smaller, focused interfaces with fewer responsibilities rather than a single broad interface. This avoids forcing classes to implement methods they don’t need.
+Overriding method should not widen the method visibility to public.
 
-Example: Split a broad interface into smaller, specific interfaces to prevent empty implementations in unrelated classes.
-D - Dependency Inversion Principle (DIP)
-Depend on abstractions, not on concrete implementations. Polymorphism and Dependency Injection (DI) help achieve Inversion of Control (IoC). With abstractions, testing, extending, and deployment become easier.
+Parameters in overriding method should not change (hierarchically).
 
-Example: Book should depend on an interface Printer instead of directly depending on ConsolePrinter.
+Return type should not change (hierarchically).
+
+Pre-condition (some checks before actual code in method) should not 
+change.
+
+Post-condition (at the end of method some reduce must happen).
+
+**I - ISP:**  
+Use small, specific interfaces instead of one broad  
+interface.  
+*Example:* Split a broad interface into smaller ones  
+to avoid unused methods in unrelated classes.
+
+**D - DIP:**  
+Depend on abstractions, not concretions.  
+*Example:* `Book` depends on `Printer` interface,  
+not directly on `ConsolePrinter`.
