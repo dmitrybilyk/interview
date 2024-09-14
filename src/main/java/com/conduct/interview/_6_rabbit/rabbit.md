@@ -44,3 +44,6 @@ RabbitMQ supports **AMQP**, **STOMP**, **HTTP** protocols, etc.
 - **Dead-letter Exchange** - Handles unroutable or expired messages.
 - **Prefetch Count** - Controls the number of messages a consumer can process.
 - **Priority Queues** - Allows prioritization of messages.
+
+
+[//]: # (example is in practise/rabbit folder and `rabbit` profile)
