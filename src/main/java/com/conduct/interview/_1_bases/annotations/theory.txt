@@ -1,13 +1,18 @@
-Annotations are used to provide supplement information about a program.
+Annotations are used to provide supplemental information about a program. They
+start with `@` and do not change the action of the compiled program, but they
+help associate metadata (information) with program elements like instance
+variables, constructors, methods, and classes.
 
-Annotations start with ‘@’.
-Annotations do not change action of a compiled program.
-Annotations help to associate metadata (information) to the program elements i.e. instance variables, constructors,
-methods, classes, etc.
-Annotations are not pure comments as they can change the way a program is treated by compiler. See below code for example.
+Unlike pure comments, annotations can influence how a program is treated by the
+compiler.
 
-We can create our custom annotation and then check by means of reflection if
-it is present. And we can run some logic if it's present.
-we point @Target annotation in order to say where annotation could be situated.
-Also we use @Retention to say, if we want that annotation to be present at runtime (in class) or
-at compile time only.
+For example, we can create custom annotations and use reflection to check if
+they are present, running specific logic if needed, to generate some code
+(like creation of builder class etc.)
+
+Key concepts include:
+
+- **`@Target`**: Specifies where the annotation can be applied (methods, fields,
+  classes, etc.).
+- **`@Retention`**: Determines whether the annotation is available at runtime
+  or only at compile-time.
