@@ -2,7 +2,7 @@ package com.conduct.interview._1_bases.immutables_classes;
 
 import java.util.HashMap;
 
-public final class FinalClassExample {
+public final class ImmutableClassExample {
 
 	private final int id;
 	
@@ -13,7 +13,6 @@ public final class FinalClassExample {
 	public int getId() {
 		return id;
 	}
-
 
 	public String getName() {
 		return name;
@@ -34,7 +33,7 @@ public final class FinalClassExample {
 	 * @param hm
 	 */
 	
-//	public FinalClassExample(int i, String n, HashMap<String,String> hm){
+//	public FinalClassExample(int i, String n, HashMap<String,String> hm) {
 //		System.out.println("Performing Deep Copy for Object initialization");
 //		this.id=i;
 //		this.name=n;
@@ -56,7 +55,7 @@ public final class FinalClassExample {
 	 * @param hm
 	 */
 
-	public FinalClassExample(int i, String n, HashMap<String,String> hm){
+	public ImmutableClassExample(int i, String n, HashMap<String,String> hm){
 		System.out.println("Performing Shallow Copy for Object initialization");
 		this.id=i;
 		this.name=n;
@@ -77,7 +76,7 @@ public final class FinalClassExample {
 		
 		int i=10;
 		
-		FinalClassExample ce = new FinalClassExample(i,s,h1);
+		ImmutableClassExample ce = new ImmutableClassExample(i,s,h1);
 		
 		//Lets see whether its copy by field or reference
 		System.out.println(s==ce.getName());
