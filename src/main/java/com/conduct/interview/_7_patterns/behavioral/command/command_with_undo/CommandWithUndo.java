@@ -1,4 +1,4 @@
-package com.conduct.interview._7_patterns.behavioral.command;
+package com.conduct.interview._7_patterns.behavioral.command.command_with_undo;
 
 import java.util.Stack;
 
