@@ -1,4 +1,4 @@
-The Command pattern allows wrapping methods and parameters in objects to execute
+The Command pattern allows wrapping methods and parameters into objects to execute
 them later. It also supports implementing undo operations and is an example of the
 producer-consumer pattern.
 
