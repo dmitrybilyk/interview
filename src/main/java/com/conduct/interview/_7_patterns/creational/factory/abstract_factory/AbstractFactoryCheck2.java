@@ -1,13 +1,13 @@
-//package com.learn.easyboot.patterns.creational.factory.abstract_factory;
+// package com.learn.easyboot.patterns.creational.factory.abstract_factory;
 //
-//public class AbstractFactoryCheck2 {
+// public class AbstractFactoryCheck2 {
 //    public static void main(String[] args) {
 //        CoffeeMaker coffeeMaker = new CappuccinoCoffeeMaker(new BigCaffeAbstractFactory());
 //        coffeeMaker.makeACoffee();
 //    }
-//}
+// }
 //
-//abstract class CoffeeMaker {
+// abstract class CoffeeMaker {
 //    protected CaffeAbstractFactory caffeAbstractFactory;
 //
 //    public CoffeeMaker(CaffeAbstractFactory caffeAbstractFactory) {
@@ -15,9 +15,9 @@
 //    }
 //
 //    abstract Coffee makeACoffee();
-//}
+// }
 //
-//class CappuccinoCoffeeMaker extends CoffeeMaker {
+// class CappuccinoCoffeeMaker extends CoffeeMaker {
 //
 //    public CappuccinoCoffeeMaker(CaffeAbstractFactory caffeAbstractFactory) {
 //        super(caffeAbstractFactory);
@@ -27,10 +27,10 @@
 //    Coffee makeACoffee() {
 //        return caffeAbstractFactory. Cappuccino();
 //    }
-//}
+// }
 //
 //
-//class LatteCoffeeMaker extends CoffeeMaker {
+// class LatteCoffeeMaker extends CoffeeMaker {
 //
 //    public LatteCoffeeMaker(CaffeAbstractFactory caffeAbstractFactory) {
 //        super(caffeAbstractFactory);
@@ -40,17 +40,17 @@
 //    Coffee makeACoffee() {
 //        return new Latte();
 //    }
-//}
+// }
 //
-//class Coffee {}
-//class Cappuccino extends Coffee {}
-//class Latte extends Coffee {}
+// class Coffee {}
+// class Cappuccino extends Coffee {}
+// class Latte extends Coffee {}
 //
 //
-//class CaffeAbstractFactory {
+// class CaffeAbstractFactory {
 //
-//}
+// }
 //
-//class BigCaffeAbstractFactory extends CaffeAbstractFactory {}
+// class BigCaffeAbstractFactory extends CaffeAbstractFactory {}
 //
-//class SmallCaffeAbstractFactory extends CaffeAbstractFactory{}
+// class SmallCaffeAbstractFactory extends CaffeAbstractFactory{}

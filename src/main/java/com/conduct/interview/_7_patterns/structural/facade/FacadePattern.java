@@ -1,62 +1,63 @@
 package com.conduct.interview._7_patterns.structural.facade;
 
 public class FacadePattern {
-	public static void main(String[] args) {
-		ShapeMaker shapeMaker = new ShapeMaker();
+  public static void main(String[] args) {
+    ShapeMaker shapeMaker = new ShapeMaker();
 
-      	shapeMaker.drawCircle();
-      	shapeMaker.drawRectangle();
-      	shapeMaker.drawSquare();	
-	}
+    shapeMaker.drawCircle();
+    shapeMaker.drawRectangle();
+    shapeMaker.drawSquare();
+  }
 }
 
 interface Shape {
-   void draw();
+  void draw();
 }
 
 class Rectangle implements Shape {
 
-   @Override
-   public void draw() {
-      System.out.println("Rectangle::draw()");
-   }
+  @Override
+  public void draw() {
+    System.out.println("Rectangle::draw()");
+  }
 }
 
 class Square implements Shape {
 
-   @Override
-   public void draw() {
-      System.out.println("Square::draw()");
-   }
+  @Override
+  public void draw() {
+    System.out.println("Square::draw()");
+  }
 }
 
 class Circle implements Shape {
 
-   @Override
-   public void draw() {
-      System.out.println("Circle::draw()");
-   }
+  @Override
+  public void draw() {
+    System.out.println("Circle::draw()");
+  }
 }
 
 class ShapeMaker {
-   private Shape circle;
-   private Shape rectangle;
-   private Shape square;
+  private Shape circle;
+  private Shape rectangle;
+  private Shape square;
 
-   public ShapeMaker() {
-      circle = new Circle();
-      rectangle = new Rectangle();
-      square = new Square();
-   }
+  public ShapeMaker() {
+    circle = new Circle();
+    rectangle = new Rectangle();
+    square = new Square();
+  }
 
-   public void drawCircle(){
-      circle.draw();
-   }
-   public void drawRectangle(){
-      rectangle.draw();
-   }
-   public void drawSquare(){
-      square.draw();
-   }
+  public void drawCircle() {
+    circle.draw();
+  }
+
+  public void drawRectangle() {
+    rectangle.draw();
+  }
+
+  public void drawSquare() {
+    square.draw();
+  }
 }
-

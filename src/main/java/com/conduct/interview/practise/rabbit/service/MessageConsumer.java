@@ -8,8 +8,8 @@ import org.springframework.stereotype.Service;
 @Profile("rabbit")
 public class MessageConsumer {
 
-    @RabbitListener(queues = "my_queue")
-    public void receiveMessage(String message) {
-        System.out.println("Received message: " + message);
-    }
+  @RabbitListener(queues = "my_queue")
+  public void receiveMessage(String message) {
+    System.out.println("Received message: " + message);
+  }
 }

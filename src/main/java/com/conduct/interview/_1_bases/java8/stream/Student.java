@@ -1,44 +1,42 @@
 package com.conduct.interview._1_bases.java8.stream;
 
-/**
- * Created by dik81 on 12.01.19.
- */
+/** Created by dik81 on 12.01.19. */
 public class Student {
-    private String name;
-    private String group;
-    private Integer age;
+  private String name;
+  private String group;
+  private Integer age;
 
-    public Student(int age) {
-        this.age = age;
-    }
+  public Student(int age) {
+    this.age = age;
+  }
 
-    public String getName() {
-        return name;
-    }
+  public String getName() {
+    return name;
+  }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+  public void setName(String name) {
+    this.name = name;
+  }
 
-    public Student(String name, String group) {
-        this.name = name;
-        this.group = group;
-    }
+  public Student(String name, String group) {
+    this.name = name;
+    this.group = group;
+  }
 
-    public String getGroup() {
+  public String getGroup() {
 
-        return group;
-    }
+    return group;
+  }
 
-    public void setGroup(String group) {
-        this.group = group;
-    }
+  public void setGroup(String group) {
+    this.group = group;
+  }
 
-    public Integer getAge() {
-        return age;
-    }
+  public Integer getAge() {
+    return age;
+  }
 
-    public void setAge(Integer age) {
-        this.age = age;
-    }
+  public void setAge(Integer age) {
+    this.age = age;
+  }
 }

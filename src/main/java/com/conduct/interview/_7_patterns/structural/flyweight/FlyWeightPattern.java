@@ -3,17 +3,16 @@ package com.conduct.interview._7_patterns.structural.flyweight;
 import java.util.HashMap;
 import java.util.Map;
 
-
 public class FlyWeightPattern {
-	public static void main(String[] args) {
-		HumanFlyweightFactory humanFlyweightFactory = new HumanFlyweightFactory();
-    	Human human = humanFlyweightFactory.getHumanWithSomeRace("nigger");
-    	human.setName("some nigger 1");
-    	System.out.println(human);
-    	Human human2 = humanFlyweightFactory.getHumanWithSomeRace("nigger");
-    	human2.setName("some nigger 2");
-    	System.out.println(human2);
-	}
+  public static void main(String[] args) {
+    HumanFlyweightFactory humanFlyweightFactory = new HumanFlyweightFactory();
+    Human human = humanFlyweightFactory.getHumanWithSomeRace("nigger");
+    human.setName("some nigger 1");
+    System.out.println(human);
+    Human human2 = humanFlyweightFactory.getHumanWithSomeRace("nigger");
+    human2.setName("some nigger 2");
+    System.out.println(human2);
+  }
 }
 
 class Human {
@@ -44,6 +43,7 @@ class Human {
 
 class HumanFlyweightFactory {
   private Map<String, Human> humanMap = new HashMap<>();
+
   public Human getHumanWithSomeRace(String race) {
     Human human = humanMap.get(race);
     if (human == null) {
@@ -54,5 +54,3 @@ class HumanFlyweightFactory {
     return human;
   }
 }
-
-

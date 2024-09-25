@@ -1,27 +1,25 @@
 package com.conduct.interview._5_solid._3_liskov_principle.rules;
 
-public class PostconditionRule {
-}
+public class PostconditionRule {}
 
 abstract class Car3 {
 
-    protected int speed;
+  protected int speed;
 
-    // postcondition: speed must reduce
-    protected abstract void brake();
+  // postcondition: speed must reduce
+  protected abstract void brake();
 
-    // Other methods...
+  // Other methods...
 }
-
 
 class HybridCar3 extends Car3 {
 
-    // Some properties and other methods...
+  // Some properties and other methods...
 
-    @Override
-    // postcondition: speed must reduce
-    // postcondition: charge must increase
-    protected void brake() {
-        // Apply HybridCar brake
-    }
+  @Override
+  // postcondition: speed must reduce
+  // postcondition: charge must increase
+  protected void brake() {
+    // Apply HybridCar brake
+  }
 }

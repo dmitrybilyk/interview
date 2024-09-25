@@ -8,5 +8,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.SOURCE)
 public @interface NotNull {
-    String message() default "Should not be null";
+  String message() default "Should not be null";
 }

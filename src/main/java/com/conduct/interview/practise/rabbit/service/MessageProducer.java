@@ -8,14 +8,13 @@ import org.springframework.stereotype.Service;
 @Service
 @Profile("rabbit")
 public class MessageProducer {
-    @Autowired
-    private RabbitTemplate rabbitTemplate;
+  @Autowired private RabbitTemplate rabbitTemplate;
 
-    private static final String EXCHANGE_NAME = "my_exchange";
-    private static final String ROUTING_KEY = "my_routing_key";
+  private static final String EXCHANGE_NAME = "my_exchange";
+  private static final String ROUTING_KEY = "my_routing_key";
 
-    public void sendMessage(String message) {
-        rabbitTemplate.convertAndSend(EXCHANGE_NAME, ROUTING_KEY, message);
-        System.out.println("Message sent: " + message);
-    }
+  public void sendMessage(String message) {
+    rabbitTemplate.convertAndSend(EXCHANGE_NAME, ROUTING_KEY, message);
+    System.out.println("Message sent: " + message);
+  }
 }

@@ -4,18 +4,20 @@ import lombok.Getter;
 
 @Getter
 public class CustomDestroyMethod {
-    private String name;
-    public void customDestroy() {
-        System.out.println("Custom Destruction: " + getName() + " is bidding farewell and performing a final action.");
-        sayGoodbye();
-        performFinalAction();
-    }
+  private String name;
 
-    private void sayGoodbye() {
-        System.out.println("Custom Destruction: " + getName() + " says goodbye.");
-    }
+  public void customDestroy() {
+    System.out.println(
+        "Custom Destruction: " + getName() + " is bidding farewell and performing a final action.");
+    sayGoodbye();
+    performFinalAction();
+  }
 
-    private void performFinalAction() {
-        System.out.println("Custom Destruction: " + getName() + " performs a final action.");
-    }
+  private void sayGoodbye() {
+    System.out.println("Custom Destruction: " + getName() + " says goodbye.");
+  }
+
+  private void performFinalAction() {
+    System.out.println("Custom Destruction: " + getName() + " performs a final action.");
+  }
 }

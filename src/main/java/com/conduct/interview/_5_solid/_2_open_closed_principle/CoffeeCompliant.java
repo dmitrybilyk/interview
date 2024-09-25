@@ -1,23 +1,15 @@
 package com.conduct.interview._5_solid._2_open_closed_principle;
 
 public class CoffeeCompliant {
-    public static void main(String[] args) {
-
-    }
+  public static void main(String[] args) {}
 }
 
 class Coffee {
-    private int weight;
+  private int weight;
 }
 
-interface PrepareCoffee {
+interface PrepareCoffee {}
 
-}
+class Cappuchino implements PrepareCoffee {}
 
-class Cappuchino implements PrepareCoffee {
-
-}
-
-class Latte implements PrepareCoffee {
-
-}
+class Latte implements PrepareCoffee {}

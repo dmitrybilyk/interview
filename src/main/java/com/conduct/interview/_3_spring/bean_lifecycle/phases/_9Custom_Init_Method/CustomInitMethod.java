@@ -4,14 +4,15 @@ import lombok.Getter;
 
 @Getter
 public class CustomInitMethod {
-    private String name;
+  private String name;
 
-    public void customInit() {
-        System.out.println("Custom Initialization: Executing custom init for " + getName());
-        performSpecialTraining();
-    }
+  public void customInit() {
+    System.out.println("Custom Initialization: Executing custom init for " + getName());
+    performSpecialTraining();
+  }
 
-    private void performSpecialTraining() {
-        System.out.println("Custom Initialization: " + getName() + " is performing a special training routine.");
-    }
+  private void performSpecialTraining() {
+    System.out.println(
+        "Custom Initialization: " + getName() + " is performing a special training routine.");
+  }
 }

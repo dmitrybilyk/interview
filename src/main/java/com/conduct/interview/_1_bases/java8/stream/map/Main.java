@@ -22,32 +22,30 @@ public class Main {
     List<Evaluation> evaluations = new ArrayList<>();
     evaluations.add(evaluation);
 
-//    evaluations.stream()
-//            .map(Evaluation::getCriteriaList)
-//            .forEach(criteria -> {
-//              System.out.println(criteria.get);
-//            });
+    //    evaluations.stream()
+    //            .map(Evaluation::getCriteriaList)
+    //            .forEach(criteria -> {
+    //              System.out.println(criteria.get);
+    //            });
 
+    //    evaluations.forEach(evaluationBO -> evaluationBO.getCriteriaList().forEach(criteriaBO ->
+    //            criteriaBO.getSubevaluationList().forEach(subevaluationBO -> {
+    //                System.out.println(subevaluationBO.getName());
+    //            })));
 
-//    evaluations.forEach(evaluationBO -> evaluationBO.getCriteriaList().forEach(criteriaBO ->
-//            criteriaBO.getSubevaluationList().forEach(subevaluationBO -> {
-//                System.out.println(subevaluationBO.getName());
-//            })));
+    evaluations.stream()
+        .map(Evaluation::getCriteriaList)
+        .flatMap(List::stream)
+        .map(Criteria::getSubevaluationList)
+        .flatMap(List::stream)
+        .forEach(subevaluation -> System.out.println(subevaluation.getName()));
 
-
-    evaluations.stream().map(Evaluation::getCriteriaList).
-            flatMap(List::stream)
-            .map(Criteria::getSubevaluationList)
-            .flatMap(List::stream)
-            .forEach(subevaluation -> System.out.println(subevaluation.getName()));
-
-
-//    evaluations.stream()
-//            .map(Evaluation::getCriteriaList).collect(Collectors.toList())
-//            .stream()
-//            .map(Criteria::getSubevaluationList)
-//            .forEach(r -> {
-//              System.out.println();
-//            });
+    //    evaluations.stream()
+    //            .map(Evaluation::getCriteriaList).collect(Collectors.toList())
+    //            .stream()
+    //            .map(Criteria::getSubevaluationList)
+    //            .forEach(r -> {
+    //              System.out.println();
+    //            });
   }
 }

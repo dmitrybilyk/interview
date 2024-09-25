@@ -2,27 +2,25 @@ package com.conduct.interview._1_bases.multithreading.producer_consumer.wait_not
 
 public class Notifier implements Runnable {
 
-    private Message msg;
+  private Message msg;
 
-    public Notifier(Message msg) {
-        this.msg = msg;
+  public Notifier(Message msg) {
+    this.msg = msg;
+  }
+
+  @Override
+  public void run() {
+    String name = Thread.currentThread().getName();
+    System.out.println(name + " started");
+    try {
+      Thread.sleep(1000);
+      synchronized (msg) {
+        msg.setMsg(name + " Notifier work done");
+        //                msg.notify();
+        msg.notifyAll();
+      }
+    } catch (InterruptedException e) {
+      e.printStackTrace();
     }
-
-    @Override
-    public void run() {
-        String name = Thread.currentThread().getName();
-        System.out.println(name + " started");
-        try {
-            Thread.sleep(1000);
-            synchronized (msg) {
-                msg.setMsg(name + " Notifier work done");
-//                msg.notify();
-                msg.notifyAll();
-            }
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-
-    }
-
+  }
 }

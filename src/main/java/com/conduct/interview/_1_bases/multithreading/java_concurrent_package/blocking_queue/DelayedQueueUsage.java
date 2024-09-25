@@ -12,7 +12,6 @@
 // import java.util.concurrent.Executors;
 // import java.util.concurrent.TimeUnit;
 
-
 // public class DelayedQueueUsage {
 // 	public static void main(String[] args) {
 // 		ExecutorService executor = Executors.newFixedThreadPool(2);
@@ -21,7 +20,8 @@
 //         int delayOfEachProducedMessageMilliseconds = 500;
 //         DelayQueueConsumer consumer = new DelayQueueConsumer(queue, numberOfElementsToProduce);
 //         DelayQueueProducer producer
-//           = new DelayQueueProducer(queue, numberOfElementsToProduce, delayOfEachProducedMessageMilliseconds);
+//           = new DelayQueueProducer(queue, numberOfElementsToProduce,
+// delayOfEachProducedMessageMilliseconds);
 
 //         //when
 //         executor.submit(producer);
@@ -70,7 +70,6 @@
 //         this.numberOfElementsToTake = numberOfElementsToTake;
 //     }
 
-
 //     @Override
 //     public void run() {
 //         for (int i = 0; i < numberOfElementsToTake; i++) {
@@ -102,7 +101,8 @@
 //     public void run() {
 //         for (int i = 0; i < numberOfElementsToProduce; i++) {
 //             DelayObject object
-//                     = new DelayObject(UUID.randomUUID().toString(), delayOfEachProducedMessageMilliseconds);
+//                     = new DelayObject(UUID.randomUUID().toString(),
+// delayOfEachProducedMessageMilliseconds);
 //             System.out.println("Put object = " + object);
 //             try {
 //                 queue.put(object);

@@ -7,9 +7,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 @Controller
 public class InterviewController {
 
-    @GetMapping("/interview")
-    @ResponseBody
-    public String interview() {
-        return "interview";
-    }
+  @GetMapping("/interview")
+  @ResponseBody
+  public String interview() {
+    return "interview";
+  }
 }

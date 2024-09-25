@@ -6,44 +6,45 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 public class SimpleFactory {
-    public static void main(String[] args) {
-        User user = SimpleUserFactory.createUser("good");
-        System.out.println(user.getName());
-    }
+  public static void main(String[] args) {
+    User user = SimpleUserFactory.createUser("good");
+    System.out.println(user.getName());
+  }
 }
+
 @Getter
 @Setter
 @NoArgsConstructor
 class User {
-    public String name;
+  public String name;
 
-    public User(String name) {
-        this.name = name;
-    }
+  public User(String name) {
+    this.name = name;
+  }
 }
 
 @AllArgsConstructor
-//@NoArgsConstructor
+// @NoArgsConstructor
 class GoodUser extends User {
-    public GoodUser(String name) {
-        this.name = name;
-    }
+  public GoodUser(String name) {
+    this.name = name;
+  }
 }
 
 @AllArgsConstructor
-//@NoArgsConstructor
+// @NoArgsConstructor
 class BadUser extends User {
-    public BadUser(String name) {
-        this.name = name;
-    }
+  public BadUser(String name) {
+    this.name = name;
+  }
 }
 
 class SimpleUserFactory {
-    public static User createUser(String param){
-        if (param.equals("good")) {
-            return new GoodUser(param);
-        } else {
-            return new BadUser(param);
-        }
+  public static User createUser(String param) {
+    if (param.equals("good")) {
+      return new GoodUser(param);
+    } else {
+      return new BadUser(param);
     }
+  }
 }
