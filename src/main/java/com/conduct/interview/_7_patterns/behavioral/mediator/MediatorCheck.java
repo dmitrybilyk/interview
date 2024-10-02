@@ -1,111 +1,66 @@
 package com.conduct.interview._7_patterns.behavioral.mediator;
 
+import lombok.Getter;
+import lombok.Setter;
+
 import java.util.ArrayList;
 import java.util.List;
 
 public class MediatorCheck {
-  public static void main(String[] args) {
-    Dispatcher dispatcher = new InternetDispatcherImpl();
-    Plane plane1 = new TurboPlaneImpl("plane1", dispatcher);
-    Plane plane2 = new TurboPlaneImpl("plane2", dispatcher);
-    Plane plane3 = new TurboPlaneImpl("plane3", dispatcher);
-    dispatcher.addPlane(plane1);
-    dispatcher.addPlane(plane2);
-    dispatcher.addPlane(plane3);
-    plane2.landing();
-  }
-}
-
-abstract class Plane {
-  protected String name;
-
-  public Plane(String name) {
-    this.name = name;
-  }
-
-  abstract void landing();
-
-  abstract void waiting();
-}
-
-class PlaneImpl extends Plane {
-  private Dispatcher dispatcher;
-
-  public PlaneImpl(String name, Dispatcher dispatcher) {
-    super(name);
-    this.dispatcher = dispatcher;
-  }
-
-  public void landing() {
-    dispatcher.landing(this);
-  }
-
-  public void waiting() {
-    System.out.println("The plane " + name + " will wait for other to land");
-  }
-}
-
-class TurboPlaneImpl extends Plane {
-  private Dispatcher dispatcher;
-
-  public TurboPlaneImpl(String name, Dispatcher dispatcher) {
-    super(name);
-    this.dispatcher = dispatcher;
-  }
-
-  public void landing() {
-    System.out.println("Turbo plane is" + name + " is landing");
-    dispatcher.landing(this);
-  }
-
-  public void waiting() {
-    System.out.println("The Turbo plane " + name + " will wait for other to land");
-  }
-}
-
-abstract class Dispatcher {
-  abstract void landing(Plane plane);
-
-  abstract void addPlane(Plane plane);
-}
-
-class DispatcherImpl extends Dispatcher {
-  private List<Plane> planes;
-
-  public DispatcherImpl() {
-    planes = new ArrayList<>();
-  }
-
-  public void addPlane(Plane plane) {
-    planes.add(plane);
-  }
-
-  public void landing(Plane plane) {
-    for (Plane planeToWait : planes) {
-      if (!plane.equals(planeToWait)) {
-        planeToWait.waiting();
-      }
+    public static void main(String[] args) {
+        DispatcherMediator mediator = new DispatcherMediatorImpl();
+        mediator.addFlight(new FlightImpl("Flight 1", mediator));
+        FlightImpl flight2 = new FlightImpl("Flight 2", mediator);
+        mediator.addFlight(flight2);
+        mediator.addFlight(new FlightImpl("Flight 3", mediator));
+        flight2.sendMessage(flight2, "Message from flight 2");
     }
-  }
 }
 
-class InternetDispatcherImpl extends Dispatcher {
-  private List<Plane> planes;
 
-  public InternetDispatcherImpl() {
-    planes = new ArrayList<>();
-  }
 
-  public void addPlane(Plane plane) {
-    planes.add(plane);
-  }
 
-  public void landing(Plane plane) {
-    for (Plane planeToWait : planes) {
-      if (!plane.equals(planeToWait)) {
-        System.out.println("Managed by the internet");
-        planeToWait.waiting();
-      }
+interface Flight {
+    void receiveMessage(String message);
+    void sendMessage(Flight flight2, String message);
+}
+
+@Getter
+@Setter
+class FlightImpl implements Flight {
+    private String name;
+    private DispatcherMediator mediator;
+
+    public FlightImpl(String name, DispatcherMediator mediator) {
+        this.name = name;
+        this.mediator = mediator;
     }
-  }
+
+    public void receiveMessage(String message) {
+        System.out.println("Flight " + name + " received the message " + message);
+    }
+    public void sendMessage(Flight flight, String message) {
+        mediator.sendMessage(flight, message);
+    }
+}
+
+interface DispatcherMediator {
+    void sendMessage(Flight flight, String message);
+    void addFlight(Flight flight);
+}
+
+class DispatcherMediatorImpl implements DispatcherMediator {
+    private final List<Flight> flightImplList = new ArrayList<>();
+    public void sendMessage(Flight flight, String message) {
+        for (Flight flightImpl : flightImplList) {
+            if (!flightImpl.equals(flight)) {
+                flightImpl.receiveMessage(message);
+            }
+        }
+    }
+
+    @Override
+    public void addFlight(Flight flight) {
+        flightImplList.add(flight);
+    }
 }

@@ -1,2 +1,3 @@
-Mediator pattern provides a simple interface for objects to communicate with each other
-taking of the complexity on itself.
+The Mediator pattern simplifies communication between objects 
+by introducing a central mediator. Objects interact through the mediator, 
+reducing dependencies and complexity.
