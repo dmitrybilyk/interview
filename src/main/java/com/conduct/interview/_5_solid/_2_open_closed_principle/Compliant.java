@@ -7,7 +7,7 @@ public class Compliant {
 
   public static void main(String[] args) {
     MyCalculator myCalculator = new MyCalculator();
-    Operation operation = new SubtractionOperation(3, 3);
+    Operation operation = new MultiplyOperation(3, 3);
     myCalculator.calculate(operation);
     System.out.println(operation.getResult());
   }
@@ -68,17 +68,17 @@ class AdditionOperation extends Operation {
 
 @Getter
 @Setter
-class SubtractOperation extends Operation {
+class MultiplyOperation extends Operation {
   private double left;
   private double right;
 
-  public SubtractOperation(double left, double right) {
+  public MultiplyOperation(double left, double right) {
     this.left = left;
     this.right = right;
   }
 
   @Override
   public void perform() {
-    result = left - right;
+    result = left * right;
   }
 }
