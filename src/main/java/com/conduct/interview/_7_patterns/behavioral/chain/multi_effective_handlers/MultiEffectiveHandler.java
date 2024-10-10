@@ -13,7 +13,7 @@ public class MultiEffectiveHandler {
     secondHandler.setNext(thirdHandler);
     RequestHandler firstHandler = new FirstRequestHandler();
     firstHandler.setNext(secondHandler);
-    System.out.println("Request is handled with - " + firstHandler.handleRequest(someRequest));
+    firstHandler.handleRequest(someRequest);
   }
 }
 
@@ -22,48 +22,45 @@ public class MultiEffectiveHandler {
 abstract class RequestHandler {
   protected RequestHandler next;
 
-  abstract boolean handleRequest(SomeRequest someRequest);
+  abstract void handleRequest(SomeRequest someRequest);
 }
 
 class FirstRequestHandler extends RequestHandler {
 
   @Override
-  boolean handleRequest(SomeRequest someRequest) {
+  void handleRequest(SomeRequest someRequest) {
     if (someRequest.getBody().contains("first")) {
       System.out.println("Handling in the first");
     }
     if (next != null) {
-      return next.handleRequest(someRequest);
+      next.handleRequest(someRequest);
     }
-    return false;
   }
 }
 
 class SecondRequestHandler extends RequestHandler {
 
   @Override
-  boolean handleRequest(SomeRequest someRequest) {
+  void handleRequest(SomeRequest someRequest) {
     if (someRequest.getBody().contains("second")) {
       System.out.println("Handling in the second");
     }
     if (next != null) {
-      return next.handleRequest(someRequest);
+      next.handleRequest(someRequest);
     }
-    return false;
   }
 }
 
 class ThirdRequestHandler extends RequestHandler {
 
   @Override
-  boolean handleRequest(SomeRequest someRequest) {
+  void handleRequest(SomeRequest someRequest) {
     if (someRequest.getBody().contains("third")) {
       System.out.println("Handling in the third");
     }
     if (next != null) {
-      return next.handleRequest(someRequest);
+      next.handleRequest(someRequest);
     }
-    return false;
   }
 }
 
