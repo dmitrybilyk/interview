@@ -3,11 +3,13 @@ package com.conduct.interview.practise.spring.transactions.service;
 import com.conduct.interview.practise.spring.transactions.MyEntity;
 import com.conduct.interview.practise.spring.transactions.repository.MyRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Profile("postgres")
 public class AnotherService {
 
     @Autowired

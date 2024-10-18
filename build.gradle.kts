@@ -1,4 +1,6 @@
 import org.gradle.kotlin.dsl.*
+import org.springframework.boot.gradle.tasks.run.BootRun
+import java.io.IOException
 
 
 plugins {
@@ -32,6 +34,81 @@ spotless {
     }
 }
 
+// Create a custom task to run Docker Compose up
+tasks.register<DefaultTask>("dockerComposeUp") {
+    val profile = if (project.hasProperty("profile")) project.property("profile") as String else "default"
+
+    // Construct the command line arguments based on the profile
+    val composeFiles = mutableListOf("docker-compose/docker-compose.yaml")
+    when (profile) {
+        "postgres" -> composeFiles.add("docker-compose/docker-compose-postgres.yaml")
+        "rabbit" -> composeFiles.add("docker-compose/docker-compose-rabbit.yaml")
+    }
+
+    doLast {
+        try {
+            val processBuilder = ProcessBuilder("docker-compose", "-f", *composeFiles.toTypedArray(), "up", "-d")
+            processBuilder.inheritIO()  // Inherit input/output for console visibility
+            val process = processBuilder.start()
+
+            // Capture output and error streams
+            val output = process.inputStream.bufferedReader().readText()
+            val errorOutput = process.errorStream.bufferedReader().readText()
+
+            val exitCode = process.waitFor()  // Wait for the process to complete
+
+            if (exitCode != 0) {
+                throw IOException("Failed to start Docker Compose with exit code $exitCode: $errorOutput")
+            } else {
+                println(output)  // Print the normal output
+            }
+        } catch (e: IOException) {
+            throw RuntimeException("Error executing Docker Compose up: ${e.message}", e)
+        }
+    }
+}
+
+// Create a custom task to run Docker Compose down
+tasks.register<DefaultTask>("dockerComposeDown") {
+    val profile = if (project.hasProperty("profile")) project.property("profile") as String else "default"
+
+    // Construct the command line arguments based on the profile
+    val composeFiles = mutableListOf("docker-compose/docker-compose.yaml")
+    when (profile) {
+        "postgres" -> composeFiles.add("docker-compose/docker-compose-postgres.yaml")
+        "rabbit" -> composeFiles.add("docker-compose/docker-compose-rabbit.yaml")
+    }
+
+    // Task action to execute Docker Compose down
+    doLast {
+        try {
+            val processBuilder = ProcessBuilder("docker-compose", "-f", *composeFiles.toTypedArray(), "down")
+            processBuilder.inheritIO()  // Inherit input/output for console visibility
+            val process = processBuilder.start()
+            val exitCode = process.waitFor()  // Wait for the process to complete
+
+            if (exitCode != 0) {
+                throw IOException("Failed to stop Docker Compose with exit code $exitCode")
+            }
+        } catch (e: IOException) {
+            throw RuntimeException("Error executing Docker Compose down: ${e.message}", e)
+        }
+    }
+}
+
+// Configure the bootRun task to start and stop Docker Compose
+tasks.named<BootRun>("bootRun") {
+    doFirst {
+        tasks["dockerComposeUp"].actions.forEach { it.execute(this) }  // Start Docker Compose
+    }
+
+    doLast {
+        tasks["dockerComposeDown"].actions.forEach { it.execute(this) }  // Stop Docker Compose
+    }
+
+    // Ensure that 'dockerComposeDown' runs even if 'bootRun' fails
+    finalizedBy(tasks["dockerComposeDown"])
+}
 
 configurations {
     compileOnly {
@@ -45,10 +122,14 @@ repositories {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
-    implementation("org.springframework.boot:spring-boot-starter-amqp")
+//    if (project.hasProperty("rabbit")) {
+        implementation("org.springframework.boot:spring-boot-starter-amqp")
+//    }
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     runtimeOnly("org.postgresql:postgresql")
-    implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+//    if (project.hasProperty("postgres")) {
+        implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+//    }
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
