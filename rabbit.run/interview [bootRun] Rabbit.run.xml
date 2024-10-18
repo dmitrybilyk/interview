@@ -11,6 +11,7 @@
       <option name="taskNames">
         <list>
           <option value="bootRun" />
+          <option value="--args='--spring.profiles.active=rabbit'" />
         </list>
       </option>
       <option name="vmOptions" />
