@@ -1,0 +1,2 @@
+Hello, World! NIO
+This is an example of character streams.
