@@ -5,7 +5,6 @@ import com.conduct.interview.practise.spring.transactions.repository.MyRepositor
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -25,7 +24,10 @@ public class MyService {
         repository.save(entity1);
 
         // Calling another service which requires a new transaction
-        anotherService.innerTransaction();
+        anotherService.anotherServiceMethod();
+//        anotherService.anotherServiceMethodForNested(new MyEntity(null, "Nested1"));
+//        anotherService.anotherServiceMethodForNested(new MyEntity(null, "Nested2"));
+//        anotherService.anotherServiceMethodForNested(new MyEntity(null, "Nested3"));
 
         MyEntity entity2 = new MyEntity();
         entity2.setName("Entity 2");

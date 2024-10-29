@@ -15,10 +15,24 @@ public class AnotherService {
     @Autowired
     private MyRepository repository;
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void innerTransaction() {
+    @Transactional
+//    @Transactional(propagation = Propagation.NEVER)
+//    @Transactional(propagation = Propagation.NESTED) // can execute in scope
+//    of existing transaction, but uses it's own savepoints
+//    @Transactional(propagation = Propagation.MANDATORY)
+//    @Transactional(propagation = Propagation.REQUIRES_NEW)
+//    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    public void anotherServiceMethod() {
         MyEntity entity = new MyEntity();
-        entity.setName("Entity in new transaction");
+        entity.setName("Entity in from inner");
         repository.save(entity);
+    }
+
+    @Transactional(propagation = Propagation.NESTED)
+    public void anotherServiceMethodForNested(MyEntity myEntity) {
+        repository.save(myEntity);
+        if (myEntity.getName().equals("Nested2")) {
+            throw new RuntimeException("Nested2 failed");
+        }
     }
 }

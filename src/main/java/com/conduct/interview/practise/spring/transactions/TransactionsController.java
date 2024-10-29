@@ -8,12 +8,12 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @Profile("postgres")
-public class MyController {
+public class TransactionsController {
 
     @Autowired
     private MyService myService;
 
-    @GetMapping("/transaction/requires-new")
+    @GetMapping("/transaction/check")
     public String testTransaction() {
         try {
             myService.outerTransaction();
