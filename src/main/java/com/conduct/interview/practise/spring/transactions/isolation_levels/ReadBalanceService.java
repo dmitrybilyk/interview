@@ -1,6 +1,7 @@
 package com.conduct.interview.practise.spring.transactions.isolation_levels;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -9,20 +10,20 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class ReadBalanceService {
 
-    private final AccountRepository accountRepository;
+    private final JdbcTemplate jdbcTemplate;
 
-    public ReadBalanceService(AccountRepository accountRepository) {
-        this.accountRepository = accountRepository;
+    public ReadBalanceService(JdbcTemplate jdbcTemplate) {
+        this.jdbcTemplate = jdbcTemplate;
     }
 
-//    @Transactional(isolation = Isolation.SERIALIZABLE)
-//    @Transactional(isolation = Isolation.REPEATABLE_READ)
-//    @Transactional(isolation = Isolation.READ_COMMITTED)
-    @Transactional(isolation = Isolation.READ_UNCOMMITTED)
+    @Transactional(isolation = Isolation.SERIALIZABLE)
     public int getBalance(Long accountId) {
-        Account account = accountRepository.findById(accountId).orElseThrow();
+        int balance = jdbcTemplate.queryForObject(
+                "SELECT balance FROM account WHERE id = ?",
+                Integer.class, accountId
+        );
 
-        log.info("ReadBalanceService: Reading balance: {}", account.getBalance());
+        log.info("ReadBalanceService: Reading balance: {}", balance);
 
         // Simulate a delay during reading
         try {
@@ -31,8 +32,28 @@ public class ReadBalanceService {
             Thread.currentThread().interrupt();
         }
 
-        log.info("ReadBalanceService: After delay of 2s, balance read is: {}", account.getBalance());
+        balance = jdbcTemplate.queryForObject(
+                "SELECT balance FROM account WHERE id = ?",
+                Integer.class, accountId
+        );
 
-        return account.getBalance();
+        log.info("ReadBalanceService: After delay of 2s, balance read is: {}", balance);
+
+        // Simulate a delay during reading
+        try {
+            Thread.sleep(2000);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+
+        balance = jdbcTemplate.queryForObject(
+                "SELECT balance FROM account WHERE id = ?",
+                Integer.class, accountId
+        );
+
+        log.info("ReadBalanceService: After delay of 2s, balance read is: {}", balance);
+
+
+        return balance;
     }
 }
