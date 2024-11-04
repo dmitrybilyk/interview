@@ -24,7 +24,17 @@ services:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
 
+  redis:
+    image: redis:latest
+    container_name: redis_cache
+    ports:
+      - "6379:6379"  # Map Redis default port to the host
+    volumes:
+      - redis_data:/data  # Persist Redis data
+
 volumes:
+  redis_data:
+    driver: local
   postgres-data:
 
 networks:

@@ -125,6 +125,8 @@ dependencies {
 //    if (project.hasProperty("rabbit")) {
         implementation("org.springframework.boot:spring-boot-starter-amqp")
         implementation("org.springframework.boot:spring-boot-starter-aop")
+        implementation("org.springframework.boot:spring-boot-starter-data-redis")
+        implementation("redis.clients:jedis")
 //    }
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("commons-io:commons-io:2.11.0")
