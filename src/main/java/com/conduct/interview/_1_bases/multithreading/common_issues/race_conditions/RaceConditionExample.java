@@ -1,14 +1,20 @@
-package com.conduct.interview._1_bases.multithreading.common_problems.race_conditions;
+package com.conduct.interview._1_bases.multithreading.common_issues.race_conditions;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 class Counter {
-    private int count = 0;
+//    Second way to fix is using Atomic types
+    private AtomicInteger count = new AtomicInteger(0);
+//    private int count = 0;
 
+//    First way to fix is `syncrhonized` keword
     public synchronized void increment() {
-        count++; // This is not atomic and can cause race conditions
+        count.incrementAndGet(); // This is atomic and can not cause race conditions
+//        count++; // This is not atomic and can cause race conditions
     }
 
     public int getCount() {
-        return count;
+        return count.get();
     }
 }
 
