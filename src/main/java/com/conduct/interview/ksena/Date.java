@@ -1,28 +1,32 @@
 package com.conduct.interview.ksena;
 
-import java.time.LocalDate;
-
 public class Date {
-    private int day = 44;
+    private int day;
     private int month;
     private int year;
 
     public Date() {
-        this.day = 1;
-        this.month = 1;
-        this.year = 2024;
+        this(1, 1, 2024);
     }
 
     public Date(int day, int month, int year) {
-        this.day = day;
-        this.month = month;
-        this.year = year;
+        if (isValidDate(day, month, year)) {
+            this.day = day;
+            this.month = month;
+            this.year = year;
+        } else {
+            throw new IllegalArgumentException("Invalid date");
+        }
     }
 
     public Date(Date other) {
-        this.day = other.day;
-        this.month = other.month;
-        this.year = other.year;
+        this(other.day, other.month, other.year);
+    }
+
+    private boolean isValidDate(int day, int month, int year) {
+        if (month < 1 || month > 12 || day < 1) return false;
+        int[] daysInMonth = {31, isLeapYear(year) ? 29 : 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+        return day <= daysInMonth[month - 1];
     }
 
     public int getDay() {
@@ -30,7 +34,7 @@ public class Date {
     }
 
     public void setDay(int day) {
-        if (day > 1 && day <= 31) {
+        if (isValidDate(day, this.month, this.year)) {
             this.day = day;
         }
     }
@@ -40,7 +44,7 @@ public class Date {
     }
 
     public void setMonth(int month) {
-        if (month > 1 && month <= 12) {
+        if (isValidDate(this.day, month, this.year)) {
             this.month = month;
         }
     }
@@ -50,37 +54,54 @@ public class Date {
     }
 
     public void setYear(int year) {
-        if (year > 1000 && year < 9999) {
+        if (isValidDate(this.day, this.month, year)) {
             this.year = year;
         }
     }
 
     public boolean equals(Date other) {
-        return this.year == other.year
-                && this.month == other.month
-                && this.day == other.day;
+        return this.year == other.year && this.month == other.month && this.day == other.day;
     }
 
     public boolean before(Date other) {
-        LocalDate thisLocalDate = LocalDate.of(this.year, this.month, this.day);
-        LocalDate otherLocalDate = LocalDate.of(other.year, other.month, other.day);
-        return otherLocalDate.isBefore(thisLocalDate);
+        if (this.year != other.year) return this.year < other.year;
+        if (this.month != other.month) return this.month < other.month;
+        return this.day < other.day;
     }
 
     public boolean after(Date other) {
-        LocalDate thisLocalDate = LocalDate.of(this.year, this.month, this.day);
-        LocalDate otherLocalDate = LocalDate.of(other.year, other.month, other.day);
-        return otherLocalDate.isAfter(thisLocalDate);
+        return !before(other) && !equals(other);
     }
 
     public int difference(Date other) {
-        LocalDate thisLocalDate = LocalDate.of(this.year, this.month, this.day);
-        LocalDate otherLocalDate = LocalDate.of(other.year, other.month, other.day);
-        return 7;
+        return Math.abs(this.calculateDate(this.year, this.month, this.day)
+                - other.calculateDate(other.year, other.month, other.day));
     }
 
     public String toString() {
-        return "";
+        return String.format("%02d/%02d/%04d", this.month, this.day, this.year);
     }
 
+    public Date tomorrow() {
+        if (isValidDate(this.day + 1, this.month, this.year)) {
+            return new Date(this.day + 1, this.month, this.year);
+        } else if (isValidDate(1, this.month + 1, this.year)) {
+            return new Date(1, this.month + 1, this.year);
+        } else if (this.year < 9999) {
+            return new Date(1, 1, this.year + 1);
+        }
+        return this; // No "tomorrow" beyond 9999.
+    }
+
+    public int calculateDate(int year, int month, int day) {
+        if (month < 3) {
+            year--;
+            month += 12;
+        }
+        return 365 * year + year / 4 - year / 100 + year / 400 + (153 * (month - 3) + 2) / 5 + day;
+    }
+
+    public boolean isLeapYear(int year) {
+        return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
+    }
 }
