@@ -22,9 +22,12 @@ import java.util.LinkedList;
 
 public class Main {
   public static void main(String[] args) {
-    ArrayList<String> aStrings2 = new ArrayList<>();
-    LinkedList<String> aStrings = new LinkedList<>();
-    aStrings.add("1)");
-    aStrings.get(0);
+    ArrayList<String> arrayList = new ArrayList<>();
+    LinkedList<String> linkedList = new LinkedList<>();
+    linkedList.add("aaa");
+    System.out.println(linkedList.get(0));
+//    arrayList.get(0);
+//    linkedList.add("1)");
+//    linkedList.get(0);
   }
 }

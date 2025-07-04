@@ -1,4 +1,4 @@
-package com.conduct.interview._1_bases.annotations.compile;
+package com.conduct.interview._1_bases._4_annotations.compile;
 
 import java.util.Set;
 import javax.annotation.processing.AbstractProcessor;

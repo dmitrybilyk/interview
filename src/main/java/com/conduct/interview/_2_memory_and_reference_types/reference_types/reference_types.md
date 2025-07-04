@@ -23,6 +23,8 @@ by the Garbage Collector (GC). These include strong, weak, soft, and phantom ref
 - Objects with soft references are only removed if there is **memory pressure** or  
   low available memory.
 - **Garbage Collection**: The object stays in memory as long as there’s sufficient heap space.
+  Caching large objects (e.g., images, compiled templates, parsed JSON trees) that are expensive to recreate, 
+  but not essential to always keep in memory.
 
 ### 4. PhantomReference
 

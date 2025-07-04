@@ -1,7 +1,11 @@
-package com.conduct.interview._1_bases.static_members;
+package com.conduct.interview._1_bases._3_static_members;
 
 public class SomeParentClass {
   static int a;
+
+  public int getAA() {
+    return a;
+  }
 
   public static int getA() {
     return a;
@@ -17,7 +21,9 @@ public class SomeParentClass {
   }
 
   public static void main(String[] args) {
+//    getAA();
     SomeParentClass someParentClass = new SomeChild1();
+//    someParentClass.getAA();
     someParentClass.setA(123);
   }
 }

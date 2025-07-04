@@ -1,4 +1,4 @@
-package com.conduct.interview._1_bases.passing_params;
+package com.conduct.interview._1_bases._1_passing_params;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;

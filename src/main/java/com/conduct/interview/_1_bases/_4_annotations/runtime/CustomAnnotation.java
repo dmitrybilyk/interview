@@ -1,4 +1,4 @@
-package com.conduct.interview._1_bases.annotations.runtime;
+package com.conduct.interview._1_bases._4_annotations.runtime;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

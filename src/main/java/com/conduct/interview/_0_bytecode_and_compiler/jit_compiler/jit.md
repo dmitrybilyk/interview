@@ -6,7 +6,9 @@ Compile-Time (javac): When you write Java code and compile it using javac,
 it is first converted into bytecode. This bytecode is platform-independent and can run on any machine that has a JVM.
 
 Run-Time (JIT): When the Java application runs, the JIT compiler kicks in. Instead of interpreting 
-the bytecode instruction-by-instruction (which is slower), the JVM converts sections of bytecode into native machine code (specific to your system’s architecture) as needed. This process happens "just in time" when the code is about to be executed, hence the name.
+the bytecode instruction-by-instruction (which is slower), the JVM converts sections of bytecode into native machine 
+code (specific to your system’s architecture) as needed. This process happens "just in time" when the code is about to 
+be executed, hence the name.
 
 The JIT compiler optimizes frequently executed code paths (hot spots) by compiling them into machine 
 code, allowing the JVM to run the program more efficiently. If certain code is run repeatedly, 
@@ -14,7 +16,8 @@ the JVM compiles and stores the machine code for reuse, which significantly boos
 
 
 Additional Notes:
-JVM Options: You can pass various JVM options to observe JIT behavior more clearly. For example, use -Xcomp to force compilation or -Xint to run entirely in interpreted mode (without JIT):
+JVM Options: You can pass various JVM options to observe JIT behavior more clearly. For example, use -Xcomp to 
+force compilation or -Xint to run entirely in interpreted mode (without JIT):
 
 Force full JIT compilation:
 
