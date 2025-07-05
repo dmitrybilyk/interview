@@ -1,0 +1,47 @@
+@startuml
+skinparam shadowing false
+skinparam defaultTextAlignment center
+skinparam rectangle {
+  BackgroundColor #FDF6E3
+  BorderColor Black
+}
+
+actor "Users\n(Agents, Customers)" as Users
+rectangle "Recording Server\nStores media & metadata" as RecordingServer
+rectangle "Interaction Service\nLoads from DB, saves media" as IS
+rectangle "ZQM Service\nCreates Conversations + Events" as ZQM
+rectangle "Encourage Scheduler\nTriggers periodic import" as Scheduler
+rectangle "Encourage Correlations\nMerges/Correlates calls" as Corr
+rectangle "Encourage Conversations\nSaves to Solr & DB" as Conv
+rectangle "Encourage Framework\nGateway + Permissions" as Framework
+rectangle "SpeechRec\nSends satisfaction tags" as SpeechRec
+rectangle "Enrichment Processor\nLoads transcription files" as Enrich
+rectangle "AutoQM\nRule-based + AI evaluation" as AutoQM
+rectangle "Manual QM Services\nReviews, Surveys, Reports" as MQM
+database "Database\n(PostgreSQL)" as DB
+database "File System\nMedia & Transcriptions" as FS
+rectangle "Solr\nSearch index" as Solr
+rectangle "Audit Log\nAudit events" as Audit
+rectangle "AI Engine\nExternal" as AI
+
+' Data Flows
+Users --> RecordingServer : Participates in Calls
+RecordingServer --> IS : Sends call + metadata
+Scheduler --> ZQM : Triggers import
+ZQM --> IS : Loads raw call data
+ZQM --> Corr : Sends via RabbitMQ
+Corr --> Conv : Sends correlated calls
+Conv --> Solr : Save searchable data
+Conv --> DB : Save raw data
+SpeechRec --> Conv : Voice tags via Rabbit
+Enrich --> FS : Reads transcripts
+Conv --> FS : Loads transcriptions
+Conv --> Solr : Indexes transcript
+Framework --> Conv : Fetch call for FE
+Framework --> Audit : Sends audit event
+Framework --> DB : Enrich data
+AutoQM --> Conv : Load calls
+AutoQM --> AI : Ask AI questions
+AutoQM --> DB : Save evaluation
+MQM --> DB : Save manual reviews
+@enduml

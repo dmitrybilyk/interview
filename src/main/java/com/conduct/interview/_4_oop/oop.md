@@ -74,3 +74,9 @@ systems to enhance modularity, reusability, and maintainability.
   code reuse, encapsulation, and inheritance.
 - **FP**: Emphasizes functions and immutability, using pure functions, lambda expressions,  
   and streams for declarative and concise data processing.
+
+Functional Aspects:
+Pure Functions: The filter and map operations are stateless and produce consistent outputs.
+Immutability: Employee is immutable (final fields, no setters); List.of creates an immutable list.
+Declarative: The stream pipeline declares what to do (filter, transform, collect) without loops or mutable state.
+Higher-Order Functions: filter and map take lambda expressions as arguments.

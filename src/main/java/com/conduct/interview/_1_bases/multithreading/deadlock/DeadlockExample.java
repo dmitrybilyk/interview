@@ -13,6 +13,7 @@ public class DeadlockExample {
     //        Thread.sleep(3000);
     System.out.println("State of the thread 1 is " + myThread1.getState());
     System.out.println("State of the thread 2 is " + myThread2.getState());
+    System.out.println("State of the thread 1 is " + myThread1.getState());
   }
 }
 

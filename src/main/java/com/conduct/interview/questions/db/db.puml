@@ -1,0 +1,119 @@
+@startuml
+
+!theme plain
+top to bottom direction
+skinparam linetype ortho
+
+class ai_questions {
+   attribute_sub_rule_id: integer
+   question: text
+   yes_score: numeric(10,2)
+   no_score: numeric(10,2)
+   na_score: numeric(10,2)
+   id: bigint
+}
+class attribute_sub_rules {
+   name: text
+   attribute: text
+   score: numeric(10,2)
+   rule_id: integer
+   operator: text
+   value: text
+   id: integer
+}
+class attribute_sub_score {
+   sub_rule_id: integer
+   sub_rule_score: numeric(10,2)
+   review_id: bigint
+   range_id: bigint
+   snapshot_value: text
+   multi_equals_id: integer
+   id: bigint
+}
+class automated_reviews {
+   conversation_id: text
+   agent_id: text
+   score: numeric(10,2)
+   review_date: timestamp
+   rule_id: bigint
+   status: varchar(16)
+   id: bigint
+}
+class executions {
+   start_date_time: timestamp
+   end_date_time: timestamp
+   number_of_records: integer
+   status: text
+   rule_id: integer
+   successful_records: integer
+   failed_records: integer
+   id: bigint
+}
+class flyway_schema_history {
+   version: varchar(50)
+   description: varchar(200)
+   type: varchar(20)
+   script: varchar(1000)
+   checksum: integer
+   installed_by: varchar(100)
+   installed_on: timestamp
+   execution_time: integer
+   success: boolean
+   installed_rank: integer
+}
+class multi_equals {
+   value: text
+   score: numeric(10,2)
+   attribute_rule_id: integer
+   id: bigint
+}
+class range {
+   from_param: numeric(10,2)
+   to_param: numeric(10,2)
+   score: numeric(10,2)
+   attribute_rule_id: integer
+   id: bigint
+}
+class retry {
+   conversation_id: text
+   rule_id: integer
+   first_exec: timestamp
+   last_exec: timestamp
+   number_of_retries: integer
+   status: text
+   agent_id: text
+   id: bigint
+}
+class rules {
+   name: text
+   delay: integer
+   external_filter_id: integer
+   show_to_agent: boolean
+   user_id: text
+   scoring_system: text
+   status: text
+   id: integer
+}
+class speech_tags {
+   tag_id: integer
+   attribute_sub_rule_id: integer
+   participant_type: varchar(64)
+   score: numeric(10,2)
+   position: varchar(64)
+   interval: numeric(10,2)
+   id: bigint
+}
+
+ai_questions           -[#595959,plain]-^  attribute_sub_rules   : "attribute_sub_rule_id:id"
+attribute_sub_rules    -[#595959,plain]-^  rules                 : "rule_id:id"
+attribute_sub_score    -[#595959,plain]-^  attribute_sub_rules   : "sub_rule_id:id"
+attribute_sub_score    -[#595959,plain]-^  automated_reviews     : "review_id:id"
+attribute_sub_score    -[#595959,plain]-^  multi_equals          : "multi_equals_id:id"
+attribute_sub_score    -[#595959,plain]-^  range                 : "range_id:id"
+automated_reviews      -[#595959,plain]-^  rules                 : "rule_id:id"
+executions             -[#595959,plain]-^  rules                 : "rule_id:id"
+multi_equals           -[#595959,plain]-^  attribute_sub_rules   : "attribute_rule_id:id"
+range                  -[#595959,plain]-^  attribute_sub_rules   : "attribute_rule_id:id"
+retry                  -[#595959,plain]-^  rules                 : "rule_id:id"
+speech_tags            -[#595959,plain]-^  attribute_sub_rules   : "attribute_sub_rule_id:id"
+@enduml

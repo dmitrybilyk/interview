@@ -1,0 +1,151 @@
+✅ How to Explain Your DB Design
+🧱 1. Modular Structure
+"I designed the schema in a modular way: each table has a specific responsibility.
+For example, rules define what we evaluate, attribute_sub_rules define how we break it down,
+and automated_reviews store the actual evaluation results."
+
+🔄 2. Normalization
+"I followed database normalization principles, mostly up to the third normal form (3NF).
+That means:
+
+Each table stores only one type of entity (e.g., rules, scores, tags).
+
+Repeating groups are extracted into separate tables (e.g., multi_equals, range).
+
+Foreign keys connect related data instead of duplicating values."
+
+Simple example:
+Instead of putting sub-rule data inside automated_reviews, I placed it in attribute_sub_score
+and linked it with foreign keys — this reduces redundancy and improves consistency.
+
+🔑 3. Primary Keys & Foreign Keys
+"Each table has a clear primary key (id) and all relationships use foreign keys.
+This ensures data integrity and enforces valid links between related tables."
+
+Examples:
+
+attribute_sub_rules.rule_id → rules.id
+
+speech_tags.attribute_sub_rule_id → attribute_sub_rules.id
+
+🧩 4. Flexible Scoring System
+"Scoring is flexible:
+
+Each sub-rule can have different score types: fixed (score), ranges, or multi-equals values.
+
+This allows us to build a flexible rule engine, where each sub-rule type is pluggable."
+
+🧠 5. AI Integration
+"For AI-based evaluations, we have ai_questions linked to sub-rules.
+Each question maps to yes/no/NA scores. This makes AI results compatible
+with the same rule-based evaluation logic."
+
+🕐 6. Execution History & Retries
+"I store each execution (executions) with stats like number of records, success/fail counts.
+If something goes wrong, retry table tracks when and how many times a rule was retried."
+
+📊 7. Auditability and Traceability
+"Everything is traceable:
+
+Which rule was applied
+
+Which sub-rule triggered
+
+What the AI answered
+
+What the score was
+
+Whether we used speech tags or metadata"
+
+This allows full transparency and explainability, which is critical for QM systems.
+
+✅ Best Practices I Followed
+Use normalized tables to avoid redundancy
+
+Use foreign keys to maintain integrity
+
+Ensure expandability (e.g., subrules can have many types)
+
+Store execution history for audit/debug
+
+Keep AI & rule-based evaluations unified
+
+Use clear naming conventions
+
+Avoid storing computed or redundant fields (keep logic in app/service layer)
+
+🧠 Summary You Can Say at Interview:
+"I designed the database using normalization principles (up to 3NF), with modular tables,
+foreign key relationships, and traceable scoring logic. It supports flexible rule-based
+and AI-driven evaluation with full transparency and auditability."
+
+
+
+
+
+
+
+📚 Normal Forms (With Simple Examples)
+🔹 1st Normal Form (1NF) – No repeating groups
+Rule: Every column should contain atomic (single) values. No lists or arrays in a cell.
+
+✅ Good:
+
+ID	Phone
+1	+38012345
+
+❌ Bad:
+
+ID	Phones
+1	+38012345, +38067890
+
+"In my DB, every field like agent_id, conversation_id, etc., stores only one value per row."
+
+🔹 2nd Normal Form (2NF) – Remove partial dependencies
+Applies only to tables with composite primary keys
+
+Rule: Every non-key column must depend on the whole primary key, not just part of it.
+
+✅ Good:
+Split into:
+
+Order(id, customer_id)
+
+OrderItem(order_id, product_id, quantity)
+
+"In my DB, each table has a single primary key (like id) and all columns describe that row only."
+
+🔹 3rd Normal Form (3NF) – Remove transitive dependencies
+Rule: Columns should only depend on the primary key, not on other non-key columns.
+
+❌ Bad:
+| EmployeeID | DepartmentID | DepartmentName |
+
+Here, DepartmentName depends on DepartmentID, not on EmployeeID directly.
+
+✅ Good:
+Split into:
+
+Employee(id, department_id)
+
+Department(id, name)
+
+"In my schema, instead of putting everything into one table like automated_reviews, I created
+separate tables for sub-rules, speech tags, ranges, and so on. Each table stores only its specific
+piece of information and links to others through foreign keys."
+
+🎯 Final Sentence You Can Say
+"By normalizing up to 3NF, I made sure the database is clean, avoids duplication, and is easier
+to maintain and scale. Every table has a clear purpose, and related data is connected using foreign keys.
+That keeps everything organized and consistent."
+
+
+
+
+Where to add indexes:
+
+Foreign key	✅ Yes	Used in joins
+WHERE clauses	✅ Yes	Speeds up filtering
+JOIN conditions	✅ Yes	Essential for performance
+ORDER BY columns	✅ Optional	If sorting is common
+Composite filters	✅ Optional	For multi-column filters
