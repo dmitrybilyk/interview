@@ -39,6 +39,7 @@ public class Main {
     Book book = new Book("The Great Gatsby", "F. Scott Fitzgerald");
     PrintSomething printer = new PrintSomething();
 
+
     // Using PrintSomething to print book details
     printer.print(book.getBookDetails());
   }
