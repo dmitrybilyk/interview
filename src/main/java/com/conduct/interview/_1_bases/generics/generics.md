@@ -1,10 +1,11 @@
-`Covariance` is a restriction in java related to having the same
+Java is invariant by default. There is a restriction in java related to having the same
 type of reference type and object in generic object declaration:
 
+it's not possible:
 `List<Person> studentList = new ArrayList<Student>();`
 
 If it were possible then we would not be able to rely on generics,
-type consistency would be broken.
+type consistency would be broken. We could then add person type to list of students.
 
 `Covariance` - is an ability with help of `? extends <smthn>`
 to a method parameter to allow to read type and it's parent. 
