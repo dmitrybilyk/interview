@@ -37,7 +37,8 @@ Preparing for an interview on **Spring** and **Spring Boot**, including understa
 
 6. **Spring Security**
     - Handles authentication (e.g., OAuth2, JWT) and authorization.
-    - **Your Experience**: You removed deprecated `WebSecurityConfigurerAdapter` during the Spring Boot 3 upgrade, indicating exposure to Spring Security.
+    - **Your Experience**: You removed deprecated `WebSecurityConfigurerAdapter` 
+   during the Spring Boot 3 upgrade, indicating exposure to Spring Security.
 
 ---
 
