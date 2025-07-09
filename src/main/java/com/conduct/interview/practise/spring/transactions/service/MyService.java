@@ -34,8 +34,8 @@ public class MyService {
         repository.save(entity2);
         
         // Throwing an exception to test rollback behavior
-        if (true) {
-            throw new RuntimeException("Simulating an error");
-        }
+//        if (true) {
+//            throw new RuntimeException("Simulating an error");
+//        }
     }
 }

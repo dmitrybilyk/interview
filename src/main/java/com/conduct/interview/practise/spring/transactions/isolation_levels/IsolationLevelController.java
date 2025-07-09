@@ -1,6 +1,7 @@
 package com.conduct.interview.practise.spring.transactions.isolation_levels;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -11,6 +12,7 @@ import java.util.concurrent.Future;
 
 @RestController
 @Slf4j
+@Profile("postgres")
 public class IsolationLevelController {
 
     private final ReadBalanceService readBalanceService;
@@ -50,3 +52,12 @@ public class IsolationLevelController {
         return "Transactions executed. Check the console output for isolation level effects.";
     }
 }
+
+
+//INSERT INTO my_entity (id, name) VALUES
+//                                 (1, 'Initial Entity 1'),
+//                                         (2, 'Initial Entity 2');
+//
+//INSERT INTO account (owner, balance) VALUES
+//                                         ('John Doe', 100),
+//                                                 ('Jane Smith', 200);

@@ -1,6 +1,7 @@
 package com.conduct.interview.practise.spring.transactions.isolation_levels;
 
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Profile;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
@@ -8,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
+@Profile("postgres")
 public class AddBalanceService {
 
     private final JdbcTemplate jdbcTemplate;
