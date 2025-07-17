@@ -1,5 +1,5 @@
 A data structure is a storage that is used to store and organize data.
-1. Linear data structures (element are placed sequentially, elements
+1. Linear data structures (elements are placed sequentially, elements
 have connections to other elements):
 - static (fixed memory size): array;
 - dynamic (size can be changed at runtime): stack, queue, LinkedList.

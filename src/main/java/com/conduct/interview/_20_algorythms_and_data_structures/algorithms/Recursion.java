@@ -16,14 +16,14 @@ public class Recursion {
   private static final int distance = 1000;
 
   public static void main(String[] args) {
-    iterativeApproach();
-    recursionApproach(1);
+//    iterativeApproach();
+//    recursionApproach(1);
 
     var factorialCalculator = new FactorialCalculator();
     System.out.println(factorialCalculator.factorial(5));
 
-    var fiboCalculator = new FiboCalculator();
-    System.out.println(fiboCalculator.fibo(5));
+//    var fiboCalculator = new FiboCalculator();
+//    System.out.println(fiboCalculator.fibo(5));
   }
 
   private static void iterativeApproach() {
@@ -31,6 +31,8 @@ public class Recursion {
       System.out.println("step " + i);
     }
   }
+
+//  public
 
   private static void recursionApproach(int step) {
     if (step <= distance) {

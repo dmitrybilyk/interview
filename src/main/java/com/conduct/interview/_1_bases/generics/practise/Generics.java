@@ -4,19 +4,85 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public class Generics {
 
     public static void main(String[] args) {
-        List<Person> people = List.of(new Person("Alice", 30), new Person("Bob", 25));
-        ProcessorRegistry registry = new ProcessorRegistry();
-        registry.register(Person.class, new PersonListProcessor());
+//        List<Person> people = List.of(new Person("Alice", 30), new Person("Bob", 25));
+//        ProcessorRegistry registry = new ProcessorRegistry();
+//        registry.register(Person.class, new PersonListProcessor());
+//
+//        AbstractProcessor<Person, List<Person>> personProcessor = registry.get(Person.class);
+//
+//        personProcessor.process(people);
 
-        AbstractProcessor<Person, List<Person>> personProcessor = registry.get(Person.class);
+        List<Person> people = List.of(
+                new Person("Alice", 30),
+                new Person("Bob", 20),
+                new Person("Carol", 35)
+        );
 
-        personProcessor.process(people);
+        PipelineProcessor<Person, Person> processor =
+                new PipelineProcessor<>(
+                        person -> person.getAge() > 20,
+                        Function.identity(),
+                        new PersonNameExporter()
+                );
+
+        List<String> result = processor.process(people);
+        result.forEach(System.out::println);
+
     }
 
+}
+
+
+interface Exporter<T> {
+    String export (T item);
+}
+
+class PipelineProcessor<T, R> {
+    private final Predicate<? super T> filter;
+    private final Function<? super T, ? extends R> mapper;
+    private final Exporter<? super R> exporter;
+
+    public PipelineProcessor(
+            Predicate<? super T> filter,
+            Function<? super T, ? extends R> mapper,
+            Exporter<? super R> exporter
+    ) {
+        this.filter = filter;
+        this.mapper = mapper;
+        this.exporter = exporter;
+    }
+
+    public List<String> process(Collection<T> collection) {
+        return collection.stream()
+                .filter(filter)
+                .map(mapper)
+                .map(exporter::export)
+                .collect(Collectors.toList());
+    }
+
+}
+
+class StringExporter implements Exporter<String> {
+
+    @Override
+    public String export(String item) {
+        return "[[" + item + "]]";
+    }
+}
+
+class PersonNameExporter implements Exporter<Person> {
+
+    @Override
+    public String export(Person item) {
+        return item.getName();
+    }
 }
 
 class ProcessorRegistry {
