@@ -5,7 +5,7 @@ public class DecoratorPattern {
     TShirtProducer tShirtProducer =
         new WaterProofTShirtDecorator(
             new ColorfulTShirtDecorator(
-                //				new SimpleTShirtProducer()
+                				new SimpleTShirtProducer()
                 ));
     tShirtProducer.produceTShirt();
   }

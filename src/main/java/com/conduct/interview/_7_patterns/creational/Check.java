@@ -16,61 +16,114 @@ public class Check {
         Product product = productFactory.createProduct();
         System.out.println(product.toString());
 
+        ProductFactoryProvider productFactoryProvider = ProductFactoryProvider.getInstance();
+        ProductFactory productFactory1 = productFactoryProvider.getProductFactory();
+        Product product1 = productFactory1.createProduct();
+        System.out.println("Name - " + product1.getName() + ", type - " + product1.getType());
     }
 }
 
+class ProductFactoryProvider {
+    private final ProductFactory productFactory;
+
+    private ProductFactoryProvider() {
+        boolean badProductEnabled = Boolean.getBoolean("bad.product.enabled");
+        if (badProductEnabled) {
+            productFactory = new BadProductFactory();
+        } else {
+            productFactory = new GoodProductFactory();
+        }
+    }
+
+    public static ProductFactoryProvider getInstance() {
+        return SingletonHolder.INSTANCE;
+    }
+
+    public ProductFactory getProductFactory() {
+        return productFactory;
+    }
+
+    private static class SingletonHolder {
+        private final static ProductFactoryProvider INSTANCE = new ProductFactoryProvider();
+    }
+}
+
+class Customer {
+    private String name;
+    private Customer(String name) {
+        this.name = name;
+    }
+
+    public static Customer createCustomer(String name) {
+        return new Customer(name);
+    }
+}
 
 class Product {
     enum ProductType {
         GOOD, BAD
     }
     private String name;
+    private ProductType type;
+
+    public Product(String name, ProductType type) {
+        this.name = name;
+        this.type = type;
+    }
 
     public String getName() {
         return name;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public ProductType getType() {
+        return type;
     }
+
 }
 
 class GoodProduct extends Product {
-
+    public GoodProduct(String name, ProductType type) {
+        super(name, type);
+    }
 }
 
 class BadProduct extends Product {
-
-}
-
-
-
-abstract class ProductFactory {
-    public abstract Product createProduct();
-}
-
-class GoodProductFactory extends ProductFactory {
-
-    @Override
-    public Product createProduct() {
-        return new GoodProduct();
-    }
-}
-
-class BadProductFactory extends ProductFactory {
-
-    @Override
-    public Product createProduct() {
-        return new BadProduct();
+    public BadProduct(String name, ProductType type) {
+        super(name, type);
     }
 }
 
 
-class SimpleFactory {
+
+interface ProductFactory {
+    Product createProduct();
+}
+
+class GoodProductFactory implements ProductFactory {
+
+    @Override
+    public Product createProduct() {
+        return new GoodProduct("Good Product", Product.ProductType.GOOD);
+    }
+}
+
+class BadProductFactory implements ProductFactory {
+
+    @Override
+    public Product createProduct() {
+        return new BadProduct("Bad Product", Product.ProductType.BAD);
+    }
+}
+
+
+final class SimpleFactory {
+    private SimpleFactory() {
+    }
+
     public static Product create(Product.ProductType type) {
         return switch (type) {
-            case GOOD -> new GoodProduct();
-            case BAD -> new BadProduct();
+            case GOOD -> new GoodProduct("Bad Product", Product.ProductType.GOOD);
+            case BAD -> new BadProduct("Bad Product", Product.ProductType.BAD);
             default -> throw new IllegalArgumentException("Unknown product type: " + type);
         };
     }
