@@ -126,6 +126,8 @@ dependencies {
         implementation("org.springframework.boot:spring-boot-starter-amqp")
         implementation("org.springframework.boot:spring-boot-starter-aop")
         implementation("org.springframework.boot:spring-boot-starter-data-redis")
+        implementation("org.apache.cxf:cxf-spring-boot-starter-jaxws:4.0.0")
+        implementation("org.springframework.ws:spring-ws-core")
         implementation("redis.clients:jedis")
 //    }
     implementation("org.springframework.boot:spring-boot-starter-actuator")

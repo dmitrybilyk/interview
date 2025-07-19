@@ -8,7 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
-@Profile("rabbit")
+//@Profile("rabbit")
 public class RabbitController {
 
   @Autowired private MessageProducer messageProducer;

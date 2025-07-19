@@ -5,7 +5,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
 @Service
-@Profile("rabbit")
+//@Profile("rabbit")
 public class MessageConsumer {
 
   @RabbitListener(queues = "my_queue")
