@@ -9,6 +9,8 @@ public class RecursiveBinarySearch {
     } else {
       System.out.println("Found " + result);
     }
+
+    System.out.println(binarySearchRecursive(sortedArray, 0, sortedArray.length - 1, 7));
   }
 
   private static int binarySearch(int[] arr, int first, int last, int key) {
@@ -32,4 +34,20 @@ public class RecursiveBinarySearch {
     // in array
     return -1;
   }
+
+
+  public static int binarySearchRecursive(int[] array, int first, int last, int key) {
+    if (last >= first) {
+      int mid = first + (last - first) / 2;
+      if (array[mid] == key) {
+        return mid;
+      } else if (array[mid] > key) {
+        return binarySearchRecursive(array, first, mid - 1, key);
+      } else {
+        return binarySearchRecursive(array, mid + 1, last, key);
+      }
+    }
+    return -1;
+  }
+
 }

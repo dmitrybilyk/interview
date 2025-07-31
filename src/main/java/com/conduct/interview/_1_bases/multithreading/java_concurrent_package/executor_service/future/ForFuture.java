@@ -18,7 +18,7 @@ public class ForFuture {
             System.out.println("Doing some work");
         }
 
-        Thread.sleep(1000);
+        Thread.sleep(3000);
 
         if (future.isDone()) {
             System.out.println("Done");
