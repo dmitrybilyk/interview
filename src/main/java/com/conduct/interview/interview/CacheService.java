@@ -18,7 +18,7 @@
 //
 //    public List<String> get(String[] key) {
 //            List<String> actualKey = List.of(key);
-//            return cache.computeIfAbsent(actualKey, externalService.get(key));
+//            return cache.computeIfAbsent(actualKey, k -> externalService.get());
 //
 //    }
 //}
