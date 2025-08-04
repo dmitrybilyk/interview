@@ -3,20 +3,25 @@ package com.conduct.interview._7_patterns.behavioral.templatemethod;
 public class TemplateMethod {
   public static void main(String[] args) {
     BuildingHouse buildingHouse = new BuildingTheCheapHouse();
-    buildingHouse.buildingBasement();
-    buildingHouse.buildTheFloor();
-    buildingHouse.buildTheBox();
+    buildingHouse.buildHouse();
   }
 }
 
 abstract class BuildingHouse {
-  void buildingBasement() {
+
+  void buildHouse() {
+    buildingBasement();
+    buildTheFloor();
+    buildTheBox();
+  }
+
+  private void buildingBasement() {
     System.out.println("Building the basement");
   }
 
-  abstract void buildTheFloor();
+  protected abstract void buildTheFloor();
 
-  abstract void buildTheBox();
+  protected abstract void buildTheBox();
 }
 
 class BuildingTheCheapHouse extends BuildingHouse {

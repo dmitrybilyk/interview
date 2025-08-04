@@ -1,6 +1,4 @@
 import org.gradle.kotlin.dsl.*
-import org.springframework.boot.gradle.tasks.run.BootRun
-import java.io.IOException
 
 
 plugins {
@@ -139,6 +137,7 @@ dependencies {
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
     testImplementation("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.mockito:mockito-inline:5.2.0")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     implementation(kotlin("stdlib-jdk8"))
 }
