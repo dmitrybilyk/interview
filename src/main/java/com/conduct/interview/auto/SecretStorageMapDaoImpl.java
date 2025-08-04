@@ -3,7 +3,7 @@ package com.conduct.interview.auto;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class SecretStorageIntegerMapDaoImpl<K, V> implements SecretStorageDao<K, V> {
+public class SecretStorageMapDaoImpl<K, V> implements SecretStorageDao<K, V> {
     private final Map<K, V> storage = new ConcurrentHashMap<>();
 
     @Override
