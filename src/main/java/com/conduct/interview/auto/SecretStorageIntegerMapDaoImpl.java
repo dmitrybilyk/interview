@@ -3,21 +3,21 @@ package com.conduct.interview.auto;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class SecretStorageIntegerMapDaoImpl implements SecretStorageDao {
-    private final Map<Integer, String> storage = new ConcurrentHashMap<>();
+public class SecretStorageIntegerMapDaoImpl<K, V> implements SecretStorageDao<K, V> {
+    private final Map<K, V> storage = new ConcurrentHashMap<>();
 
     @Override
-    public void store(Integer key, String secret) {
+    public void store(K key, V secret) {
         this.storage.put(key, secret);
     }
 
     @Override
-    public String retrieve(Integer key) {
+    public V retrieve(K key) {
         return this.storage.get(key);
     }
 
     @Override
-    public boolean keyExists(Integer key) {
+    public boolean keyExists(K key) {
         return this.storage.containsKey(key);
     }
 }

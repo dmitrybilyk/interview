@@ -1,9 +1,9 @@
 package com.conduct.interview.auto;
 
-public interface SecretStorageDao {
-    void store(String key, String secret);
+public interface SecretStorageDao<K, V> {
+    void store(K key, V secret);
 
-    String retrieve(String key);
+    V retrieve(K key);
 
-    boolean keyExists(String key);
+    boolean keyExists(K key);
 }
