@@ -19,7 +19,7 @@ public class Main {
         t2.join();
         t3.join();
 
-        System.out.println("Counter value - " + myService.getCounter());
+        System.out.println("Counter value - " + myService.getCounterValue());
 
 //        System.out.println("In main");
 
@@ -39,6 +39,8 @@ class MyRunnable implements Runnable {
 
     @Override
     public void run() {
+        int ref3 = System.identityHashCode(myService.getCounter());
+        System.out.println("Thread  at beginning 1 "+ ref3);
         for (int i = 0; i < 1000; i++) {
             if (i == 500) {
                 myService.setCounter(new AtomicInteger());
@@ -46,7 +48,11 @@ class MyRunnable implements Runnable {
             myService.incrementCounter();
         }
         myService.doSomething();
-        System.out.println("Thread 1");
+        int ref =System.identityHashCode(myService.getCounter());
+        System.out.println("Thread 2 "+ ref);
+
+        int ref2 = System.identityHashCode(myService.getCounter());
+        System.out.println("Thread 2 "+ ref2);
     }
 }
 
@@ -58,12 +64,15 @@ class MyRunnable2 implements Runnable {
 
     @Override
     public void run() {
-        System.out.println("current - " + myService.getCounter());
+        int ref2 = System.identityHashCode(myService.getCounter());
+        System.out.println("Thread  at beginning 1 "+ ref2);
+        System.out.println("current - " + myService.getCounterValue());
         for (int i = 0; i < 1000; i++) {
             myService.incrementCounter();
         }
         myService.doSomething();
-        System.out.println("Thread 1");
+        int ref = System.identityHashCode(myService.getCounter());
+        System.out.println("Thread 1 "+ ref);
     }
 }
 
@@ -77,8 +86,12 @@ class MyThread extends Thread {
 class MyService {
     private AtomicInteger counter = new AtomicInteger();
 
-    public int getCounter() {
+    public int getCounterValue() {
         return counter.get();
+    }
+
+    public AtomicInteger getCounter() {
+        return counter;
     }
 
     public void setCounter(AtomicInteger counter) {
