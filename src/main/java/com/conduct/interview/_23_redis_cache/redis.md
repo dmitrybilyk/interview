@@ -1,6 +1,6 @@
 # Redis: Key Concepts
 
-Redis is an in-memory data store used as a database, cache, and message broker.
+Redis is an in-memory data store used as a database, LRUCache, and message broker.
 
 ## Main Data Structures
 - **Strings**: Simple values, up to 512MB.

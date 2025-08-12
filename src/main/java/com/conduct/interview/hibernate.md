@@ -38,7 +38,7 @@ features for efficient data handling.
 
 4. **Caching**
     - **First-Level Cache**: Enabled by default within a `Session` to reduce database queries.
-    - **Second-Level Cache**: Optional, application-wide cache (e.g., using Ehcache or Redis).
+    - **Second-Level Cache**: Optional, application-wide LRUCache (e.g., using Ehcache or Redis).
     - **Query Cache**: Caches query results for repeated queries.
     - **Your Experience**: Your focus on performance (e.g., GraalVM optimization) suggests you’ve considered caching 
     for efficiency.
