@@ -27,10 +27,10 @@ public class LruCacheCheck {
         }
     }
 
-    public String getValue(int key) {
-        LinkedListNode linkedListNode = cache.get(key);
-
-    }
+//    public String getValue(int key) {
+//        LinkedListNode linkedListNode = cache.get(key);
+//
+//    }
 
     public void setKeyValue(int key, String value) {
         if (cache.size() >= maxSize) {
