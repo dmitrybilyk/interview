@@ -6,24 +6,23 @@ import java.time.Duration
 
 fun main() {
 
-    val aaplFlux = stockFeed("AAPL")
-    val googFlux = stockFeed("GOOG")
-
-    Flux.merge(aaplFlux, googFlux)
-        .log()
-        .filter { it.price > 150 }
-        .take(5)
-        .sample(Duration.ofMillis(500))
-        .buffer(3)
-        .subscribeOn(Schedulers.parallel())
-        .subscribe { println(it) }
-
-    sleep(5000)
+    getBookTitles()
+        .flatMap { title ->
+            getAuthor(title)
+                .map { Book(title, it) }
+        }
+        .collectList()
+        .subscribe{ println(it) }
 }
 
-data class StockPrice(val symbol: String, val price: Double)
+data class Book(val title: String, val author: String)
 
-fun stockFeed(symbol: String): Flux<StockPrice> =
-    Flux.interval(Duration.ofMillis(300))
-        .map { StockPrice(symbol, (100..200).random().toDouble()) }
-        .take(10) // simulate 10 updates
+fun getBookTitles(): Flux<String> = Flux.just("1984", "Brave New World", "Fahrenheit 451")
+
+fun getAuthor(title: String): Mono<String> =
+    when(title) {
+        "1984" -> Mono.just("George Orwell")
+        "Brave New World" -> Mono.just("Aldous Huxley")
+        "Fahrenheit 451" -> Mono.just("Ray Bradbury")
+        else -> Mono.empty()
+    }
