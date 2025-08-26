@@ -1,0 +1,11 @@
+#server:
+#  port: 8443
+#  ssl:
+#    enabled: true
+#    key-store: classpath:server.p12
+#    key-store-password: password
+#    key-store-type: PKCS12
+#    key-alias: server
+#    client-auth: need
+#    trust-store: classpath:server-truststore.p12
+#    trust-store-password: password
