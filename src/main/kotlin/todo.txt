@@ -1,0 +1,3 @@
+1. to try jpms
+2. Jackson and object mapper to play
+3. load of certs in console app in kotlin
