@@ -22,15 +22,24 @@ fun main() {
     println(countTo100())
 }
 
+//fun countTo100() =
+//     with(StringBuilder()) {
+//        for (i in 1..99) {
+//            append(i)
+//            append(", ")
+//        }
+//        append(100)
+//        toString()
+//}
+
 fun countTo100() =
-     with(StringBuilder()) {
+    StringBuilder().apply {
         for (i in 1..99) {
             append(i)
             append(", ")
         }
         append(100)
-        toString()
-}
+    }.toString()
 
 fun topLevel() = println("Im in a function")
 
