@@ -9,6 +9,8 @@ public class Check {
         System.out.println(fibonacciRecursive(5));
     }
 
+
+
     private static long countFibonacci(int n) {
 
         if (n <= 1) return n;
