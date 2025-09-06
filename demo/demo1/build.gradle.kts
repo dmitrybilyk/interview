@@ -17,3 +17,24 @@ dependencies {
 tasks.test {
     useJUnitPlatform()
 }
+
+tasks.register<Copy>("copyProps") {
+    rename("application.properties", "dmytro.yml")
+    from("src/main/resources")
+    into(layout.buildDirectory.dir("result"))
+    include("application*")
+}
+
+tasks.named<ProcessResources>("processResources") {
+    filesMatching("application.properties") {
+        expand(
+            "version" to project.version,
+            "group" to project.group,
+//            "someValue" to project.findProperty("someValue") ?: "defaultValue"
+        )
+    }
+}
+
+tasks.named("build") {
+    dependsOn("copyProps")
+}
