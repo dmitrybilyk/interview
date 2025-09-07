@@ -1,5 +1,7 @@
 package com.conduct.interview.design_classes.zoo.model;
 
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,6 +14,13 @@ interface Identifiable {
 
 enum VehicleType {
     CAR, BUS, TRUCK
+}
+
+abstract class CivilVehicle extends Vehicle implements Passengerable {
+
+    protected CivilVehicle(String id, String model, int capacity, VehicleType type) {
+        super(id, model, capacity, type);
+    }
 }
 
 // --- Abstract Base ---
@@ -27,6 +36,16 @@ abstract class Vehicle implements Identifiable {
         this.capacity = capacity;
         this.type = type;
     }
+
+    void doAnnualCheckup() {
+        provideInfo();
+        System.out.println("Annual checkup for Vehicle");
+        System.out.println("price is - " + calculatePrice());
+    }
+
+    protected abstract void provideInfo();
+
+    protected abstract int calculatePrice();
 
     @Override
     public String getId() { return id; }
@@ -44,16 +63,117 @@ abstract class Vehicle implements Identifiable {
 }
 
 // --- Subclasses ---
-final class Car extends Vehicle {
+final class Car extends CivilVehicle {
     public Car(String id, String model, int capacity) {
         super(id, model, capacity, VehicleType.CAR);
     }
+
+    @Override
+    void doAnnualCheckup() {
+        super.doAnnualCheckup();
+        System.out.println("Annual checkup for Vehicle");
+    }
+
+    @Override
+    protected void provideInfo() {
+        System.out.println("info about Car");
+    }
+
+    @Override
+    protected int calculatePrice() {
+        return 500;
+    }
+
+    @Override
+    public int getPassengersCount() {
+        return 4;
+    }
+
+    @Override
+    public void feedPassengers() {
+        System.out.println("We are feeding of the car passengers - " + getPassengersCount());
+    }
 }
 
-final class Bus extends Vehicle implements Routable {
+final class Bus extends CivilVehicle implements Routable {
     public Bus(String id, String model, int capacity) {
         super(id, model, capacity, VehicleType.BUS);
     }
+
+    @Override
+    public int getPassengersCount() {
+        return 50;
+    }
+
+    @Override
+    public void feedPassengers() {
+        System.out.println("We are feeding passengers of the bus - " + getPassengersCount());
+    }
+
+    @Override
+    protected void provideInfo() {
+        System.out.println("providing info about Bus");
+    }
+
+    @Override
+    protected int calculatePrice() {
+        System.out.println("Calculating for bus");
+        return 1000;
+    }
+}
+
+abstract class Restaurant {
+    void buySources() {
+        System.out.println("buying source for food");
+    }
+    void cookFood() {
+        System.out.println("cooking food");
+    }
+    abstract <T extends CivilVehicle> void doService(T t);
+}
+
+class CheapRestaurant extends Restaurant {
+
+    @Override
+    public void buySources() {
+        super.buySources();
+        System.out.println("really cheap");
+    }
+
+    @Override
+    public void cookFood() {
+        super.cookFood();
+        System.out.println("low quality of food cooking");
+    }
+
+    @Override
+    <T extends CivilVehicle> void doService(T t) {
+        System.out.println("doing food service");
+        t.feedPassengers();
+    }
+
+}
+
+class ExpensiveRestaurant extends Restaurant {
+
+    @Override
+    public void buySources() {
+        super.buySources();
+        System.out.println("really best quality");
+    }
+
+    @Override
+    public void cookFood() {
+        super.cookFood();
+        System.out.println("best quality of food cooking");
+    }
+
+    @Override
+    <T extends CivilVehicle> void doService(T t) {
+        System.out.println("doing best food service");
+        t.feedPassengers();
+    }
+
 }
 
 final class Truck extends Vehicle implements Routable {
@@ -63,6 +183,23 @@ final class Truck extends Vehicle implements Routable {
         this.maxLoadKg = maxLoadKg;
     }
     public int getMaxLoadKg() { return maxLoadKg; }
+
+
+    @Override
+    void doAnnualCheckup() {
+        super.doAnnualCheckup();
+        System.out.println("Annual checkup for Truck");
+    }
+
+    @Override
+    protected void provideInfo() {
+        System.out.println("Info about truck");
+    }
+
+    @Override
+    protected int calculatePrice() {
+        return 2000;
+    }
 }
 
 // --- Factory ---
@@ -249,50 +386,109 @@ class RoutableMaintenanceService {
     }
 }
 
+interface ServiceProvider {
+    <T> void register(ServiceKey<T> key, T service);
+    <T> Optional<T> get(ServiceKey<T> key);
+}
+
+class SimpleServiceProvider implements ServiceProvider {
+    private final Map<ServiceKey<?>, Object> services = new ConcurrentHashMap<>();
+
+    @Override
+    public <T> void register(ServiceKey<T> key, T service) {
+        services.put(key, service);
+    }
+
+    @SuppressWarnings("unchecked")
+    @Override
+    public <T> Optional<T> get(ServiceKey<T> key) {
+        return Optional.ofNullable((T) services.get(key));
+    }
+}
+
+
+abstract class ServiceKey<T> {
+    private final Type type;
+
+    protected ServiceKey() {
+        Type superClass = getClass().getGenericSuperclass();
+        if (superClass instanceof ParameterizedType) {
+            this.type = ((ParameterizedType) superClass).getActualTypeArguments()[0];
+        } else {
+            throw new IllegalArgumentException("Missing type parameter.");
+        }
+    }
+
+    public Type getType() {
+        return type;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof ServiceKey<?> other)) return false;
+        return Objects.equals(type, other.type);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type);
+    }
+
+    @Override
+    public String toString() {
+        return "ServiceKey<" + type.getTypeName() + ">";
+    }
+}
+
+interface Passengerable {
+    int getPassengersCount();
+    void feedPassengers();
+}
+
 // --- Demo ---
 public class FleetDemo {
     public static void main(String[] args) {
-        FleetRepository<Car> fleetRepository = new InMemoryFleetRepository();
-        FleetService<Car> carFleetService = new FleetServiceCarImpl(fleetRepository);
+        ServiceProvider provider = new SimpleServiceProvider();
 
-        FleetRepository<Bus> busFleetRepository = new InMemoryBusRepository();
-        FleetService<Bus> busFleetService = new FleetServiceBusImpl(busFleetRepository);
+        FleetService<Car> carService = new FleetServiceCarImpl(new InMemoryFleetRepository());
+        FleetService<Bus> busService = new FleetServiceBusImpl(new InMemoryBusRepository());
+        MaintenanceService<Car> carMaintenance = new CarMaintenanceService();
+
+        // Register by type
+        provider.register(new ServiceKey<>() {
+        }, carService);
+        provider.register(new ServiceKey<>() {
+        }, busService);
+        provider.register(new ServiceKey<>() {
+        }, carMaintenance);
+
+        // Retrieve and use
+        FleetService<Car> cs = provider.get(new ServiceKey<FleetService<Car>>() {}).orElseThrow();
+        FleetService<Bus> bs = provider.get(new ServiceKey<FleetService<Bus>>() {}).orElseThrow();
 
         Car car = VehicleFactory.createCar("Toyota Corolla", 5);
         Bus bus = VehicleFactory.createBus("Mercedes Sprinter", 20);
-        Truck truck = VehicleFactory.createTruck("Volvo FH", 2, 12000);
 
-        carFleetService.register(car);
+        cs.register(car);
+        bs.register(bus);
 
-        busFleetService.register(bus);
+        car.doAnnualCheckup();
 
-        MaintenanceService<Car> carMaintenanceService = new CarMaintenanceService();
-        carMaintenanceService.performCheckup(car);
+        System.out.println("Cars: " + cs.listAll());
+        System.out.println("Buses: " + bs.listAll());
 
-        RouteService routeService = new RouteService();
-        routeService.assignRoute(bus, "To Kharkiv");
-        routeService.assignRoute(truck, "To Kharkiv2");
+        Restaurant restaurant = new CheapRestaurant();
+        restaurant.buySources();
+        restaurant.cookFood();
+        restaurant.doService(bus);
+        restaurant.doService(car);
 
-        TruckLogisticsService truckLogisticsService = new TruckLogisticsService();
-        truckLogisticsService.calculateLoad(truck, 2000);
+        bus.doAnnualCheckup();
 
-        System.out.println("All vehicles: " + carFleetService.listAll());
-        System.out.println("Find buses: " + busFleetService.listAll());
-
-        RoutableMaintenanceService routableMaintenanceService = new RoutableMaintenanceService();
-        routableMaintenanceService.scheduleMaintenance(
-                LocalDate.now().plusDays(2),
-                truck);
-        routableMaintenanceService.scheduleMaintenance(
-                LocalDate.now().plusDays(3),
-                bus
-        );
-
-        Bus anotherBus = new Bus("newId", "Volvun", 50);
-
-        routableMaintenanceService.getMaintenanceDate(anotherBus)
-                .ifPresentOrElse(System.out::println,
-                        () -> System.out.println("No value for - " + anotherBus.getId()));
-
+        Restaurant goodRestaurant = new ExpensiveRestaurant();
+        goodRestaurant.buySources();
+        goodRestaurant.cookFood();
+        goodRestaurant.doService(bus);
     }
 }
