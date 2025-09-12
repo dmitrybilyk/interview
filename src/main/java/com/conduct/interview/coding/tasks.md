@@ -13,7 +13,7 @@ Implement Two-Level Cache (memory + disk).
 
 2️⃣ Rate Limiting / Retry / Throttling
 
-Sliding Window Rate Limiter – allow only N requests per time window.
+Sliding Window Rate Limiter – allow only N requests per time window. DONE
 
 Token Bucket Rate Limiter – refill tokens over time.
 
@@ -27,9 +27,11 @@ Request Debouncing / Throttling – merge or limit rapid calls.
 
 3️⃣ Data Structure Design
 
-Implement Thread-Safe Bounded Queue (producer-consumer).
+Implement Priority Queue / Min-Max Heap from scratch. IN_PROGRESS
 
-Implement Priority Queue / Min-Max Heap from scratch.
+Implement Disjoint Set / Union-Find with path compression.
+
+Implement Thread-Safe Bounded Queue (producer-consumer).
 
 Implement Concurrent HashMap with segment locking or CAS.
 
@@ -37,7 +39,6 @@ Implement Circular Buffer / Ring Buffer with overwrites.
 
 Implement Bloom Filter for probabilistic membership checks.
 
-Implement Disjoint Set / Union-Find with path compression.
 
 4️⃣ Scheduling / Timing
 
