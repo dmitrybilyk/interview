@@ -1,0 +1,20 @@
+DmitryBilyk
+t7yOFp2v1tAL1XSk
+
+mongodb+srv://dmitrybilyk:t7yOFp2v1tAL1XSk@cluster0.jl1clmw.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+
+mongodb://user123:pass123@localhost:27017
+
+https://atlas-education.s3.amazonaws.com/sampledata.archive
+
+docker cp sampledat.archive my-mongo:/sampledata.archive
+
+# Restore archive inside container
+docker exec -it my-mongo mongorestore --host localhost:27017 --username user123 --password pass123 --archive=/sampledat.archive
+
+docker exec -it my-mongo mongosh --username user123 --password pass123 --eval "show dbs;"
+
+npm install mongodb
+
+npm init -y
+
