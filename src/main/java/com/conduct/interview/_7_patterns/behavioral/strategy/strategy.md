@@ -1,4 +1,4 @@
-The Strategy pattern allows defining a family of algorithms, encapsulating
+The Strategy pattern allows defining a comunity of algorithms, encapsulating
 each one, and making them interchangeable. The algorithm can vary independently
 of clients using it.
 
