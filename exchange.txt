@@ -1,1 +1,3 @@
 git@github.com:dmitrybilyk/simple-java-maven-app.git
+
+https://github.com/in28minutes/clean-code
