@@ -3,6 +3,7 @@ package com.conduct.interview.practise.spring.security;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -52,7 +53,7 @@ public class SecurityConfig {
                     .requestMatchers("/public/**").permitAll() // public endpoints
                     .anyRequest().authenticated()
             )
-            .httpBasic(); // Enable HTTP Basic auth explicitly
+            .httpBasic(Customizer.withDefaults()); // Enable HTTP Basic auth explicitly
 
         return http.build();
     }
