@@ -1,0 +1,18 @@
+1-5	Comments	Instructs to use the latest Java base image.
+6	FROM docker-enterprise-prod…oracle-jdk-rhel8:17.0.6-1-latest	Base image with Oracle JDK 17 on RHEL8. This is your runtime.
+8	ENV APP_SHORTNAME=aof-portal	Sets an environment variable with the app short name.
+9-12	LABEL	Adds metadata labels (app description, team email, ID, maintainer). Helps with tracking.
+13-17	RUN commands	Prepares /opt/appdyn folder, sets permissions, copies the Java agent (AppDynamics agent) into place.
+18	RUN umask 0002	Default file permission mask (group-write enabled).
+20-21	Install OpenSSH clients and Filebeat	yum installs packages inside the image. OpenSSH clients allow SSH/scp if needed; Filebeat collects logs.
+22	Configure app config path	Sets up environment variables for where certs/config will live.
+24-26	ENV for config and logs	Prepares variables for later in entrypoint script.
+28	EXPOSE 8080	Exposes port 8080 to the outside (Spring Boot default port).
+29	ADD target/maven-spring-boot-hello.jar ...	Copies your built Spring Boot JAR into the image at $APPCONFIGPATH/app.jar.
+30	ENV JAVA_ARGS	Placeholder for Java arguments (filled later).
+32	ENTRYPOINT ["/bin/sh", "-c", "/opt/jkcertdir/custom_entrypoint.sh"]	Tells Docker what to run when the container starts. Here it runs your custom shell script.
+
+
+Big picture:
+This Dockerfile produces a RHEL-based Java 17 container with AppDynamics agent, OpenSSH, Filebeat, your Spring Boot JAR, and some environment variables, then sets a custom entrypoint script.
+

@@ -5,7 +5,7 @@ plugins {
     java
     id("org.springframework.boot") version "3.3.3"
     id("io.spring.dependency-management") version "1.1.6"
-    id("com.diffplug.spotless") version "6.22.0"
+//    id("com.diffplug.spotless") version "6.22.0"
     id("my-custom-plugin") // The plugin id is derived from the class name by default
     kotlin("jvm")
 }
@@ -15,22 +15,26 @@ plugins {
 group = "com.conduct"
 version = "0.0.1-SNAPSHOT"
 
-java {
-    toolchain {
-        languageVersion = JavaLanguageVersion.of(21)
-    }
+//java {
+//    toolchain {
+//        languageVersion = JavaLanguageVersion.of(21)
+//    }
+//}
+
+tasks.bootJar {
+    archiveFileName = "app.jar"
 }
 
-spotless {
-    java {
-        target("src/**/*.java")
-        googleJavaFormat() // Use Google Java Format
-    }
-    kotlin {
-        target("src/**/*.kt")
-        ktlint() // Use ktlint for Kotlin files
-    }
-}
+//spotless {
+//    java {
+//        target("src/**/*.java")
+//        googleJavaFormat() // Use Google Java Format
+//    }
+//    kotlin {
+//        target("src/**/*.kt")
+//        ktlint() // Use ktlint for Kotlin files
+//    }
+//}
 
 //// Create a custom task to run Docker Compose up
 //tasks.register<DefaultTask>("dockerComposeUp") {

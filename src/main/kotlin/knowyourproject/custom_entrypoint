@@ -1,0 +1,41 @@
+The custom_entrypoint.sh
+
+This is the script executed when the container starts.
+Its job is to set environment variables, prepare arguments, and run Java with the right options.
+
+Line	What it does
+#!/bin/bash	It’s a bash script.
+umask 0002	Default permissions group-write.
+PORT=8080	The app’s port.
+env_indicator=${ENVIRONMENT} + export env_indicator	Reads the ENVIRONMENT variable from the environment and stores it locally. (E.g. dev, test, prod).
+export APP_ARGS=...	Builds Java arguments for cert/config/log directories using environment variables defined in Dockerfile.
+echo "java version" + java -version	Prints the Java version inside the container. Useful for debugging.
+echo "Running on ${env_indicator} environment on port number $PORT"	Prints where you’re running.
+JAVA_CMD="java"	Command to run.
+JAR=${APPCONFIGPATH}/app.jar	Path to the jar copied by Dockerfile.
+JAVA_ARGS="$APPD_JAVA_AGENT -DAPP_SHORTNAME=$APP_SHORTNAME -Dspring.profiles.active=${env_indicator} ${CERTS} ${APP_ARGS}"	Composes all Java system properties and agent arguments.
+CMD="$JAVA_CMD -jar $JAVA_ARGS $JAR"	Assembles the final command.
+$CMD	Executes it.
+
+
+How it all fits together
+
+Build image → Dockerfile installs JDK, copies JAR, adds script.
+
+Run container → Docker uses the ENTRYPOINT to run custom_entrypoint.sh.
+
+Script → sets environment variables and starts the Spring Boot JAR with correct properties.
+
+Why they did it this way
+
+Dockerfile holds static build-time instructions.
+
+EntryPoint script handles run-time variability (e.g. which environment, cert paths).
+
+This separation lets you run the same image in different environments just by changing environment variables at container launch.
+
+TL;DR
+
+Dockerfile: builds the container image, installs dependencies, copies your app, sets environment variables, and tells Docker to run the entrypoint script.
+
+custom_entrypoint.sh: runs inside the container at startup, prepares config and launches your Java app with all necessary arguments.

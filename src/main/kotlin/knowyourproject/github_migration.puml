@@ -1,0 +1,47 @@
+@startuml Bitbucket to GitHub Migration Plan
+title Bitbucket to GitHub Migration Plan
+
+start
+
+:1. Get GitHub Account/Org;
+
+:2. Fix Dry-Run Migration Issues;
+note right
+  - Address long paths in `ui-mono-repo`
+  - Decrease number of branches (<100)
+  - Remove old feature/bugfix/test branches
+end note
+
+:3. Notify Team About Freeze;
+note right
+  - Inform others to avoid merging into Bitbucket
+end note
+
+:4. Execute Migration;
+
+:5. Update Project URLs;
+note right
+  - Replace `env.LS_BITBUCKET_URL`
+  - Developers should run:
+    `git remote set-url origin https://github.com/mycompany/my-repo.git`
+  - After this, everyone works from GitHub locally
+end note
+
+:6. Update Jenkins Credentials;
+note right
+  - Replace `omc-bitbucket-ssh` with `omc-github-ssh`
+  - Replace `omc-bitbucket` credentials in Jenkinsfile
+  - Fix screenshot push functionality
+  Questions:
+    a) Does GitHub provide SSH access? (Yes ✅)
+    b) Screenshot push not working now, correct? (Yes, needs fix)
+end note
+
+:7. Update Maven Settings (`buildinfra/settings.xml`);
+note right
+  - Currently uses `omc_bitbucket` / `${bitbucket_password}`
+  - Will we need a new user/token for Maven repo? (TBD)
+end note
+
+stop
+@enduml

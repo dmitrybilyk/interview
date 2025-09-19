@@ -6,8 +6,12 @@ public class Zoo {
 //        cage.setAnimal1(new Monkey());  // Compile ERROR!
 //    }
     public static void main(String[] args) {
-        Cage<Monkey> cage = new Cage<Monkey>(new Monkey(), new Monkey());
-        Monkey monkey = cage.getAnimal1();
+//        Cage<Monkey> cage = new Cage<Monkey>(new Monkey(), new Monkey());
+//        Monkey monkey = cage.getAnimal1();
+
+        Monkey monkey1  = new Monkey();
+        Monkey monkey2 = new Monkey();
+        System.out.println(Cage.isCompatible(monkey1, monkey2));
 
 //        Cage<Lion> lionCage = new Cage<>();
 //        lionCage.setAnimal1(new Lion());
@@ -53,6 +57,10 @@ class Cage<E extends Animal & Eats & Runs> {
         animal1.eat();
         animal2.eat();
 //        animal1.run();
+    }
+
+    public static <E extends Animal> boolean isCompatible(E animal1, E animal2) {
+        return animal1.getType().equals(animal2.getType());
     }
 }
 
