@@ -15,6 +15,8 @@ echo "Running on ${env_indicator} environment on port number $PORT"
 JAVA_CMD="java"
 JAR=${APPCONFIGPATH}/app.jar
 
+echo "-------------check-------------"
+
 # Example of javaagent
 # APPD_JAVA_AGENT="-javaagent:/opt/appdyn/javaagent/current/javaagent.jar"
 
