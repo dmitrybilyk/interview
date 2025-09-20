@@ -1,4 +1,4 @@
-package com.conduct.interview.leetcode;
+package com.conduct.interview.coding.lru_cache;
 
 import java.util.HashMap;
 
