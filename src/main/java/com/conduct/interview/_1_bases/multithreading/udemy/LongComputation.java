@@ -4,7 +4,8 @@ import java.math.BigInteger;
 
 public class LongComputation {
     public static void main(String[] args) {
-        Thread thread = new Thread(new LongComputationTask(new BigInteger("20000000"), new BigInteger("100000000")));
+        Thread thread = new Thread(new LongComputationTask(
+                new BigInteger("20000000"), new BigInteger("100000000")));
         thread.start();
     }
 
