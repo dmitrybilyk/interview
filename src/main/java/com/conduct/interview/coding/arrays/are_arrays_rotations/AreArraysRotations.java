@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.arrays;
+package com.conduct.interview.coding.arrays.are_arrays_rotations;
 
 public class AreArraysRotations {
     public static void main(String[] args) {

@@ -26,7 +26,9 @@ public class RotateMatrixCheck2 {
 
         for (int i = 0; i < n; i++) {
             for (int j = i + 1; j < n / 2; j++) {
-
+                int temp = array[i][j - 1 - i];
+                array[i][j - 1 - i] = array[j][i];
+                array[j][i] = temp;
             }
         }
         return array;
