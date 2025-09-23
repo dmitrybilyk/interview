@@ -1,4 +1,4 @@
-package com.conduct.interview._1_bases.multithreading.udemy.interrupt_thread;
+package com.conduct.interview._1_bases.multithreading.udemy.latency;
 
 public class LatencyOptimizationWithThreads {
     public static void main(String[] args) throws InterruptedException {
