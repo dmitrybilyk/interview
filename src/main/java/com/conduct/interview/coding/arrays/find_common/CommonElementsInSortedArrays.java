@@ -1,9 +1,9 @@
-package com.conduct.interview.coding.arrays;
+package com.conduct.interview.coding.arrays.find_common;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class CommonElementsInArrays {
+public class CommonElementsInSortedArrays {
     public static void main(String[] args) {
         int[] array1 = {2, 4, 5, 7, 8};
         int[] array2 = {1, 3, 5, 8, 18};
