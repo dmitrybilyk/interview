@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.arrays;
+package com.conduct.interview.coding.arrays.most_frequent_element;
 
 import java.util.HashMap;
 import java.util.Map;

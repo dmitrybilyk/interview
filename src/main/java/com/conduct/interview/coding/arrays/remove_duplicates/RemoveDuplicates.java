@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.arrays;
+package com.conduct.interview.coding.arrays.remove_duplicates;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -15,7 +15,6 @@ public class RemoveDuplicates {
         int[] resultArray = new int[array.length];
         for(int i = 0; i < array.length - 1; i++) {
             int key = array[i];
-            map.get(key);
             if (map.get(key) == null) {
                 resultArray[i] = key;
                 map.put(array[i], i);
