@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.strings;
+package com.conduct.interview.coding.strings.first_repeating_char;
 
 public class FirstRepeatingCharInStr {
     public static void main(String[] args) {

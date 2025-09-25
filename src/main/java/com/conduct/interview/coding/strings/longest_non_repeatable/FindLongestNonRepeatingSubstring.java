@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.strings;
+package com.conduct.interview.coding.strings.longest_non_repeatable;
 
 import java.util.Arrays;
 

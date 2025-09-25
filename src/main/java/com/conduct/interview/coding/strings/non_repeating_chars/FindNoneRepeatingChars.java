@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.strings;
+package com.conduct.interview.coding.strings.non_repeating_chars;
 
 import java.util.ArrayList;
 import java.util.HashMap;
