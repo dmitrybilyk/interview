@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.strings;
+package com.conduct.interview.coding.strings.reverse_string_words;
 
 public class ReverseStringWords {
     public static void main(String[] args) {

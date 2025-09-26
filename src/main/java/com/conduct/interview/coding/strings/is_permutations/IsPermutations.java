@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.strings;
+package com.conduct.interview.coding.strings.is_permutations;
 
 public class IsPermutations {
     public static void main(String[] args) {

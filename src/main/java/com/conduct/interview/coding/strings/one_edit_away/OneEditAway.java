@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.strings;
+package com.conduct.interview.coding.strings.one_edit_away;
 
 public class OneEditAway {
     public static void main(String[] args) {

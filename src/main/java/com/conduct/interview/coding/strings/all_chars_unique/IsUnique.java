@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.strings;
+package com.conduct.interview.coding.strings.all_chars_unique;
 
 import java.util.HashSet;
 import java.util.Set;
