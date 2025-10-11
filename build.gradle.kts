@@ -125,9 +125,9 @@ repositories {
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web")
 //    if (project.hasProperty("rabbit")) {
-        implementation("org.springframework.boot:spring-boot-starter-amqp")
+//        implementation("org.springframework.boot:spring-boot-starter-amqp")
         implementation("org.springframework.boot:spring-boot-starter-aop")
-        implementation("org.springframework.boot:spring-boot-starter-data-redis")
+//        implementation("org.springframework.boot:spring-boot-starter-data-redis")
         implementation("org.apache.cxf:cxf-spring-boot-starter-jaxws:4.0.0")
         implementation("org.springframework.boot:spring-boot-starter-security")
 //        implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
@@ -140,7 +140,7 @@ dependencies {
     implementation("commons-io:commons-io:2.11.0")
     runtimeOnly("org.postgresql:postgresql")
 //    if (project.hasProperty("postgres")) {
-        implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+//        implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 //    }
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")

@@ -44,14 +44,15 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable()) // disable CSRF for simplicity in testing
             .authorizeHttpRequests(auth -> auth
-                    .requestMatchers(HttpMethod.GET, "/**").authenticated()
-                    .requestMatchers(HttpMethod.HEAD, "/**").authenticated()
-                    .requestMatchers(HttpMethod.POST, "/**").authenticated()
-                    .requestMatchers(HttpMethod.PUT, "/**").authenticated()
-                    .requestMatchers(HttpMethod.DELETE, "/**").authenticated()
-                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                    .requestMatchers("/public/**").permitAll() // public endpoints
-                    .anyRequest().authenticated()
+//                    .requestMatchers(HttpMethod.GET, "/**").authenticated()
+//                    .requestMatchers(HttpMethod.HEAD, "/**").authenticated()
+//                    .requestMatchers(HttpMethod.POST, "/**").authenticated()
+//                    .requestMatchers(HttpMethod.PUT, "/**").authenticated()
+//                    .requestMatchers(HttpMethod.DELETE, "/**").authenticated()
+//                    .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+//                    .requestMatchers("/public/**").permitAll() // public endpoints
+//                    .anyRequest().authenticated()
+                    .anyRequest().permitAll()
             )
             .httpBasic(Customizer.withDefaults()); // Enable HTTP Basic auth explicitly
 
