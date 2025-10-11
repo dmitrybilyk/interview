@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.lru_cache;
+package com.conduct.interview.coding.linked_lists.dll.lru_cache;
 
 import java.util.HashMap;
 
