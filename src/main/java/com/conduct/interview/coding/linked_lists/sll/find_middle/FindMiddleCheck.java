@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.linked_lists.find_middle;
+package com.conduct.interview.coding.linked_lists.sll.find_middle;
 
 public class FindMiddleCheck {
     public static void main(String[] args) {

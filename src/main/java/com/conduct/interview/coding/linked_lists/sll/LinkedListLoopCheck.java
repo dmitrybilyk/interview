@@ -1,6 +1,6 @@
-package com.conduct.interview.coding.linked_lists.find_middle;
+package com.conduct.interview.coding.linked_lists.sll;
 
-public class FindMiddleLinkedList {
+public class LinkedListLoopCheck {
 
     // Node definition
     static class Node {
@@ -48,7 +48,23 @@ public class FindMiddleLinkedList {
             return slow.data;
         }
 
-        // Print the list
+        // Detect if list has a loop
+        boolean hasLoop() {
+            Node slow = head;
+            Node fast = head;
+
+            while (fast != null && fast.next != null) {
+                slow = slow.next;
+                fast = fast.next.next;
+
+                if (slow == fast) {
+                    return true; // loop detected
+                }
+            }
+            return false; // no loop
+        }
+
+        // Print the list (WARNING: won't stop if loop exists!)
         void printList() {
             Node current = head;
             while (current != null) {
@@ -72,5 +88,11 @@ public class FindMiddleLinkedList {
         list.printList();
 
         System.out.println("Middle Element: " + list.findMiddle());
+        System.out.println("Has Loop? " + list.hasLoop());
+
+        // Create a loop manually: connect last node to second node
+        list.head.next.next.next.next.next = list.head.next;
+
+        System.out.println("Has Loop after modification? " + list.hasLoop());
     }
 }

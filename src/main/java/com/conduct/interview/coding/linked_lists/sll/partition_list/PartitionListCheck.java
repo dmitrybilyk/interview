@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.linked_lists.partition_list;
+package com.conduct.interview.coding.linked_lists.sll.partition_list;
 
 public class PartitionListCheck {
     static class ListNode {

@@ -1,6 +1,6 @@
-package com.conduct.interview.coding.linked_lists;
+package com.conduct.interview.coding.linked_lists.sll;
 
-public class LinkedListLoopCheck {
+public class LinkedListKthFromEnd {
 
     // Node definition
     static class Node {
@@ -48,7 +48,7 @@ public class LinkedListLoopCheck {
             return slow.data;
         }
 
-        // Detect if list has a loop
+        // Detect if list has a loop (Floyd's cycle detection)
         boolean hasLoop() {
             Node slow = head;
             Node fast = head;
@@ -56,15 +56,40 @@ public class LinkedListLoopCheck {
             while (fast != null && fast.next != null) {
                 slow = slow.next;
                 fast = fast.next.next;
-
                 if (slow == fast) {
                     return true; // loop detected
                 }
             }
-            return false; // no loop
+            return false;
         }
 
-        // Print the list (WARNING: won't stop if loop exists!)
+        // Find k-th element from end
+        int findKthFromEnd(int k) {
+            if (head == null) {
+                throw new RuntimeException("List is empty");
+            }
+
+            Node first = head;
+            Node second = head;
+
+            // Move first k steps ahead
+            for (int i = 0; i < k; i++) {
+                if (first == null) {
+                    throw new IllegalArgumentException("k is larger than list size");
+                }
+                first = first.next;
+            }
+
+            // Move both pointers until first reaches the end
+            while (first != null) {
+                first = first.next;
+                second = second.next;
+            }
+
+            return second.data;
+        }
+
+        // Print the list (unsafe if loop exists)
         void printList() {
             Node current = head;
             while (current != null) {
@@ -89,10 +114,7 @@ public class LinkedListLoopCheck {
 
         System.out.println("Middle Element: " + list.findMiddle());
         System.out.println("Has Loop? " + list.hasLoop());
-
-        // Create a loop manually: connect last node to second node
-        list.head.next.next.next.next.next = list.head.next;
-
-        System.out.println("Has Loop after modification? " + list.hasLoop());
+        System.out.println("2nd element from end: " + list.findKthFromEnd(2));
+        System.out.println("5th element from end: " + list.findKthFromEnd(5));
     }
 }

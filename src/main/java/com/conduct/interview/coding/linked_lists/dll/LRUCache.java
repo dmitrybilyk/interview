@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.linked_lists;
+package com.conduct.interview.coding.linked_lists.dll;
 
 import java.util.HashMap;
 

@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.linked_lists.sll;
+package com.conduct.interview.coding.linked_lists.sll.pallindrom;
 
 class SllNode {
     int val;

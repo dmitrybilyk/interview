@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.linked_lists;
+package com.conduct.interview.coding.linked_lists.sll;
 
 // Definition of a Node for the linked list
 class Node {

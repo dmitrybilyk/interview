@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.linked_lists.binary_to_decimal;
+package com.conduct.interview.coding.linked_lists.sll.binary_to_decimal;
 
 public class BinaryToDecimalCheck {
     public static void main(String[] args) {
