@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CommandCheck2 {
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         LightSystem lightSystem = new LightSystem();
         SmartHomeCommand turnOnTheLightCommand = new TurnOnTheLightCommand(lightSystem);
         SmartHomeCommand turnOffTheLightCommand = new TurnOffTheLightCommand(lightSystem);
@@ -28,7 +28,22 @@ public class CommandCheck2 {
         macroCommand.addCommand(increaseTemperatureCommand);
         macroCommand.addCommand(turnOnTheLightCommand);
         macroCommand.execute();
+
+        SmartHomeExecuteCommand resetTemperatureToZero = temperatureSystem::setToZero;
+        SmartHomeExecuteCommand turnOnTheLight = lightSystem::turnOnTheLight;
+
+        SmartHomeExecuteCommand macroSmartCommand = () -> {
+            resetTemperatureToZero.execute();
+            turnOnTheLight.execute();
+        };
+
+        Thread.sleep(4000);
+        macroSmartCommand.execute();
     }
+}
+
+interface SmartHomeExecuteCommand {
+    void execute();
 }
 
 interface SmartHomeCommand {
@@ -146,6 +161,11 @@ class TemperatureSystem {
         currentTemperature -= value;
         System.out.println("Current temperature is - " + currentTemperature);
     }
+
+    void setToZero() {
+        this.currentTemperature = 0;
+        System.out.println("current is " + this.currentTemperature);
+    }
 }
 
 class MacroCommand implements SmartHomeCommand {
@@ -162,6 +182,8 @@ class MacroCommand implements SmartHomeCommand {
 
     @Override
     public void undo() {
-
+        for (int i = commandList.size() - 1; i >= 0; i--) {
+            commandList.get(i).undo();
+        }
     }
 }
