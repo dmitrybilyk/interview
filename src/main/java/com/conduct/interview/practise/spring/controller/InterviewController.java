@@ -1,15 +1,15 @@
 package com.conduct.interview.practise.spring.controller;
 
 import com.conduct.interview.practise.spring.aop.with_params.UserService;
-import com.conduct.interview.practise.spring.controller.service.DeadlockDemoService;
-import com.conduct.interview.practise.spring.controller.service.DeadlockFixedDemoService;
-import com.conduct.interview.practise.spring.controller.service.DeadlockLockDemoService;
-import com.conduct.interview.practise.spring.controller.service.DeadlockLockFixedDemoService;
-import com.conduct.interview.practise.spring.controller.service.MyService;
-import com.conduct.interview.practise.spring.controller.service.ThreadInfo;
-import com.conduct.interview.practise.spring.controller.service.ThreadInfoService;
-import com.conduct.interview.practise.spring.controller.service.ThreadStarvationDemoService;
-import com.conduct.interview.practise.spring.controller.service.VolatileDemoService;
+import com.conduct.interview.practise.spring.controller.multithreading.service.DeadlockDemoService;
+import com.conduct.interview.practise.spring.controller.multithreading.service.DeadlockFixedDemoService;
+import com.conduct.interview.practise.spring.controller.multithreading.service.DeadlockLockDemoService;
+import com.conduct.interview.practise.spring.controller.multithreading.service.DeadlockLockFixedDemoService;
+import com.conduct.interview.practise.spring.controller.multithreading.service.MyService;
+import com.conduct.interview.practise.spring.controller.multithreading.service.ThreadInfo;
+import com.conduct.interview.practise.spring.controller.multithreading.service.ThreadInfoService;
+import com.conduct.interview.practise.spring.controller.multithreading.service.ThreadStarvationDemoService;
+import com.conduct.interview.practise.spring.controller.multithreading.service.VolatileDemoService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;

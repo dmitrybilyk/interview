@@ -1,4 +1,4 @@
-package com.conduct.interview.practise.spring.controller.service;
+package com.conduct.interview.practise.spring.controller.multithreading.service;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

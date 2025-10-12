@@ -1,4 +1,4 @@
-package com.conduct.interview.practise.spring.controller.service;
+package com.conduct.interview.practise.spring.controller.multithreading.service;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -1,9 +1,8 @@
-package com.conduct.interview.practise.spring.controller.service;
+package com.conduct.interview.practise.spring.controller.multithreading.service;
 
 import org.springframework.stereotype.Service;
 
 import java.lang.management.ManagementFactory;
-import java.lang.management.ThreadMXBean;
 import java.util.Collections;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;

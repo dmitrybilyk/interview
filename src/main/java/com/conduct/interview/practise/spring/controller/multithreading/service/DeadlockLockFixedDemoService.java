@@ -1,4 +1,4 @@
-package com.conduct.interview.practise.spring.controller.service;
+package com.conduct.interview.practise.spring.controller.multithreading.service;
 
 import org.springframework.stereotype.Service;
 
@@ -8,7 +8,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import static java.lang.Thread.sleep;
 
 @Service
-public class DeadlockLockDemoService {
+public class DeadlockLockFixedDemoService {
 
     private final Lock lockA = new ReentrantLock();
     private final Lock lockB = new ReentrantLock();
@@ -17,12 +17,12 @@ public class DeadlockLockDemoService {
         System.out.println("Starting potential ReentrantLock deadlock...");
 
         Thread t1 = new Thread(() -> {
-            lockA.lock();
+            lockA.tryLock();
             try {
                 System.out.println(Thread.currentThread().getName() + " locked A");
                 sleep(1000); // ensure t2 gets B first
                 System.out.println(Thread.currentThread().getName() + " waiting for B...");
-                lockB.lock(); // <- waits forever if t2 holds it
+                lockB.tryLock(); // <- waits forever if t2 holds it
                 try {
                     System.out.println(Thread.currentThread().getName() + " locked B");
                 } finally {
@@ -36,12 +36,12 @@ public class DeadlockLockDemoService {
         }, "Thread-1");
 
         Thread t2 = new Thread(() -> {
-            lockB.lock();
+            lockB.tryLock();
             try {
                 System.out.println(Thread.currentThread().getName() + " locked B");
                 sleep(1000); // ensure t1 gets A first
                 System.out.println(Thread.currentThread().getName() + " waiting for A...");
-                lockA.lock(); // <- waits forever if t1 holds it
+                lockA.tryLock(); // <- waits forever if t1 holds it
                 try {
                     System.out.println(Thread.currentThread().getName() + " locked A");
                 } finally {

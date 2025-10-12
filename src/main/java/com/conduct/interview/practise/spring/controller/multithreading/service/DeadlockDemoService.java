@@ -1,11 +1,11 @@
-package com.conduct.interview.practise.spring.controller.service;
+package com.conduct.interview.practise.spring.controller.multithreading.service;
 
 import org.springframework.stereotype.Service;
 
 import static java.lang.Thread.sleep;
 
 @Service
-public class DeadlockFixedDemoService {
+public class DeadlockDemoService {
 
     private final Object objA = new Object();
     private final Object objB = new Object();
@@ -29,16 +29,16 @@ public class DeadlockFixedDemoService {
         }, "Thread-1");
 
         Thread t2 = new Thread(() -> {
-            synchronized (objA) {
-                System.out.println(Thread.currentThread().getName() + " locked objA");
+            synchronized (objB) {
+                System.out.println(Thread.currentThread().getName() + " locked objB");
                 try {
                     sleep(1000); // <--- ensures t1 locks objA first
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                 }
-                System.out.println(Thread.currentThread().getName() + " waiting for objB...");
-                synchronized (objB) {
-                    System.out.println(Thread.currentThread().getName() + " locked objB");
+                System.out.println(Thread.currentThread().getName() + " waiting for objA...");
+                synchronized (objA) {
+                    System.out.println(Thread.currentThread().getName() + " locked objA");
                 }
             }
         }, "Thread-2");
