@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.linked_lists.dll;
+package com.conduct.interview.coding.linked_lists.dll.pallindrom;
 
 public class PalindromeDLL {
     // Node definition
