@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.linked_lists.dll;
+package com.conduct.interview.coding.linked_lists.dll.reverse;
 
 public class DoublyLinkedListReverse {
 
