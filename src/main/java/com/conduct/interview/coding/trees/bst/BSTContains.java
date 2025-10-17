@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.trees;
+package com.conduct.interview.coding.trees.bst;
 
 public class BSTContains {
 

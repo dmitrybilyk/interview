@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.trees.bst_validator;
+package com.conduct.interview.coding.trees.bst.bst_validator;
 
 class TreeNode {
     int val;

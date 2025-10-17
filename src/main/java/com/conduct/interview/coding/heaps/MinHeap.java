@@ -1,4 +1,4 @@
-package com.conduct.interview.coding;
+package com.conduct.interview.coding.heaps;
 
 import java.util.ArrayList;
 import java.util.List;

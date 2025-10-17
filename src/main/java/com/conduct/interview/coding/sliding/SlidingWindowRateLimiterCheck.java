@@ -1,4 +1,4 @@
-package com.conduct.interview.coding;
+package com.conduct.interview.coding.sliding;
 
 import java.time.Instant;
 import java.util.ArrayDeque;
