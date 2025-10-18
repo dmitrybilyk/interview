@@ -133,6 +133,7 @@ dependencies {
 //        implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
         implementation("org.springframework.boot:spring-boot-starter-webflux")
         implementation("io.projectreactor.netty:reactor-netty-http")
+        implementation("org.apache.kafka:kafka-clients:3.7.0")
         implementation("org.springframework.ws:spring-ws-core")
         implementation("redis.clients:jedis")
 //    }
