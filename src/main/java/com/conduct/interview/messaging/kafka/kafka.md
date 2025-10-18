@@ -6,7 +6,7 @@ cd /opt/bitnami/kafka/bin
 /opt/bitnami/kafka/bin/kafka-topics.sh \
 --bootstrap-server kafka:29092 \
 --create \
---topic my-new-topic \
+--topic person-topic \
 --partitions 3 \
 --replication-factor 1
 
