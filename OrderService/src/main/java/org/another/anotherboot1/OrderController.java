@@ -34,7 +34,26 @@ public class OrderController {
         if (paid) {
             order.setStatus("PAID");
             repo.save(order);
+
+            // Send to Kafka
             kafkaTemplate.send("orders", order.getId(), order);
+
+//            // Send to Delivery Service via REST
+//            try {
+//                var resp = restTemplate.postForEntity(
+//                        "http://localhost:8094/deliveries",
+//                        order,
+//                        String.class
+//                );
+//                System.out.printf("📦 Delivery REST call OK for order %s: %s%n",
+//                        order.getId(),
+//                        resp.getStatusCode());
+//            } catch (Exception ex) {
+//                System.err.printf("❌ Failed to notify delivery service for order %s: %s%n",
+//                        order.getId(),
+//                        ex.getMessage());
+//            }
+
         } else {
             order.setStatus("FAILED");
             repo.save(order);

@@ -1,3 +1,8 @@
+db.getCollection("delivery").countDocuments()
+db.getCollection("orders").countDocuments()
+
+
+
 # --- AnotherBoot1: Create a new order ---
 curl -X POST http://localhost:8091/orders \
 -H "Content-Type: application/json" \
