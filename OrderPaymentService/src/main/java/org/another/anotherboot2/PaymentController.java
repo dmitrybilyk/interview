@@ -19,13 +19,13 @@ public class PaymentController {
 
     @PostMapping
     public String pay(@RequestBody Order order) {
-        int chance = rnd.nextInt(100);
-        if (chance < 70) {
+//        int chance = rnd.nextInt(100);
+//        if (chance < 70) {
             history.add("Payment OK for " + order.getId());
             return "OK";
-        }
-        history.add("Payment FAIL for " + order.getId());
-        throw new RuntimeException("Transient payment error");
+//        }
+//        history.add("Payment FAIL for " + order.getId());
+//        throw new RuntimeException("Transient payment error");
     }
 
     @GetMapping("/history")
