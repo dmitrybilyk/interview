@@ -95,6 +95,7 @@ public class KafkaCustomObjectDemo {
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, PersonSerializer.class.getName());
         props.put(ProducerConfig.ACKS_CONFIG, "all");
+        props.put("partitioner.class", VIPPartitioner.class.getName());
 
         try (KafkaProducer<String, Person> producer = new KafkaProducer<>(props)) {
             for (int i = 1; i <= 5; i++) {
@@ -144,6 +145,7 @@ public class KafkaCustomObjectDemo {
                             record.key(), record.value(),
                             record.partition(), record.offset()
                     );
+                    System.out.println("Partition: " + record.partition());
                 }
             }
         }

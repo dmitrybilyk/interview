@@ -1,0 +1,16 @@
+server:
+  port: 8093
+
+spring:
+  application:
+    name: notification-service
+
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: notif-group
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+    properties:
+      spring.json.value.default.type: org.another.anotherbootshared.model.Order
+      spring.json.trusted.packages: "*"
