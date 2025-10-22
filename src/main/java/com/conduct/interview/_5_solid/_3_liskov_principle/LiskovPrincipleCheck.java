@@ -1,34 +1,59 @@
 package com.conduct.interview._5_solid._3_liskov_principle;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class LiskovPrincipleCheck {
     public static void main(String[] args) {
+        List<Person> personList = Arrays.asList(new Adult(), new Toddler());
+        List<CrawlablePerson> crawlablePeople = Arrays.asList(new Toddler(), new Toddler());
 
+//        if we need to move regardless of the subtype
+        for (Person person : personList) {
+            person.move();
+        }
+
+//        if we need just to crawl then should use specific subtype
+        for (CrawlablePerson crawlablePerson : crawlablePeople) {
+            crawlablePerson.crawl();
+        }
     }
 }
 
-
-class JustBird {
-    void fly() {
-
-    }
+abstract class Person {
+    abstract void move();
 }
 
-class Hawk extends JustBird {
+abstract class WalkablePerson extends Person {
+    abstract void walk();
+
     @Override
-    void fly() {
-        System.out.println("I'm flying well");
+    void move() {
+        walk();
     }
 }
 
-class Chicken extends Bird {
+abstract class CrawlablePerson extends Person {
+    abstract void crawl();
+
     @Override
-    public void fly() {
-        System.out.println("but I can't fly");
+    void move() {
+        crawl();
     }
 }
 
-// to fix we should break hierarchi. We can create Bird, and FlyableBird and
-// Chicken will extend Bird. But Hawk will extend FlyableBird
+class Adult extends WalkablePerson {
 
-//And another case we will fix with principle 'tell, don't ask'
-// where we should avoid instanceOf
+    @Override
+    void walk() {
+        System.out.println("I'm walking");
+    }
+}
+
+class Toddler extends CrawlablePerson {
+
+    @Override
+    void crawl() {
+        System.out.println("I'm crawling");
+    }
+}
