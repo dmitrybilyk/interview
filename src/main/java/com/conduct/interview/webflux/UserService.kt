@@ -25,7 +25,7 @@ class UserService {
 class EmailService {
     // Sends an email and returns a confirmation Mono
     fun sendEmail(userId: Int, message: String): Mono<String> {
-        return Mono.just("Email sent to user $userId: $message")
+        return Mono.just("Email.kt sent to user $userId: $message")
             .delayElement(java.time.Duration.ofMillis(800)) // Simulate async operation
     }
 }

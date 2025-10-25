@@ -38,7 +38,7 @@ class Originator {
         this.name = name;
         this.age = age;
         this.email = email;
-        System.out.println("State set to: Name = " + name + ", Age = " + age + ", Email = " + email);
+        System.out.println("State set to: Name = " + name + ", Age = " + age + ", Email.kt = " + email);
     }
 
     // Create a Memento with all fields
@@ -52,7 +52,7 @@ class Originator {
         this.name = memento.getName();
         this.age = memento.getAge();
         this.email = memento.getEmail();
-        System.out.println("State restored from memento: Name = " + name + ", Age = " + age + ", Email = " + email);
+        System.out.println("State restored from memento: Name = " + name + ", Age = " + age + ", Email.kt = " + email);
     }
 }
 

@@ -151,7 +151,7 @@
 //        public static List<String> validateEmail(String email) {
 //            List<String> errors = new ArrayList<>();
 //            if (email == null || email.isBlank() || !email.contains("@")) {
-//                errors.add("Email field is invalid");
+//                errors.add("Email.kt field is invalid");
 //            }
 //            return errors;
 //        }

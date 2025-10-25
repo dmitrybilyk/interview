@@ -285,7 +285,7 @@ class MiscDemo {
 
         // Inline class (value class)
         val email = Email("a@b.com")
-        println("Email: $email")
+        println("Email.kt: $email")
 
         // Reflection
         val clazz = Email::class
