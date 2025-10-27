@@ -1,8 +1,6 @@
-package com.conduct.interview._1_bases.java8.stream;
+package com.conduct.interview._1_bases.java8.streams;
 
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Main7 {
     public static void main(String[] args) {

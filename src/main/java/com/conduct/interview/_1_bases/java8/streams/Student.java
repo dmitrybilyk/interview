@@ -1,4 +1,4 @@
-package com.conduct.interview._1_bases.java8.stream;
+package com.conduct.interview._1_bases.java8.streams;
 
 /** Created by dik81 on 12.01.19. */
 public class Student {

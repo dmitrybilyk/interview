@@ -1,4 +1,4 @@
-package com.conduct.interview._1_bases.java8.stream;
+package com.conduct.interview._1_bases.java8.streams;
 
 import static java.util.stream.Collectors.counting;
 import static java.util.stream.Collectors.groupingBy;

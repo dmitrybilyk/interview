@@ -1,4 +1,4 @@
-package com.conduct.interview._1_bases.java8.stream.toSortConversations;
+package com.conduct.interview._1_bases.java8.streams.toSortConversations;
 
 import java.time.Instant;
 

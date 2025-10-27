@@ -1,4 +1,4 @@
-package com.conduct.interview._1_bases.java8.stream;
+package com.conduct.interview._1_bases.java8.streams;
 
 import java.util.Arrays;
 import java.util.List;
