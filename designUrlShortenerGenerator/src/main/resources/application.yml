@@ -1,0 +1,44 @@
+server:
+  port: ${SERVER_PORT:8080}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+
+keycloak:
+  auth-server-url: ${KEYCLOAK_ISSUER_URI:http://localhost:8081}/
+  realm: short-realm
+  resource: short-generator-client
+  bearer-only: false
+  security-constraints:
+    - authRoles: [generator]
+      securityCollections:
+        - patterns: [/api/*]
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/shortdb}
+    username: ${SPRING_DATASOURCE_USERNAME:shortuser}
+    password: ${SPRING_DATASOURCE_PASSWORD:shortpass}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8081/realms/url-shortener
+      client:
+        registration:
+          keycloak:
+            client-id: url-generator-service
+            client-secret: my-secret
+            authorization-grant-type: authorization_code
+            scope: openid,profile,email
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8081/realms/url-shortener

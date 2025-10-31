@@ -1,0 +1,67 @@
+{
+  "realm": "url-shortener",
+  "enabled": true,
+
+  "roles": {
+    "realm": [
+      { "name": "user" },
+      { "name": "admin" },
+      { "name": "generator" }
+    ]
+  },
+
+  "clientScopes": [
+    {
+      "name": "generator",
+      "description": "Allows access to URL shortening API",
+      "protocol": "openid-connect",
+      "attributes": {
+        "include.in.token.scope": "true",
+        "display.on.consent.screen": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "generator-role-mapper",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-realm-role-mapper",
+          "consentRequired": false,
+          "config": {
+            "claim.name": "roles",
+            "jsonType.label": "String",
+            "multivalued": "true",
+            "usermodel.realm.role.prefix": ""
+          }
+        }
+      ]
+    }
+  ],
+
+  "clients": [
+    {
+      "clientId": "url-generator-service",
+      "secret": "my-secret",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "redirectUris": ["http://localhost:8080/*"],
+      "publicClient": false,
+      "bearerOnly": false,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "defaultClientScopes": ["generator", "profile", "email"],
+      "optionalClientScopes": []
+    }
+  ],
+
+  "users": [
+    {
+      "username": "dmytro",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [
+        { "type": "password", "value": "test123", "temporary": false }
+      ],
+      "realmRoles": ["user", "generator"]
+    }
+  ]
+}

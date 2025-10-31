@@ -1,0 +1,108 @@
+version: "3.8"
+
+services:
+  zookeeper:
+    image: zookeeper:3.7.2
+    environment:
+      ZOO_MY_ID: 1
+#      ZOO_SERVERS: server.1=zookeeper:2888:3888
+      ZOO_4LW_COMMANDS_WHITELIST: "*"
+    ports:
+      - "2181:2181"
+
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: shortuser
+      POSTGRES_PASSWORD: shortpass
+      POSTGRES_DB: shortdb
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:21.1
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    command: [ "start-dev", "--import-realm" ]
+    volumes:
+      - ./keycloak-realm.json:/opt/keycloak/data/import/realm-export.json:ro
+    ports:
+      - "8081:8080"
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:9.5
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: "admin"
+    volumes:
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "3000:3000"
+
+  generator:
+    build:
+      context: ../designUrlShortenerGenerator
+      dockerfile: Dockerfile
+    depends_on:
+      - postgres
+      - zookeeper
+      - redis
+      - keycloak
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/shortdb
+      SPRING_DATASOURCE_USERNAME: shortuser
+      SPRING_DATASOURCE_PASSWORD: shortpass
+      ZK_CONNECT: zookeeper:2181
+      KEYCLOAK_ISSUER_URI: http://keycloak:8080/realms/short-realm
+      SERVER_PORT: 8080
+    expose:
+      - "8080"
+    deploy:
+      replicas: 2
+
+  redirect:
+    build:
+      context: ./redirect
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/shortdb
+      SPRING_DATASOURCE_USERNAME: shortuser
+      SPRING_DATASOURCE_PASSWORD: shortpass
+      REDIS_HOST: redis
+      SERVER_PORT: 8080
+    expose:
+      - "8080"
+    deploy:
+      replicas: 2
+
+  nginx:
+    image: nginx:stable
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "80:80"
+    depends_on:
+      - generator
+      - redirect
+
+volumes:
+  pgdata:
+  grafana-data:
