@@ -15,6 +15,6 @@ RUN chmod +x /opt/custom_entrypoint.sh
 # Copy Gradle jar output
 COPY build/libs/app.jar ${APPCONFIGPATH}/app.jar
 
-EXPOSE 8080
+EXPOSE 8082
 
 ENTRYPOINT ["/bin/bash", "/opt/custom_entrypoint.sh"]

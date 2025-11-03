@@ -1,5 +1,7 @@
+# src/main/resources/application.yml
 server:
-  port: ${SERVER_PORT:8080}
+  port: ${SERVER_PORT:8082}
+  address: 0.0.0.0   # Critical: bind to all interfaces
 
 management:
   endpoints:
@@ -7,38 +9,44 @@ management:
       exposure:
         include: health,info,prometheus
 
-keycloak:
-  auth-server-url: ${KEYCLOAK_ISSUER_URI:http://localhost:8081}/
-  realm: short-realm
-  resource: short-generator-client
-  bearer-only: false
-  security-constraints:
-    - authRoles: [generator]
-      securityCollections:
-        - patterns: [/api/*]
+
+# DO NOT hardcode Keycloak URL here
+# Let environment variables control it
 spring:
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/shortdb}
     username: ${SPRING_DATASOURCE_USERNAME:shortuser}
     password: ${SPRING_DATASOURCE_PASSWORD:shortpass}
     driver-class-name: org.postgresql.Driver
+
   jpa:
     hibernate:
       ddl-auto: create
     show-sql: false
     database-platform: org.hibernate.dialect.PostgreSQLDialect
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          issuer-uri: http://localhost:8081/realms/url-shortener
-      client:
-        registration:
-          keycloak:
-            client-id: url-generator-service
-            client-secret: my-secret
-            authorization-grant-type: authorization_code
-            scope: openid,profile,email
-        provider:
-          keycloak:
-            issuer-uri: http://localhost:8081/realms/url-shortener
+
+#  security:
+#    oauth2:
+#      resourceserver:
+#        jwt:
+#          # This will be injected via env var
+##          issuer-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI}
+#          issuer-uri: http://keycloak:8080/realms/url-shortener
+#logging:
+#  level:
+#    org.springframework.security: DEBUG
+#    org.springframework.web: DEBUG
+# Optional: if you need client auth (not required for resource server)
+# spring:
+#   security:
+#     oauth2:
+#       client:
+#         registration:
+#           keycloak:
+#             client-id: url-generator-service
+#             client-secret: my-secret
+#             authorization-grant-type: authorization_code
+#             scope: openid,profile,email
+#         provider:
+#           keycloak:
+#             issuer-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI}

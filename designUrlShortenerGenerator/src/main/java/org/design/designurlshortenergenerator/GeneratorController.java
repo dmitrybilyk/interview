@@ -1,5 +1,6 @@
 package org.design.designurlshortenergenerator;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Value;
@@ -7,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import jakarta.annotation.PostConstruct;
 import java.net.URI;
 
+@Slf4j
 @RestController
 @RequestMapping("/api")
 public class GeneratorController {
@@ -38,6 +40,7 @@ public class GeneratorController {
         m.setShortCode(code);
         m.setTarget(req.url);
         repo.save(m);
+        log.info("Url is generated!!!!!!!!!!!!!!!!!!!!!!!!!!!");
         return ResponseEntity.created(URI.create("/" + code)).body(code);
     }
 

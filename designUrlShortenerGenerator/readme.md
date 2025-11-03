@@ -1,3 +1,7 @@
+docker swarm init
+
+
+
 ### Get Bearer Token
 POST http://localhost:8081/realms/url-shortener/protocol/openid-connect/token
 Content-Type: application/x-www-form-urlencoded

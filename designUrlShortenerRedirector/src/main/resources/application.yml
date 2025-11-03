@@ -1,0 +1,40 @@
+server:
+  port: ${SERVER_PORT:8085}
+  address: 0.0.0.0
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+#  metrics:
+#    export:
+#      prometheus:
+#        enabled: true
+
+spring:
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/shortdb}
+    username: ${SPRING_DATASOURCE_USERNAME:shortuser}
+    password: ${SPRING_DATASOURCE_PASSWORD:shortpass}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate          # read-only, no schema changes
+    show-sql: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  data:
+    redis:
+      host: ${SPRING_REDIS_HOST:localhost}
+      port: ${SPRING_REDIS_PORT:6379}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+  cache:
+    type: redis
+    redis:
+      time-to-live: 3600000   # 1 hour
+      use-key-prefix: true
