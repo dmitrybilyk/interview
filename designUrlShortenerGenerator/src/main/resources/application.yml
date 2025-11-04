@@ -7,7 +7,14 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info,prometheus
+        include: health, info, prometheus
+  metrics:
+    tags:
+      application: url-shortener
+  prometheus:
+    metrics:
+      export:
+        enabled: true
 
 
 # DO NOT hardcode Keycloak URL here

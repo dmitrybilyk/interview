@@ -5,16 +5,17 @@ global:
 
 scrape_configs:
   - job_name: "generator1"
+    metrics_path: /actuator/prometheus
     static_configs:
       - targets: ["generator1:8082"]
 
-  - job_name: "generator2"
-    static_configs:
-      - targets: ["generator2:8083"]
-
-  - job_name: "generator3"
-    static_configs:
-      - targets: ["generator3:8084"]
+#  - job_name: "generator2"
+#    static_configs:
+#      - targets: ["generator2:8083"]
+#
+#  - job_name: "generator3"
+#    static_configs:
+#      - targets: ["generator3:8084"]
 
   - job_name: "prometheus"
     static_configs:
