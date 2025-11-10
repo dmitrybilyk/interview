@@ -1,0 +1,51 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: api-gateway
+
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: false
+      routes:
+        - id: generator
+          uri: lb://DESIGNURLSHORTENERGENERATOR
+          predicates:
+            - Path=/api/shorten/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 5
+                redis-rate-limiter.burstCapacity: 10
+                redis-rate-limiter.requestedTokens: 1
+                key-resolver: "#{@ipKeyResolver}"
+        - id: redirector
+          uri: lb://DESIGNURLSHORTENERREDIRECTOR
+          predicates:
+            - Path=/redirect/**
+
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}    # ← CRITICAL: NOT "redis"
+      port: 6379
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://${DISCOVERY_SERVER:localhost}:8761/eureka/
+    register-with-eureka: true
+    fetch-registry: true
+  instance:
+    prefer-ip-address: true
+
+management:
+  health:
+    redis:
+      enabled: true    # ← ENABLE THIS TO SEE THE TRUTH
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus

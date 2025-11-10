@@ -90,13 +90,13 @@ services:
     container_name: redis
     networks:
       - shorten-network
-    command: redis-server --save 60 1 --loglevel warning
+    command: redis-server --bind 0.0.0.0 --save 60 1 --loglevel warning
     ports:
       - "6379:6379"
     volumes:
       - redis-data:/data
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: [ "CMD", "redis-cli", "ping" ]
       interval: 5s
       timeout: 3s
       retries: 5
@@ -163,49 +163,74 @@ services:
 #    command: -config.file=/etc/promtail/config.yml
 #    restart: unless-stopped
 
-  nginx:
-    image: nginx:stable
-    container_name: nginx
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    ports:
-      - "80:80"
-    depends_on:
-      - generator1
-      - redirector1
-      - redirector2
-#      - generator2
-#      - generator3
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost/health" ]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-
-#  gateway:
-#    build:
-#      context: ../designUrlShortenerApiGateway
-#      dockerfile: Dockerfile
-#    container_name: gateway
-#    environment:
-#      SERVER_PORT: 8080
-#      SPRING_REDIS_HOST: redis
-#      SPRING_REDIS_PORT: 6379
-#    depends_on:
-#      redis:
-#        condition: service_healthy
-#      generator1:
-#        condition: service_healthy
+#  nginx:
+#    image: nginx:stable
+#    container_name: nginx
+#    volumes:
+#      - ./nginx.conf:/etc/nginx/nginx.conf:ro
 #    ports:
-#      - "8080:8080"
-#    expose:
-#      - "8080"
+#      - "80:80"
+#    depends_on:
+#      - generator1
+#      - redirector1
+#      - redirector2
+##      - generator2
+##      - generator3
 #    healthcheck:
-#      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health/liveness" ]
+#      test: [ "CMD", "curl", "-f", "http://localhost/health" ]
 #      interval: 10s
 #      timeout: 5s
-#      retries: 5
-#      start_period: 30s
+#      retries: 3
+
+  discovery-server:
+    build:
+      context: ../designShortenerDiscoveryEureka
+      dockerfile: Dockerfile
+    container_name: discovery-server
+    networks:
+      - shorten-network
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8761" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+#
+  gateway:
+    build:
+      context: ../designShortenerApiGateway
+      dockerfile: Dockerfile
+    container_name: gateway
+    networks:
+      - shorten-network
+    environment:
+      # This variable is used in application.yml
+      DISCOVERY_SERVER: discovery-server
+      REDIS_HOST: redis
+
+      # Force correct Redis host (overrides any default)
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+
+      # Disable Redis health check (prevents startup delay)
+      MANAGEMENT_HEALTH_REDIS_ENABLED: "false"
+
+    depends_on:
+      discovery-server:
+        condition: service_healthy   # <-- important!
+      redis:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
 
   generator1:
     build:
@@ -215,6 +240,7 @@ services:
     networks:
       - shorten-network
     environment:
+      DISCOVERY_SERVER: discovery-server
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/shortdb
       SPRING_DATASOURCE_USERNAME: shortuser
       SPRING_DATASOURCE_PASSWORD: shortpass
@@ -301,6 +327,7 @@ services:
     networks:
       - shorten-network
     environment:
+      DISCOVERY_SERVER: discovery-server
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/shortdb
       SPRING_DATASOURCE_USERNAME: shortuser
       SPRING_DATASOURCE_PASSWORD: shortpass
@@ -328,6 +355,7 @@ services:
     networks:
       - shorten-network
     environment:
+      DISCOVERY_SERVER: discovery-server
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/shortdb
       SPRING_DATASOURCE_USERNAME: shortuser
       SPRING_DATASOURCE_PASSWORD: shortpass

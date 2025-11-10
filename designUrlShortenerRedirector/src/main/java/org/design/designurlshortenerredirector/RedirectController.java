@@ -17,7 +17,7 @@ public class RedirectController {
 
     private final RedirectService service;
 
-    @GetMapping("/{code}")
+    @GetMapping("/redirect/{code}")
     public ResponseEntity<Void> redirect(@PathVariable("code") String code,
                                          HttpServletResponse response) throws IOException {
 
