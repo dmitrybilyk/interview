@@ -19,9 +19,16 @@ extra["springCloudVersion"] = "2024.0.0-M2"
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-actuator")
-    implementation("org.springframework.boot:spring-boot-starter-data-redis")
+//    implementation("org.springframework.boot:spring-boot-starter-web")
+//    implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    implementation("org.springframework.boot:spring-boot-starter-data-redis-reactive")
     implementation("io.micrometer:micrometer-registry-prometheus")
+//    implementation("io.github.resilience4j:resilience4j-ratelimiter")
+//    implementation("io.github.resilience4j:resilience4j-spring-boot3")
+//    implementation("io.github.resilience4j:resilience4j-retry")
     implementation("org.springframework.cloud:spring-cloud-starter-netflix-eureka-client")
+    implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-reactor-resilience4j")
+    implementation("org.springframework.cloud:spring-cloud-starter-circuitbreaker-resilience4j")
 
     // 👇 Spring Cloud Gateway starter (WebFlux-based)
     implementation("org.springframework.cloud:spring-cloud-starter-gateway")

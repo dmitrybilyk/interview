@@ -26,11 +26,20 @@ spring:
           uri: lb://DESIGNURLSHORTENERREDIRECTOR
           predicates:
             - Path=/redirect/**
+          filters:
+            - name: CircuitBreaker
+              args:
+                name: redirectServiceCB
+                fallbackUri: forward:/redirect-fallback
 
   data:
     redis:
       host: ${REDIS_HOST:localhost}    # ← CRITICAL: NOT "redis"
       port: 6379
+
+gateway:
+  cache:
+    ttl-seconds: 1800
 
 eureka:
   client:
