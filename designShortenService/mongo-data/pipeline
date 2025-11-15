@@ -1,0 +1,50 @@
+[
+  {
+    $match: {
+      date: {
+        $gte: ISODate("2025-11-01T00:00:00.000Z"),
+        $lte: ISODate("2025-11-05T23:59:59.999Z")
+      }
+    }
+  },
+  {
+    $unwind: "$items"
+  },
+  {
+    $addFields: {
+      lineTotal: { $multiply: [ "$items.qty", "$items.price"] }
+    }
+  },
+  {
+    $lookup: {
+      from: "products",
+      localField: "items.productId",
+      foreignField: "_id",
+      as: "product"
+    }
+  },
+  {
+    $unwind: "$product"
+  },
+
+  // ⭐ MODIFIED GROUP (added productName + category)
+  {
+    $group: {
+      _id: "$items.productId",
+      sumOfProducts: { $sum: "$items.qty" },
+      productName: { $first: "$product.name" },
+      category: { $first: "$product.category" }
+    }
+  },
+
+  // ⭐ FIXED PROJECT (use grouped fields)
+  {
+    $project: {
+      _id: 0,
+      productId: "$_id",
+      sumOfProducts: 1,
+      productName: 1,
+      category: 1
+    }
+  }
+]

@@ -1,0 +1,139 @@
+function runReport(startDate, endDate) {
+  const result = db.sales.aggregate([
+    // 1. DATE RANGE FILTER
+    {
+      $match: {
+        date: {
+          $gte: new Date(startDate),
+          $lte: new Date(endDate)
+        }
+      }
+    },
+
+    // 2. FACET – parallel pipelines
+    {
+      $facet: {
+        // A) Total number of sales
+        totalSales: [
+          { $count: "count" }
+        ],
+
+        // B) Total revenue
+        revenue: [
+          { $unwind: "$items" },
+          {
+            $group: {
+              _id: null,
+              totalRevenue: { $sum: { $multiply: ["$items.qty", "$items.price"] } }
+            }
+          }
+        ],
+
+        // C) Unique customers
+        uniqueCustomers: [
+          { $group: { _id: "$customerId" } },
+          { $count: "count" }
+        ],
+
+        // D) Total items sold
+        totalItems: [
+          { $unwind: "$items" },
+          { $group: { _id: null, total: { $sum: "$items.qty" } } }
+        ],
+
+        // E) Sales with at least one Electronics item
+        electronicsSales: [
+          { $unwind: "$items" },
+          {
+            $lookup: {
+              from: "products",
+              localField: "items.productId",
+              foreignField: "_id",
+              as: "product"
+            }
+          },
+          { $unwind: "$product" },
+          { $match: { "product.category": "Electronics" } },
+          { $group: { _id: "$_id" } },
+          { $count: "count" }
+        ],
+
+        // F) Revenue by category
+        revenueByCategory: [
+          { $unwind: "$items" },
+          {
+            $lookup: {
+              from: "products",
+              localField: "items.productId",
+              foreignField: "_id",
+              as: "product"
+            }
+          },
+          { $unwind: "$product" },
+          {
+            $group: {
+              _id: "$product.category",
+              revenue: { $sum: { $multiply: ["$items.qty", "$items.price"] } }
+            }
+          }
+        ]
+      }
+    },
+
+    // 3. FINAL PROJECTION
+    {
+      $project: {
+        periodStart: startDate,
+        periodEnd: endDate,
+
+        totalSales: { $ifNull: [{ $arrayElemAt: ["$totalSales.count", 0] }, 0] },
+
+        totalRevenue: {
+          $ifNull: [{ $arrayElemAt: ["$revenue.totalRevenue", 0] }, 0]
+        },
+
+        uniqueCustomers: {
+          $ifNull: [{ $arrayElemAt: ["$uniqueCustomers.count", 0] }, 0]
+        },
+
+        totalItemsSold: {
+          $ifNull: [{ $arrayElemAt: ["$totalItems.total", 0] }, 0]
+        },
+
+        electronicsSales: {
+          $ifNull: [{ $arrayElemAt: ["$electronicsSales.count", 0] }, 0]
+        },
+
+        percentElectronicsSales: {
+          $round: [
+            {
+              $multiply: [
+                {
+                  $divide: [
+                    // numerator
+                    { $ifNull: [{ $arrayElemAt: ["$electronicsSales.count", 0] }, 0] },
+
+                    // denominator (avoid divide by zero)
+                    {
+                      $cond: [
+                        { $eq: [{ $ifNull: [{ $arrayElemAt: ["$totalSales.count", 0] }, 0] }, 0] },
+                        1,  // replace zero to avoid crash
+                        { $arrayElemAt: ["$totalSales.count", 0] }
+                      ]
+                    }
+                  ]
+                },
+                100
+              ]
+            },
+            2
+          ]
+        },
+
+        revenueByCategory: "$revenueByCategory"
+      }
+    }
+  ]).toArray();
+
+  printjson(result[0]);
+}

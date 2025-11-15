@@ -22,6 +22,10 @@ management:
 spring:
   application:
     name: generator-service
+    data:
+      mongodb:
+        uri: mongodb://user:pass@localhost:27017/shortenDb?authSource=admin
+
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/shortdb}
     username: ${SPRING_DATASOURCE_USERNAME:shortuser}
