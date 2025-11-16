@@ -1,6 +1,6 @@
-package org.design.designurlshortenergenerator.repository;
+package org.design.designurlshortenergenerator.mongo.model.repository;
 
-import org.design.designurlshortenergenerator.model.MongoUrlMapping;
+import org.design.designurlshortenergenerator.mongo.model.MongoUrlMapping;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 public interface MongoUrlMappingRepository extends MongoRepository<MongoUrlMapping, Long> {

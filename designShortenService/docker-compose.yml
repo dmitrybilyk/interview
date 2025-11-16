@@ -1,10 +1,10 @@
-version: "3.8"
+#version: "3.8"
 
 services:
   zookeeper:
     image: zookeeper:3.7.2
     container_name: zookeeper
-    profiles: ["core"]
+#    profiles: ["core"]
     networks:
       - shorten-network
     environment:
@@ -16,7 +16,7 @@ services:
   postgres:
     image: postgres:15-alpine
     container_name: postgres
-    profiles: ["core"]
+#    profiles: ["core"]
     networks:
       - shorten-network
     environment:
@@ -36,8 +36,10 @@ services:
   mongo:
     image: mongo:8.0
     container_name: mongo-demo
-    profiles:
-      - core
+#    profiles:
+#      - core
+    networks:
+      - shorten-network
     restart: unless-stopped
     ports:
       - "27017:27017"
@@ -57,7 +59,7 @@ services:
   redis:
     image: redis:7-alpine
     container_name: redis
-    profiles: ["core"]
+#    profiles: ["core"]
     networks:
       - shorten-network
     command: redis-server --bind 0.0.0.0 --save 60 1 --loglevel warning
@@ -157,7 +159,7 @@ services:
       context: ../designShortenerDiscoveryEureka
       dockerfile: Dockerfile
     container_name: discovery-server
-    profiles: ["core"]
+#    profiles: ["core"]
     networks:
       - shorten-network
     ports:
@@ -174,7 +176,7 @@ services:
       context: ../designShortenerApiGateway
       dockerfile: Dockerfile
     container_name: gateway
-    profiles: ["core"]
+#    profiles: ["core"]
     networks:
       - shorten-network
     environment:
@@ -209,8 +211,8 @@ services:
       context: ../designUrlShortenerGenerator
       dockerfile: Dockerfile
     container_name: generator1
-    profiles:
-      - app
+#    profiles:
+#      - app
     networks:
       - shorten-network
     environment:
@@ -223,6 +225,7 @@ services:
       SERVER_PORT: 8082
       SERVER_ADDRESS: "0.0.0.0"
       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus
+      MONGO_HOST: mongo-demo
     depends_on:
       - postgres
       - zookeeper
@@ -300,8 +303,8 @@ services:
       context: ../designUrlShortenerRedirector   # <-- new module
       dockerfile: Dockerfile
     container_name: redirector1
-    profiles:
-      - app
+#    profiles:
+#      - app
     networks:
       - shorten-network
     environment:
@@ -335,8 +338,8 @@ services:
       context: ../designUrlShortenerRedirector   # <-- new module
       dockerfile: Dockerfile
     container_name: redirector2
-    profiles:
-      - app
+#    profiles:
+#      - app
     networks:
       - shorten-network
     environment:

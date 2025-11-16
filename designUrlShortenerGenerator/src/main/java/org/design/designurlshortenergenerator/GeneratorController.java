@@ -1,8 +1,8 @@
 package org.design.designurlshortenergenerator;
 
 import lombok.extern.slf4j.Slf4j;
-import org.design.designurlshortenergenerator.model.MongoUrlMapping;
-import org.design.designurlshortenergenerator.repository.MongoUrlMappingRepository;
+import org.design.designurlshortenergenerator.mongo.model.MongoUrlMapping;
+import org.design.designurlshortenergenerator.mongo.model.repository.MongoUrlMappingRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.beans.factory.annotation.Value;
