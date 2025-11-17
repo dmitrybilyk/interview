@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package redirector;
+
+service RedirectorService {
+  rpc Resolve (ResolveRequest) returns (ResolveResponse);
+}
+
+message ResolveRequest {
+  string shortCode = 1;
+}
+
+message ResolveResponse {
+  string originalUrl = 1;
+}
