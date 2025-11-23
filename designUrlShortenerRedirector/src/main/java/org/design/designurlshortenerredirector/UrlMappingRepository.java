@@ -1,11 +1,20 @@
 package org.design.designurlshortenerredirector;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
+//import org.springframework.data.jpa.repository.JpaRepository;
+//import org.springframework.stereotype.Repository;
+//
+//import java.util.Optional;
+//
+//@Repository
+//public interface UrlMappingRepository extends JpaRepository<UrlMapping, Long> {
+//    Optional<UrlMapping> findByShortCode(String shortCode);
+//}
 
-import java.util.Optional;
+// Assuming UrlMapping is the entity class
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import reactor.core.publisher.Mono;
 
-@Repository
-public interface UrlMappingRepository extends JpaRepository<UrlMapping, Long> {
-    Optional<UrlMapping> findByShortCode(String shortCode);
+public interface UrlMappingRepository extends ReactiveCrudRepository<UrlMapping, Long> {
+    // Returns Mono<UrlMapping> for a single result
+    Mono<UrlMapping> findByShortCode(String shortCode);
 }

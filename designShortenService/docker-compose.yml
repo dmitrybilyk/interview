@@ -310,6 +310,8 @@ services:
     environment:
       DISCOVERY_SERVER: discovery-server
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/shortdb
+      SPRING_R2DBC_HOST: postgres
+      SPRING_R2DBC_PORT: 5432
       SPRING_DATASOURCE_USERNAME: shortuser
       SPRING_DATASOURCE_PASSWORD: shortpass
       SERVER_PORT: 8085
@@ -345,6 +347,8 @@ services:
     environment:
       DISCOVERY_SERVER: discovery-server
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/shortdb
+      SPRING_R2DBC_HOST: postgres
+      SPRING_R2DBC_PORT: 5432
       SPRING_DATASOURCE_USERNAME: shortuser
       SPRING_DATASOURCE_PASSWORD: shortpass
       SERVER_PORT: 8086

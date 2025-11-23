@@ -19,11 +19,16 @@ management:
 #        enabled: true
 
 spring:
-  datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/shortdb}
-    username: ${SPRING_DATASOURCE_USERNAME:shortuser}
-    password: ${SPRING_DATASOURCE_PASSWORD:shortpass}
-    driver-class-name: org.postgresql.Driver
+  r2dbc:
+    url: r2dbc:postgresql://${SPRING_R2DBC_HOST:localhost}:${SPRING_R2DBC_PORT:5432}/${SPRING_R2DBC_DB:shortdb}
+    username: ${SPRING_R2DBC_USERNAME:shortuser}
+    password: ${SPRING_R2DBC_PASSWORD:shortpass}
+
+#  datasource:
+#    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/shortdb}
+#    username: ${SPRING_DATASOURCE_USERNAME:shortuser}
+#    password: ${SPRING_DATASOURCE_PASSWORD:shortpass}
+#    driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:
       ddl-auto: validate          # read-only, no schema changes

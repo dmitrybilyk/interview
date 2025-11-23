@@ -2,7 +2,7 @@ package org.design.designurlshortenerredirector;
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
-import jakarta.persistence.EntityNotFoundException;
+//import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -10,6 +10,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 @Service
 @RequiredArgsConstructor
@@ -22,12 +23,20 @@ public class RedirectService {
 
     private static final String CACHE_NAME = "url-cache";
 
-    @Cacheable(value = CACHE_NAME, key = "#shortCode")
-    public String resolve(String shortCode) {
-        log.info("Cache MISS for shortCode: {}", shortCode);
+//    @Cacheable(value = CACHE_NAME, key = "#shortCode")
+//    public String resolve(String shortCode) {
+//        log.info("Cache MISS for shortCode: {}", shortCode);
+//        return pgRepo.findByShortCode(shortCode)
+//                .map(UrlMapping::getOriginalUrl)
+//                .orElseThrow(() -> new NotFoundException("Short code not found: " + shortCode));
+//    }
+
+    public Mono<String> resolve(String shortCode) {
+        log.info("Resolving shortCode: {}", shortCode);
+
         return pgRepo.findByShortCode(shortCode)
                 .map(UrlMapping::getOriginalUrl)
-                .orElseThrow(() -> new NotFoundException("Short code not found: " + shortCode));
+                .switchIfEmpty(Mono.error(new NotFoundException("Short code not found: " + shortCode)));
     }
 
     // Optional: manual cache eviction (e.g., on new URL creation)
