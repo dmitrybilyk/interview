@@ -71,6 +71,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-validation")
     implementation("org.springframework.boot:spring-boot-starter-websocket")
+    implementation("org.springframework.boot:spring-boot-starter-mail")
 
     // External gRPC starter (Keep explicit version)
     implementation("net.devh:grpc-server-spring-boot-starter:3.1.0.RELEASE")

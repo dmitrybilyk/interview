@@ -6,11 +6,13 @@ import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.design.designurlshortenerredirector.email.EmailService;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 @Service
 @RequiredArgsConstructor
@@ -20,6 +22,7 @@ public class RedirectService {
     private final UrlMappingRepository pgRepo;
     private final RedisTemplate<String, String> redisTemplate;
     private final MeterRegistry meterRegistry;
+    private final EmailService emailService;
 
     private static final String CACHE_NAME = "url-cache";
 
@@ -35,6 +38,22 @@ public class RedirectService {
         log.info("Resolving shortCode: {}", shortCode);
 
         return pgRepo.findByShortCode(shortCode)
+                .publishOn(Schedulers.boundedElastic())
+                .doOnNext(urlMapping -> {
+                    String originalUrl = urlMapping.getOriginalUrl();
+
+                    // Створюємо Mono для відправки пошти
+                    Mono<Void> emailMono = emailService.sendNotificationEmail(shortCode, originalUrl)
+                            .doOnError(e -> log.error("Async email failed for shortCode: {}", shortCode, e))
+                            // Важливо: обробляємо помилки, щоб вони не вплинули на main-потік
+                            .onErrorResume(e -> Mono.empty());
+
+                    // *** Ключовий момент: підписуємося, щоб ініціювати відправку ***
+                    // Цей виклик не чекає завершення Mono, а лише запускає його.
+                    emailMono.subscribe();
+
+                    log.info("Email notification launched asynchronously for shortCode: {}", shortCode);
+                })
                 .map(UrlMapping::getOriginalUrl)
                 .switchIfEmpty(Mono.error(new NotFoundException("Short code not found: " + shortCode)));
     }
