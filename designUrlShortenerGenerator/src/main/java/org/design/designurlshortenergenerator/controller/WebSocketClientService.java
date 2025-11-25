@@ -1,4 +1,4 @@
-package org.design.designurlshortenergenerator.controller;
+package org.design.designurlshortenergenerator.service;
 
 import jakarta.annotation.PostConstruct;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
@@ -14,8 +14,8 @@ import java.util.concurrent.ExecutionException;
 public class WebSocketClientService {
 
     private StompSession stompSession;
-    // URL для підключення через Gateway, який працює на 8080
-    private static final String WS_URL = "ws://localhost:8080/ws-link-register"; 
+    // ЗМІНА: Пряме підключення до Redirector (порт 8085) з WebSocket-ендпоінтом /ws-stomp
+    private static final String WS_URL = "ws://localhost:8085/ws-stomp";
     private static final String TOPIC_RESPONSES = "/topic/responses";
     private static final String APP_REGISTER = "/app/register";
 
@@ -29,7 +29,7 @@ public class WebSocketClientService {
                 @Override
                 public void afterConnected(StompSession session, StompHeaders connectedHeaders) {
                     System.out.println("Generator: WebSocket connected. Session ID: " + session.getSessionId());
-                    
+
                     // Підписка на відповіді
                     session.subscribe(TOPIC_RESPONSES, new StompFrameHandler() {
                         @Override
@@ -40,18 +40,18 @@ public class WebSocketClientService {
                         @Override
                         public void handleFrame(StompHeaders headers, Object payload) {
                             LinkResponse response = (LinkResponse) payload;
-                            
+
                             // --- ВИМІРЮВАННЯ ЧАСУ ---
                             long endTime = System.nanoTime();
                             // Загальний час = Час кінця - Час відправки, що був переданий у відповіді
-                            long totalDurationNs = endTime - response.getRequestSendTimeNs(); 
+                            long totalDurationNs = endTime - response.getRequestSendTimeNs();
                             double totalDurationMs = totalDurationNs / 1_000_000.0;
                             // -------------------------
 
                             System.out.printf(
-                                "Generator: ⚡ WS response received. Message: [%s]. Total time (Latency): %.3f ms.\n", 
-                                response.getMessage(), 
-                                totalDurationMs
+                                    "Generator: ⚡ WS response received. Message: [%s]. Total time (Latency): %.3f ms.\n",
+                                    response.getMessage(),
+                                    totalDurationMs
                             );
                         }
                     });
@@ -59,23 +59,45 @@ public class WebSocketClientService {
 
                 @Override
                 public void handleException(StompSession session, StompCommand command, StompHeaders headers, byte[] payload, Throwable exception) {
-                    System.err.println("WS Error: " + exception.getMessage());
+                    System.err.println("WS Error: Command=" + command + ", Headers=" + headers + ", Error: " + exception.getMessage());
                 }
 
                 @Override
                 public void handleTransportError(StompSession session, Throwable exception) {
                     System.err.println("WS Transport Error: " + exception.getMessage());
+                    // Спроба повторного підключення, якщо з'єднання було втрачено
+                    System.out.println("Attempting to reconnect in 5 seconds...");
+                    new Thread(() -> {
+                        try {
+                            Thread.sleep(5000);
+                            connect();
+                        } catch (InterruptedException e) {
+                            Thread.currentThread().interrupt();
+                        }
+                    }).start();
                 }
-            }).get(); 
+            }).get();
         } catch (InterruptedException | ExecutionException e) {
-            System.err.println("Failed to connect to WebSocket: " + e.getMessage());
+            System.err.println("Failed to connect to WebSocket (Is Redirector running on 8085?): " + e.getMessage());
+            // Спроба повторного підключення, якщо не вдалося підключитися
+            new Thread(() -> {
+                try {
+                    Thread.sleep(5000);
+                    connect();
+                } catch (InterruptedException ie) {
+                    Thread.currentThread().interrupt();
+                }
+            }).start();
         }
     }
 
     public void sendLinkRequest(String link) {
         if (stompSession == null || !stompSession.isConnected()) {
-            System.err.println("WebSocket not connected. Cannot send message.");
-            return;
+            System.err.println("WebSocket not connected. Cannot send message. Trying to connect...");
+            connect(); // Спроба підключитися, якщо не вдалося
+            if (stompSession == null || !stompSession.isConnected()) {
+                return;
+            }
         }
 
         LinkRequest request = new LinkRequest();
@@ -84,11 +106,12 @@ public class WebSocketClientService {
 
         // Надсилаємо повідомлення
         stompSession.send(APP_REGISTER, request);
-        System.out.println("Generator: Sent WS request for link: " + link);
+        System.out.println("Generator: Sent WS request to " + APP_REGISTER + " for link: " + link);
     }
 
     // Класи DTO (перенесені в Redirector, або в спільний модуль)
     public static class LinkRequest {
+
         private String link;
         private long sendTimeNs; // Час відправки від Generator (в наносекундах)
         // ... (геттери/сеттери)
@@ -100,6 +123,10 @@ public class WebSocketClientService {
     }
 
     public static class LinkResponse {
+
+        public LinkResponse() {
+        }
+
         private String message;
         private long requestSendTimeNs; // Повертаємо час відправки
         // ... (геттери/сеттери)
@@ -113,3 +140,4 @@ public class WebSocketClientService {
         public void setRequestSendTimeNs(long requestSendTimeNs) { this.requestSendTimeNs = requestSendTimeNs; }
     }
 }
+
