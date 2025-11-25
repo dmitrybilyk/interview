@@ -39,20 +39,32 @@ http://localhost:8081/realms/url-shortener/protocol/openid-connect/auth?response
 POST http://localhost:8081/realms/url-shortener/protocol/openid-connect/token
 Content-Type: application/x-www-form-urlencoded
 
-grant_type=authorization_code&client_id=url-generator-service&client_secret=my-secret&code=1b86b7da-b500-426c-8c15-1c446ca72f9d.0d5b0a75-5ea2-43cb-9fb6-a1f6c38c2489.e16e2c00-58d4-48c7-b841-85ccc9a99943&redirect_uri=http://localhost:8082
+grant_type=authorization_code&
+client_id=url-generator-service&
+client_secret=my-secret&
+code=1f329ed2-1eba-43fe-b250-049550344389.527f8714-51d7-4cfc-a433-3431a183d5ed.e16e2c00-58d4-48c7-b841-85ccc9a99943&
+redirect_uri=http://localhost:8082
 
+<> 2025-11-25T173757.200.json
+<> 2025-11-25T173701.400.json
+<> 2025-11-25T173651.400.json
+<> 2025-11-25T173532.400.json
+<> 2025-11-25T173504.400.json
+<> 2025-11-25T173350.400.json
 <> 2025-11-25T172534.400.json
 
 ###
 POST http://localhost:8081/realms/url-shortener/protocol/openid-connect/token
 Content-Type: application/x-www-form-urlencoded
 
-grant_type=password
-client_id=url-generator-service
-client_secret=my-secret
-username=dmytro
+grant_type=password&
+client_id=url-generator-service&
+client_secret=my-secret&
+username=dmytro&
 password=pass
 
-<> 2025-11-25T172534-1.400.json
+<> 2025-11-25T173317.200.json
+<> 2025-11-25T173155.400.json
+
 
 
