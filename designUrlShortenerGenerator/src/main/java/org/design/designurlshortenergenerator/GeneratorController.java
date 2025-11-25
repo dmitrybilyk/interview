@@ -39,6 +39,11 @@ public class GeneratorController {
 
     record CreateReq(String url) {}
 
+    @GetMapping("/get")
+    public ResponseEntity<String> get() {
+        return ResponseEntity.ok("Got something");
+    }
+
     @PostMapping("/shorten")
     public ResponseEntity<?> shorten(@RequestBody CreateReq req) throws Exception {
         long id = allocator.nextId();

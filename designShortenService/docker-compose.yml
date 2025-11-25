@@ -72,19 +72,29 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
-#
-#  keycloak:
-#    image: quay.io/keycloak/keycloak:21.1
-#    environment:
-#      KEYCLOAK_ADMIN: admin
-#      KEYCLOAK_ADMIN_PASSWORD: admin
-#    command: [ "start-dev", "--import-realm" ]
-#    volumes:
-#      - ./keycloak-realm.json:/opt/keycloak/data/import/realm-export.json:ro
-#    ports:
-#      - "8081:8080"
 
-#  prometheus:
+  keycloak:
+    image: quay.io/keycloak/keycloak:21.1
+    container_name: keycloak
+    networks:
+      - shorten-network
+    environment:
+      KC_HTTP_PORT: 8081
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    command: [ "start-dev", "--import-realm" ]
+    volumes:
+      - ./keycloak-realm.json:/opt/keycloak/data/import/realm-export.json:ro
+    ports:
+      - "8081:8081"
+#    healthcheck:
+#      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8080/health || exit 1" ]
+#      interval: 5s
+#      timeout: 3s
+#      retries: 20
+#      start_period: 10s
+
+  #  prometheus:
 #    image: prom/prometheus:latest
 #    container_name: prometheus
 #    networks:
@@ -226,11 +236,14 @@ services:
       SERVER_ADDRESS: "0.0.0.0"
       MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus
       MONGO_HOST: mongo-demo
+      KEYCLOAK_HOST: keycloak
+      POSTGRES_HOST: postgres
     depends_on:
       - postgres
       - zookeeper
       - gateway
       - discovery-server
+      - keycloak
     expose:
       - "8082"
     ports:

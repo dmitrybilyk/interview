@@ -22,6 +22,30 @@ management:
 spring:
   application:
     name: generator-service
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://${KEYCLOAK_HOST:localhost}:8081/realms/url-shortener
+#          jwk-set-uri: http://localhost:8081/auth/realms/apps/url-generator-service/protocol/openid-connect/certs
+          # --- CLIENT CONFIGURATION (Handling browser login/redirect) ---
+      client:
+        registration:
+          # A custom name for this registration (e.g., 'keycloak' or 'url-auth')
+          keycloak:
+            client-id: url-generator-service
+            client-secret: my-secret
+            # Use 'authorization_code' for browser-based login/redirect
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            # Define the scopes this service will request (openid is mandatory)
+            scope:
+              - openid
+        provider:
+          # Define the provider details using the correct issuer
+          keycloak:
+            issuer-uri: http://${KEYCLOAK_HOST:localhost}:8081/realms/url-shortener
   data:
     mongodb:
       uri: mongodb://user:pass@${MONGO_HOST:localhost}:27017/shortenDb?authSource=admin

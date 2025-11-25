@@ -19,7 +19,7 @@ public class WebSocketClientService {
     private static final String TOPIC_RESPONSES = "/topic/responses";
     private static final String APP_REGISTER = "/app/register";
 
-    @PostConstruct
+//    @PostConstruct
     public void connect() {
         WebSocketStompClient stompClient = new WebSocketStompClient(new StandardWebSocketClient());
         stompClient.setMessageConverter(new MappingJackson2MessageConverter());

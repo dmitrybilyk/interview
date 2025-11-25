@@ -12,16 +12,16 @@
 
   "clientScopes": [
     {
-      "name": "generator",
-      "description": "Allows access to URL shortening API",
+      "name": "roles-mapper",
+      "description": "Maps realm roles to 'roles' claim in JWT",
       "protocol": "openid-connect",
       "attributes": {
         "include.in.token.scope": "true",
-        "display.on.consent.screen": "true"
+        "display.on.consent.screen": "false"
       },
       "protocolMappers": [
         {
-          "name": "generator-role-mapper",
+          "name": "realm-roles-to-jwt",
           "protocol": "openid-connect",
           "protocolMapper": "oidc-usermodel-realm-role-mapper",
           "consentRequired": false,
@@ -42,13 +42,25 @@
       "secret": "my-secret",
       "enabled": true,
       "protocol": "openid-connect",
-      "redirectUris": ["http://localhost:8080/*"],
+
+      "redirectUris": [
+        "http://localhost:8082/*",
+        "http://generator1:8082/*"
+      ],
+
       "publicClient": false,
       "bearerOnly": false,
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": true,
       "serviceAccountsEnabled": true,
-      "defaultClientScopes": ["generator", "profile", "email"],
+
+      "defaultClientScopes": [
+        "openid",
+        "profile",
+        "email",
+        "roles-mapper"
+      ],
+
       "optionalClientScopes": []
     }
   ],
@@ -59,9 +71,16 @@
       "enabled": true,
       "emailVerified": true,
       "credentials": [
-        { "type": "password", "value": "test123", "temporary": false }
+        {
+          "type": "password",
+          "value": "pass",
+          "temporary": false
+        }
       ],
-      "realmRoles": ["user", "generator"]
+      "realmRoles": [
+        "user",
+        "generator"
+      ]
     }
   ]
 }
