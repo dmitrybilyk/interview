@@ -1,0 +1,5 @@
+# Without authentication (since security is disabled)
+curl -H "Content-Type: application/x-ndjson" -XPOST http://localhost:9200/_bulk --data-binary "@orders.bulk.ndjson"
+curl -H "Content-Type: application/x-ndjson" -XPOST http://localhost:9200/_bulk --data-binary "@nginx-access-logs-2020-01.bulk.ndjson"
+curl -H "Content-Type: application/x-ndjson" -XPOST http://localhost:9200/_bulk --data-binary "@nginx-access-logs-2020-02.bulk.ndjson"
+curl -H "Content-Type: application/x-ndjson" -XPOST http://localhost:9200/_bulk --data-binary "@nginx-access-logs-2020-03.bulk.ndjson"

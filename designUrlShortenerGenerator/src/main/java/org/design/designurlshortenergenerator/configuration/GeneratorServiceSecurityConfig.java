@@ -27,7 +27,7 @@ public class GeneratorServiceSecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Protected API endpoints: requires a valid JWT with the 'generator' scope.
                         // Spring Security automatically prefixes scopes with SCOPE_
-                        .requestMatchers("/api/shorten").permitAll()
+//                        .requestMatchers("/api/shorten").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
 
                         // All other paths require authentication (will trigger the login/redirect flow)
