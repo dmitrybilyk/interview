@@ -8,10 +8,10 @@ import org.springframework.web.bind.annotation.RestController;
 public class TestClientController {
 
     @Autowired
-    private ApiClient apiClient;
+    private CertificateApiClient certificateApiClient;
 
-    @GetMapping("/test/api/client")
+    @GetMapping("/test/api/with/certificate")
     public String testClient() {
-        return apiClient.callHello();
+        return certificateApiClient.callHello();
     }
 }
