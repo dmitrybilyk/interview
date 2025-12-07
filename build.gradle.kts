@@ -141,7 +141,7 @@ dependencies {
     implementation("commons-io:commons-io:2.11.0")
     runtimeOnly("org.postgresql:postgresql")
 //    if (project.hasProperty("postgres")) {
-//        implementation("org.springframework.boot:spring-boot-starter-data-jpa")
+        implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 //    }
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")

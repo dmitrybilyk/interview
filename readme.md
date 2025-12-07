@@ -1,22 +1,7 @@
-some info
-addditionals
-fgfgfddddddddddddsfsdfdsf
+Frontend
 
-some changes
+npm create vite@latest . -- --template react-ts
+npm install
+npm run dev
 
-fdsf
-
-888888888
-
-
-
-uuuuuu
-888888888ddd
-
-
-
-9999909090909090999999
-
-changes lead to non fast forward
-
-origin changes
+npm install axios
