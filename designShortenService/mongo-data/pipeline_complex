@@ -1,0 +1,138 @@
+[
+  // 1. DATE RANGE FILTER
+  {
+    $match: {
+      date: {
+        $gte: ISODate("2025-11-01T00:00:00Z"),
+        $lte: ISODate("2025-11-30T23:59:59Z")
+      }
+    }
+  },
+
+  // 2. FACET – parallel pipelines
+  {
+    $facet: {
+      // ---------------------------------------
+      // A) Total number of sales (orders)
+      // ---------------------------------------
+      totalSales: [
+        { $count: "count" }
+      ],
+
+      // ---------------------------------------
+      // B) Total revenue
+      // ---------------------------------------
+      revenue: [
+        { $unwind: "$items" },
+        {
+          $group: {
+            _id: null,
+            totalRevenue: { $sum: { $multiply: ["$items.qty", "$items.price"] } }
+          }
+        }
+      ],
+
+      // ---------------------------------------
+      // C) Unique customers
+      // ---------------------------------------
+      uniqueCustomers: [
+        { $group: { _id: "$customerId" } },
+        { $count: "count" }
+      ],
+
+      // ---------------------------------------
+      // D) Total items sold
+      // ---------------------------------------
+      totalItems: [
+        { $unwind: "$items" },
+        { $group: { _id: null, total: { $sum: "$items.qty" } } }
+      ],
+
+      // ---------------------------------------
+      // E) Sales with at least one Electronics item
+      // ---------------------------------------
+      electronicsSales: [
+        { $unwind: "$items" },
+        {
+          $lookup: {
+            from: "products",
+            localField: "items.productId",
+            foreignField: "_id",
+            as: "product"
+          }
+        },
+        { $unwind: "$product" },
+        { $match: { "product.category": "Electronics" } },
+        { $group: { _id: "$_id" } }, // unique sales
+        { $count: "count" }
+      ],
+
+      // ---------------------------------------
+      // F) Revenue by category
+      // ---------------------------------------
+      revenueByCategory: [
+        { $unwind: "$items" },
+        {
+          $lookup: {
+            from: "products",
+            localField: "items.productId",
+            foreignField: "_id",
+            as: "product"
+          }
+        },
+        { $unwind: "$product" },
+        {
+          $group: {
+            _id: "$product.category",
+            revenue: { $sum: { $multiply: ["$items.qty", "$items.price"] } }
+          }
+        }
+      ]
+    }
+  },
+
+  // 3. FINAL PROJECTION
+  {
+    $project: {
+      periodStart: "2025-11-01",
+      periodEnd: "2025-11-30",
+
+      totalSales: { $ifNull: [{ $arrayElemAt: ["$totalSales.count", 0] }, 0] },
+
+      totalRevenue: {
+        $ifNull: [{ $arrayElemAt: ["$revenue.totalRevenue", 0] }, 0]
+      },
+
+      uniqueCustomers: {
+        $ifNull: [{ $arrayElemAt: ["$uniqueCustomers.count", 0] }, 0]
+      },
+
+      totalItemsSold: {
+        $ifNull: [{ $arrayElemAt: ["$totalItems.total", 0] }, 0]
+      },
+
+      electronicsSales: {
+        $ifNull: [{ $arrayElemAt: ["$electronicsSales.count", 0] }, 0]
+      },
+
+      percentElectronicsSales: {
+        $round: [
+          {
+            $multiply: [
+              {
+                $divide: [
+                  { $ifNull: [{ $arrayElemAt: ["$electronicsSales.count", 0] }, 0] },
+                  { $ifNull: [{ $arrayElemAt: ["$totalSales.count", 0] }, 0] }
+                ]
+              },
+              100
+            ]
+          },
+          2
+        ]
+      },
+
+      revenueByCategory: "$revenueByCategory"
+    }
+  }
+]

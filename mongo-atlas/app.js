@@ -9,7 +9,7 @@ async function run() {
     const uri =
         // "mongodb://dmytro:035645@ac-qs0438f-shard-00-00.jl1clmw.mongodb.net:27017,ac-qs0438f-shard-00-01.jl1clmw.mongodb.net:27017,ac-qs0438f-shard-00-02.jl1clmw.mongodb.net:27017/?replicaSet=atlas-14dx0d-shard-0&ssl=true&authSource=admin"
         // 'mongodb+srv://dmytro:035645@cluster.jl1clmw.mongodb.net/?retryWrites=true&w=majority&tls=true&tlsAllowInvalidCertificates=false'
-        "mongodb://user123:pass123@localhost:27017"
+        "mongodb://admin:admin123@localhost:27017"
     // The MongoClient is the object that references the connection to our
     // datastore (Atlas, for example)
     const client = new MongoClient(uri);

@@ -1,0 +1,463 @@
+#version: "3.8"
+
+services:
+  zookeeper:
+    image: zookeeper:3.7.2
+    container_name: zookeeper
+#    profiles: ["core"]
+    networks:
+      - shorten-network
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_4LW_COMMANDS_WHITELIST: "*"
+    ports:
+      - "2181:2181"
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres
+#    profiles: ["core"]
+    networks:
+      - shorten-network
+    environment:
+      POSTGRES_DB: shortdb
+      POSTGRES_USER: shortuser
+      POSTGRES_PASSWORD: shortpass
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U shortuser -d shortdb" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "5432:5432"
+
+  mongo:
+    image: mongo:8.0
+    container_name: mongo-demo
+#    profiles:
+#      - core
+    networks:
+      - shorten-network
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: user
+      MONGO_INITDB_ROOT_PASSWORD: pass
+      MONGO_INITDB_DATABASE: shortenDb
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh admin -u user -p pass --quiet
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+#    profiles: ["core"]
+    networks:
+      - shorten-network
+    command: redis-server --bind 0.0.0.0 --save 60 1 --loglevel warning
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:21.1
+    container_name: keycloak
+    networks:
+      - shorten-network
+    environment:
+      KC_HTTP_PORT: 8081
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+    command: [ "start-dev", "--import-realm" ]
+    volumes:
+      - ./keycloak-realm.json:/opt/keycloak/data/import/realm-export.json:ro
+    ports:
+      - "8081:8081"
+#    healthcheck:
+#      test: [ "CMD-SHELL", "wget -q --spider http://localhost:8080/health || exit 1" ]
+#      interval: 5s
+#      timeout: 3s
+#      retries: 20
+#      start_period: 10s
+
+  #  prometheus:
+#    image: prom/prometheus:latest
+#    container_name: prometheus
+#    networks:
+#      - shorten-network
+#    volumes:
+#      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+#      - prometheus-data:/prometheus
+#    command:
+#      - "--config.file=/etc/prometheus/prometheus.yml"
+#      - "--storage.tsdb.path=/prometheus"
+#    ports:
+#      - "9090:9090"
+#    restart: unless-stopped
+#
+#  grafana:
+#    image: grafana/grafana:latest
+#    container_name: grafana
+#    networks:
+#      - shorten-network
+#    environment:
+#      GF_SECURITY_ADMIN_PASSWORD: admin
+#      GF_USERS_ALLOW_SIGN_UP: "false"
+#    volumes:
+#      - grafana-data:/var/lib/grafana
+#    ports:
+#      - "3000:3000"
+#    depends_on:
+#      - prometheus
+#    restart: unless-stopped
+
+#  loki:
+#    image: grafana/loki:2.9.3
+#    container_name: loki
+#    command: -config.file=/etc/loki/local-config.yaml
+#    ports:
+#      - "3100:3100"
+#    volumes:
+#      - ./loki-config.yaml:/etc/loki/local-config.yaml
+#    restart: unless-stopped
+#
+#  promtail:
+#    image: grafana/promtail:2.9.3
+#    container_name: promtail
+#    volumes:
+#      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+#      - /var/run/docker.sock:/var/run/docker.sock
+#      - ./promtail-config.yaml:/etc/promtail/config.yml
+#    command: -config.file=/etc/promtail/config.yml
+#    restart: unless-stopped
+
+#  nginx:
+#    image: nginx:stable
+#    container_name: nginx
+#    volumes:
+#      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+#    ports:
+#      - "80:80"
+#    depends_on:
+#      - generator1
+#      - redirector1
+#      - redirector2
+##      - generator2
+##      - generator3
+#    healthcheck:
+#      test: [ "CMD", "curl", "-f", "http://localhost/health" ]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 3
+
+  discovery-server:
+    build:
+      context: ../designShortenerDiscoveryEureka
+      dockerfile: Dockerfile
+    container_name: discovery-server
+#    profiles: ["core"]
+    networks:
+      - shorten-network
+    ports:
+      - "8761:8761"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8761" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+#
+  gateway:
+    build:
+      context: ../designShortenerApiGateway
+      dockerfile: Dockerfile
+    container_name: gateway
+#    profiles: ["core"]
+    networks:
+      - shorten-network
+    environment:
+      # This variable is used in application.yml
+      DISCOVERY_SERVER: discovery-server
+      REDIS_HOST: redis
+
+      # Force correct Redis host (overrides any default)
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+
+      # Disable Redis health check (prevents startup delay)
+      MANAGEMENT_HEALTH_REDIS_ENABLED: "false"
+
+    depends_on:
+      discovery-server:
+        condition: service_healthy   # <-- important!
+      redis:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+
+  generator1:
+    build:
+      context: ../designUrlShortenerGenerator
+      dockerfile: Dockerfile
+    container_name: generator1
+#    profiles:
+#      - app
+    networks:
+      - shorten-network
+    environment:
+      DISCOVERY_SERVER: discovery-server
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/shortdb
+      SPRING_DATASOURCE_USERNAME: shortuser
+      SPRING_DATASOURCE_PASSWORD: shortpass
+      ZK_CONNECT: zookeeper:2181
+      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/url-shortener
+      SERVER_PORT: 8082
+      SERVER_ADDRESS: "0.0.0.0"
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus
+      MONGO_HOST: mongo-demo
+      KEYCLOAK_HOST: keycloak
+      POSTGRES_HOST: postgres
+    depends_on:
+      - postgres
+      - zookeeper
+      - gateway
+      - discovery-server
+      - keycloak
+    expose:
+      - "8082"
+    ports:
+      - "8082:8082"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8082/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+      start_period: 20s
+
+#  generator2:
+#    build:
+#      context: ../designUrlShortenerGenerator
+#      dockerfile: Dockerfile
+#    container_name: generator2
+#    environment:
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/shortdb
+#      SPRING_DATASOURCE_USERNAME: shortuser
+#      SPRING_DATASOURCE_PASSWORD: shortpass
+#      ZK_CONNECT: zookeeper:2181
+#      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/url-shortener
+#      SERVER_PORT: 8083
+#      SERVER_ADDRESS: "0.0.0.0"
+#      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info
+#    depends_on:
+#      - postgres
+#      - zookeeper
+#    expose:
+#      - "8083"
+#    ports:
+#      - "8083:8083"
+#    healthcheck:
+#      test: [ "CMD", "curl", "-f", "http://localhost:8083/actuator/health" ]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 12
+#      start_period: 30s
+
+#  generator3:
+#    build:
+#      context: ../designUrlShortenerGenerator
+#      dockerfile: Dockerfile
+#    container_name: generator3
+#    environment:
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/shortdb
+#      SPRING_DATASOURCE_USERNAME: shortuser
+#      SPRING_DATASOURCE_PASSWORD: shortpass
+#      ZK_CONNECT: zookeeper:2181
+#      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/url-shortener
+#      SERVER_PORT: 8084
+#      SERVER_ADDRESS: "0.0.0.0"
+#      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info
+#    depends_on:
+#      - postgres
+#      - zookeeper
+#    expose:
+#      - "8084"
+#    ports:
+#      - "8084:8084"
+#    healthcheck:
+#      test: [ "CMD", "curl", "-f", "http://localhost:8084/actuator/health" ]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 8
+#      start_period: 20s
+
+  redirector1:
+    build:
+      context: ../designUrlShortenerRedirector   # <-- new module
+      dockerfile: Dockerfile
+    container_name: redirector1
+#    profiles:
+#      - app
+    networks:
+      - shorten-network
+    environment:
+      DISCOVERY_SERVER: discovery-server
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/shortdb
+      SPRING_R2DBC_HOST: postgres
+      SPRING_R2DBC_PORT: 5432
+      SPRING_DATASOURCE_USERNAME: shortuser
+      SPRING_DATASOURCE_PASSWORD: shortpass
+      SERVER_PORT: 8085
+      SERVER_ADDRESS: "0.0.0.0"
+      SPRING_REDIS_HOST: redis
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus
+    depends_on:
+      discovery-server:
+        condition: service_started
+      gateway:
+        condition: service_started
+      postgres:
+        condition: service_healthy
+
+    ports:
+      - "8085:8085"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+      start_period: 30s
+
+  redirector2:
+    build:
+      context: ../designUrlShortenerRedirector   # <-- new module
+      dockerfile: Dockerfile
+    container_name: redirector2
+#    profiles:
+#      - app
+    networks:
+      - shorten-network
+    environment:
+      DISCOVERY_SERVER: discovery-server
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/shortdb
+      SPRING_R2DBC_HOST: postgres
+      SPRING_R2DBC_PORT: 5432
+      SPRING_DATASOURCE_USERNAME: shortuser
+      SPRING_DATASOURCE_PASSWORD: shortpass
+      SERVER_PORT: 8086
+      SERVER_ADDRESS: "0.0.0.0"
+      SPRING_REDIS_HOST: redis
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus
+    depends_on:
+      postgres:
+        condition: service_healthy
+      discovery-server:
+        condition: service_started
+      gateway:
+        condition: service_started
+    ports:
+      - "8086:8086"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 8
+      start_period: 30s
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
+    container_name: elasticsearch
+    hostname: elasticsearch  # Add this line
+    networks:
+      shorten-network:
+        aliases:
+          - elasticsearch.local  # Add this line
+    environment:
+      - node.name=elasticsearch
+      - cluster.name=es-docker-cluster
+      - discovery.type=single-node
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - xpack.security.enabled=false
+      # Add these network settings:
+      - network.host=0.0.0.0
+      - network.publish_host=elasticsearch
+      - network.bind_host=0.0.0.0
+      - thread_pool.write.queue_size=100000
+      - thread_pool.search.queue_size=100000
+      - thread_pool.get.queue_size=100000
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.13.0
+    container_name: kibana
+    hostname: kibana  # Add this line
+    networks:
+      shorten-network:
+        aliases:
+          - kibana.local  # Add this line
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      # Add this to prevent Kibana hostname resolution issues:
+      - SERVER_NAME=kibana
+    ports:
+      - "5601:5601"
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+#  pg_primary_data:
+#  pg_replica1_data:
+#  pg_replica2_data:
+  pgdata:
+  redis-data:
+  prometheus-data:
+  grafana-data:
+  mongo-data:
+  elasticsearch-data:
+
+networks:
+  shorten-network:
+    driver: bridge
+

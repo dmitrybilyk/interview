@@ -1,0 +1,76 @@
+###
+POST http://localhost:8080/api/shorten
+Content-Type: application/json
+Authorization: Basic user pass
+
+{
+  "url": "https://google.com"
+}
+
+<> 2025-11-25T172533.201.txt
+
+###
+GET http://localhost:8082/api/get
+Authorization: Basic dmytro pass
+
+###
+GET http://localhost:8080/redirect/Mq
+
+<> 2025-11-25T172533.200.html
+
+###
+GET http://localhost:8080/api/shorten/trigger-rest
+
+###
+GET http://localhost:8080/api/shorten/trigger-ws
+
+###
+GET http://localhost:8085/api/admin/send-manual?message=777
+
+<> 2025-11-25T172534.404.json
+
+#Get Code
+###
+http://localhost:8081/realms/url-shortener/protocol/openid-connect/auth?response_type=code&client_id=url-generator-service&redirect_uri=http://localhost:8082&scope=openid&state=abc12345
+
+<> 2025-11-25T172534.200.html
+
+#Get Access Token with code
+###
+POST http://localhost:8081/realms/url-shortener/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code&
+client_id=url-generator-service&
+client_secret=my-secret&
+code=
+12789672-0175-4f56-9a99-550122c5be36.527f8714-51d7-4cfc-a433-3431a183d5ed.e16e2c00-58d4-48c7-b841-85ccc9a99943
+    &
+redirect_uri=http://localhost:8082
+
+<> 2025-11-25T174545.200.json
+<> 2025-11-25T174511.400.json
+<> 2025-11-25T173757.200.json
+<> 2025-11-25T173701.400.json
+<> 2025-11-25T173651.400.json
+<> 2025-11-25T173532.400.json
+<> 2025-11-25T173504.400.json
+<> 2025-11-25T173350.400.json
+<> 2025-11-25T172534.400.json
+
+#Get Access Token with password
+###
+POST http://localhost:8081/realms/url-shortener/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=password&
+client_id=url-generator-service&
+client_secret=my-secret&
+username=dmytro&
+password=pass
+
+<> 2025-11-25T173317.200.json
+<> 2025-11-25T173155.400.json
+
+
+

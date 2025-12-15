@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: jfrog-postgres
+    environment:
+      POSTGRES_USER: artifactory
+      POSTGRES_PASSWORD: artifactory123
+      POSTGRES_DB: artifactory
+    ports:
+      - "5433:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U artifactory"]
+      interval: 5s
+      retries: 5
+
+  artifactory:
+    image: docker.io/jfrog/artifactory-oss:7.55.7
+    container_name: artifactory
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: artifactory
+      POSTGRES_PASSWORD: artifactory123
+      POSTGRES_DB: artifactory
+
+      ACCESS_DB_TYPE: postgresql
+      ACCESS_DB_HOST: postgres
+      ACCESS_DB_PORT: 5432
+      ACCESS_DB_USER: artifactory
+      ACCESS_DB_PASSWORD: artifactory123
+      ACCESS_DB_NAME: artifactory
+
+      JF_SHARED_EXTRAJAVAOPTS: "-Xms512m -Xmx2g"
+    ports:
+      - "8081:8081"
+      - "8040:8040"
+      - "8046:8046"
+    volumes:
+      - artifactory_data:/var/opt/jfrog/artifactory
+
+volumes:
+  pg_data:
+  artifactory_data:

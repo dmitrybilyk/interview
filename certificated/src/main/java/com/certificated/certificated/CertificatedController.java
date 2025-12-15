@@ -11,7 +11,7 @@ public class CertificatedController {
         return "certificated";
     }
 
-    @GetMapping("/api/hello")
+    @GetMapping("/api/with/certificate")
     public String apiHello() {
         return "api hello";
     }
