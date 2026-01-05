@@ -33,7 +33,8 @@ public class GeneratorServiceSecurityConfig {
                         // All other paths require authentication (will trigger the login/redirect flow)
                         // This covers your request to be redirected to Keycloak when accessing
                         // a public-facing but authenticated endpoint.
-                        .anyRequest().authenticated()
+                        .anyRequest().permitAll()
+//                        .anyRequest().authenticated()
                 )
 
                 // 2. Enable OAuth 2.0 Login (Client Flow)
