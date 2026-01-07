@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 public class VirtualThreadsConfiguration {
     @Bean
     public Executor virtualThreadExecutor() {
-        return Executors.newVirtualThreadPerTaskExecutor();
+//        return Executors.newVirtualThreadPerTaskExecutor();
+        return Executors.newSingleThreadExecutor();
     }
 }
