@@ -1,6 +1,10 @@
 package com.conduct.interview.practise.departments;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,7 +26,10 @@ public class DepartmentController {
     }
 
     @GetMapping
-    public List<DepartmentDto> findAll() {
+    public List<DepartmentDto> findAll(
+            @AuthenticationPrincipal Jwt jwt,
+            Authentication authentication
+    ) {
         return service.findAll();
     }
 
