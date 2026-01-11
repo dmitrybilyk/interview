@@ -1,3 +1,5 @@
+eval $(minikube docker-env)
+
 minikube service spring-webflux --url
 
 kubectl exec -it deploy/spring-webflux -- curl http://localhost:8080/hello
@@ -12,7 +14,7 @@ docker build -t spring-webflux:0.0.1 .
 
 kubectl config view --minify --output 'jsonpath={..namespace}'
 
-helm install spring-webflux-demo ./spring-webflux -n demo
+helm install spring-webflux ./spring-webflux -n demo
 
 kubectl config set-context --current --namespace=demo
 
