@@ -8,21 +8,39 @@ fun test(box: Box) {
     }
 }
 
+fun test() {
+    listOf(1, 2, 3).forEach {
+        if (it == 2) return   // returns from test(), NOT from lambda
+        println(it)
+    }
+    print("fdfdf")
+}
+
+fun test2() {
+    listOf(1, 2, 3).forEach(fun(it: Int) {
+        if (it == 2) return  // returns only from THIS function
+        println(it)
+    })
+    print("ffffff")
+}
+
 fun main() {
 
-    checkDefaultValues(7)
+    test2()
 
-    val a = null
-    val b = 5
-
-    println(a?:b)
-
-    var x: Any = "hello"
-//    x = 4
-
-    if (x is String) {
-        println(x.length) // ❌ compile error
-    }
+//    checkDefaultValues(7)
+//
+//    val a = null
+//    val b = 5
+//
+//    println(a?:b)
+//
+//    var x: Any = "hello"
+////    x = 4
+//
+//    if (x is String) {
+//        println(x.length) // ❌ compile error
+//    }
 
 
 
