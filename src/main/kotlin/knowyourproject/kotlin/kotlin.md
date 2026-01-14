@@ -1,3 +1,28 @@
+                     ┌─────────────────────────┐
+                     │      Kotlin Philosophy   │
+                     └─────────────────────────┘
+                                │
+    ┌───────────────┬───────────┼───────────────┬───────────────┐
+    │               │           │               │               │
+┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
+│ Immutability│ │ Final by     │ │ Null Safety │ │ No Checked  │ │ DSL Support │
+│ (val by     │ │ default      │ │              │ │ Exceptions │ │ (first-class│
+│ default)    │ │ (classes/    │ │              │ │             │ │ lambdas)    │
+└─────────────┘ │ functions)  │ └─────────────┘ └─────────────┘ └─────────────┘
+│         └─────────────┘        │                │                 │
+│             │                   │                │                 │
+│  Safe &     │   Prevent          │  Compile-time  │  Cleaner code   │
+│  predictable│ accidental        │  null checks   │  (no try/catch)│
+│  code       │ overrides          │  (NPE-free)   │                 │
+│             │                    │                │                 │
+▼             ▼                    ▼                ▼                 ▼
+Fewer runtime   Safer inheritance    Less crashes     Focus on          Concise,
+bugs & side-    & predictable        & bugs          meaningful       readable APIs
+effects         code                                  error handling
+
+
+
+
 CORE LANGUAGE (must be rock-solid)
 Types & Null Safety
 
