@@ -1,4 +1,4 @@
-package knowyourproject.kotlin.methods
+package knowyourproject.kotlin.methods.grouping
 
 data class Person(val name: String, val age: Int)
 
