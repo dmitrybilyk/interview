@@ -1,14 +1,16 @@
 package knowyourproject.reactive.flatmap
 
-import knowyourproject.ValidateRUserService
+import knowyourproject.reactive.ValidateRUserService
 import knowyourproject.reactive.EnrichRUserService
 import knowyourproject.reactive.RUserService
+import reactor.core.publisher.Mono
 import reactor.core.scheduler.Schedulers
 import java.lang.Thread.sleep
 
 fun main() {
     val rUserService = RUserService()
     val enrichRUserService = EnrichRUserService()
+    val validateRUserService = ValidateRUserService()
     val start = System.currentTimeMillis()
 
     fun log(msg: String, item: Any? = "") =
@@ -21,8 +23,14 @@ fun main() {
             enrichRUserService.enrichUserReactive(user)
                 .subscribeOn(Schedulers.boundedElastic())
                 .doOnSubscribe { log("STARTING enrichment for:", user.name) }
+                .flatMap {
+//                    Mono.fromCallable { validateRUserService.validateRUser(it) }
+//                        .subscribeOn(Schedulers.boundedElastic())
+                    Mono.defer { validateRUserService.validateRUserReactive(it) }
+                        .subscribeOn(Schedulers.boundedElastic())
+                }
         }
-        .doOnNext { log("FINISHED enrichment -", it) }
+        .doOnNext { log("FINISHED processing -", it) }
         .doOnComplete { log("TOTAL TIME:") }
         .subscribe()
 
