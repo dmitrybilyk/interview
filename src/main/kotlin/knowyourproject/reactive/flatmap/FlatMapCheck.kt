@@ -15,7 +15,7 @@ fun main() {
         println("${System.currentTimeMillis() - start}ms | [${Thread.currentThread().name}] $msg $item")
 
     rUserService.getRUsers()
-//        .mergeWith(rUserService.getPremiumRUsers())
+        .mergeWith(rUserService.getPremiumRUsers())
         .doOnNext { log("FETCHED from Java server:", it) } // Track when the 1s wait ends
         .flatMap { user ->
             enrichRUserService.enrichUserReactive(user)
@@ -26,5 +26,5 @@ fun main() {
         .doOnComplete { log("TOTAL TIME:") }
         .subscribe()
 
-    Thread.sleep(6000)
+    sleep(6000)
 }
