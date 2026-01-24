@@ -1,0 +1,32 @@
+@startuml
+autonumber
+skinparam monochrome true
+
+participant "Main/Client" as C
+participant "Flux (Publisher)" as P
+participant "LambdaSubscriber\n(Internal)" as S
+participant "Subscription" as Sub
+
+C -> P: flux.subscribe(user -> { ... })
+activate P
+
+P -> S: onSubscribe(Subscription)
+activate S
+
+note right of S: Internal Subscriber automatically\ncalls request(Long.MAX_VALUE)
+
+S -> Sub: request(Long.MAX_VALUE)
+activate Sub
+Sub -> P: (Signal: Send everything!)
+deactivate Sub
+
+loop for each element
+    P -> S: onNext(RUser)
+    S -> C: (Executes your Lambda code)
+end
+
+P -> S: onComplete()
+deactivate S
+deactivate P
+
+@enduml
