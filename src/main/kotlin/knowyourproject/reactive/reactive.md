@@ -33,7 +33,8 @@ next to check:
 - map vs flatmap.
 - cold vs hot subscription
 - streaming
-- sink
+- sink - it's hot subscriber meaning execution happens just once and independently on subscribers. Sink "pushes"
+something and subscribers get it when they are ready. Often used in callback scenarios
 
 
 seq 1 200 | xargs -n1 -P 50 curl -s http://localhost:8081/users
