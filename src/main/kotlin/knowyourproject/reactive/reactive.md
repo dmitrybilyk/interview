@@ -30,10 +30,15 @@ this - Flux<Mono<UserRest>>
 limitRate = upstream backpressure control, chunk by chunk
 
 next to check:
-- map vs flatmap.
-- cold vs hot subscription
-- streaming
-- sink - it's hot subscriber meaning execution happens just once and independently on subscribers. Sink "pushes"
+- map vs flatmap. - map to use when you just transform value. from non-publisher to non-publisher. 
+If map returns publisher then result for publisher chain will be Mono<Mono<String>>. We should flatten. 
+so use flatMap
+- cold vs hot subscription. - Cold subscription to use when we need execution of publisher per subscriber.
+In case of hot subscription Producer executes once and pushes result to first coming subscriber
+and subscribers are fetching it when they need, when they are ready etc. 
+- streaming - is a multiple values over time. can be hot and cold (Flux.fromIterable(fileLines))
+- sink - it's hot publishing with delay. with async execution involved. 
+it's hot subscriber meaning execution happens just once and independently on subscribers. Sink "pushes"
 something and subscribers get it when they are ready. Often used in callback scenarios
 
 
