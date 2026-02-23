@@ -30,6 +30,20 @@ public class GeneratorController {
         return ResponseEntity.ok("Got something");
     }
 
+    @GetMapping("/codes/{code}")
+    public ResponseEntity<String> getOriginalUrl(@PathVariable("code") String code) {
+        log.info("Received request to resolve code: {}", code);
+
+        String originalUrl = urlService.getOriginalUrlByCode(code);
+
+        if (originalUrl != null) {
+            return ResponseEntity.ok(originalUrl);
+        } else {
+            log.warn("Code not found: {}", code);
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @PostMapping("/shorten")
     public ResponseEntity<String> shorten(@RequestBody @Valid CreateReq req) {
         String code = urlService.shortenUrl(req.url());

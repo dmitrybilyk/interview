@@ -1,16 +1,14 @@
-package org.design.designurlshortenerredirector;
+package org.design.designurlshortenerredirector.controller;
 
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.design.designurlshortenerredirector.service.rest.api.RedirectService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
-
-import java.io.IOException;
 
 @Slf4j
 @RestController

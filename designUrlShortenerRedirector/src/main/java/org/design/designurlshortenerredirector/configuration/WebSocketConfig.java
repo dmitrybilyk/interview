@@ -1,4 +1,4 @@
-package org.design.designurlshortenerredirector.controller;
+package org.design.designurlshortenerredirector.configuration;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.MessageBrokerRegistry;

@@ -1,4 +1,4 @@
-package org.design.designurlshortenerredirector.email;
+package org.design.designurlshortenerredirector.email.api;
 
 import reactor.core.publisher.Mono;
 

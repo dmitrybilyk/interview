@@ -1,4 +1,4 @@
-package org.design.designurlshortenerredirector;
+package org.design.designurlshortenerredirector.persistence;
 
 //import org.springframework.data.jpa.repository.JpaRepository;
 //import org.springframework.stereotype.Repository;
@@ -11,6 +11,7 @@ package org.design.designurlshortenerredirector;
 //}
 
 // Assuming UrlMapping is the entity class
+import org.design.designurlshortenerredirector.persistence.model.UrlMapping;
 import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 import reactor.core.publisher.Mono;
 

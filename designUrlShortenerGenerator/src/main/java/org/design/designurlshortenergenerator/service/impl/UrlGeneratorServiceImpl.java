@@ -1,5 +1,6 @@
 package org.design.designurlshortenergenerator.service.impl;
 
+import jakarta.ws.rs.NotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.design.designurlshortenergenerator.generator.allocator.api.IdProvider;
@@ -77,5 +78,14 @@ public class UrlGeneratorServiceImpl implements UrlGeneratorService {
         long id = 0L;
         jpaRepo.deleteByShortCode(code);
         mongoRepo.deleteById(id);
+    }
+
+    @Override
+    public String getOriginalUrlByCode(String code) {
+        log.info("Fetching original URL for code: {}", code);
+
+        return jpaRepo.findByShortCode(code)
+                .map(UrlMapping::getTarget)
+                .orElseThrow(() -> new NotFoundException("Mapping not found for code: " + code));
     }
 }

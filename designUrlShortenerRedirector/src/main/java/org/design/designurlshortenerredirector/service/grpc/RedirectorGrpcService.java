@@ -1,10 +1,8 @@
-package org.design.designurlshortenerredirector;
+package org.design.designurlshortenerredirector.service.grpc;
 
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
-import redirector.Redirector;
 import redirector.RedirectorServiceGrpc;
-import redirector.Redirector.ResolveRequest;
 import redirector.Redirector.ResolveResponse;
 
 @GrpcService

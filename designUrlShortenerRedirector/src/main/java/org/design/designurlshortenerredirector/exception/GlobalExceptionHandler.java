@@ -1,4 +1,4 @@
-package org.design.designurlshortenerredirector;
+package org.design.designurlshortenerredirector.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,8 +13,4 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Void> notFound(NotFoundException ex, WebRequest request) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
     }
-}
-
-class NotFoundException extends RuntimeException {
-    public NotFoundException(String msg) { super(msg); }
 }

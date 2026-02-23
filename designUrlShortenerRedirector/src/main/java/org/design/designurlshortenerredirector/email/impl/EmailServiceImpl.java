@@ -1,6 +1,7 @@
-package org.design.designurlshortenerredirector.email;
+package org.design.designurlshortenerredirector.email.impl;
 
 import lombok.extern.slf4j.Slf4j;
+import org.design.designurlshortenerredirector.email.api.EmailService;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -9,7 +10,7 @@ import reactor.core.scheduler.Schedulers;
 
 @Service
 @Slf4j
-public class EmailServiceImpl implements EmailService{
+public class EmailServiceImpl implements EmailService {
     private final JavaMailSender mailSender;
 
     public EmailServiceImpl(JavaMailSender mailSender) {

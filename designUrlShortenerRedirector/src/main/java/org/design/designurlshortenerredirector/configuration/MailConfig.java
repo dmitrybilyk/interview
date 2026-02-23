@@ -1,4 +1,4 @@
-package org.design.designurlshortenerredirector.email;
+package org.design.designurlshortenerredirector.configuration;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

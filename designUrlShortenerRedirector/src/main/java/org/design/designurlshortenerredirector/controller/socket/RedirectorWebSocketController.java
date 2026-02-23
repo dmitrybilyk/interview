@@ -1,4 +1,4 @@
-package org.design.designurlshortenerredirector.controller;
+package org.design.designurlshortenerredirector.controller.socket;
 
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.SendTo;
