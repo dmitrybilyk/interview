@@ -1,4 +1,4 @@
-package org.design.designurlshortenergenerator.persistance.mongo.model;
+package org.design.designurlshortenergenerator.persistence.mongo.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;

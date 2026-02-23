@@ -1,6 +1,6 @@
-package org.design.designurlshortenergenerator.persistance.mongo.model.repository;
+package org.design.designurlshortenergenerator.persistence.mongo.model.repository;
 
-import org.design.designurlshortenergenerator.persistance.mongo.model.MongoUrlMapping;
+import org.design.designurlshortenergenerator.persistence.mongo.model.MongoUrlMapping;
 import org.springframework.data.mongodb.repository.MongoRepository;
 
 public interface MongoUrlMappingRepository extends MongoRepository<MongoUrlMapping, Long> {

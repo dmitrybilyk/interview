@@ -1,4 +1,4 @@
-package org.design.designurlshortenergenerator.persistance.model;
+package org.design.designurlshortenergenerator.persistence.model;
 
 import jakarta.persistence.*;
 import lombok.Getter;

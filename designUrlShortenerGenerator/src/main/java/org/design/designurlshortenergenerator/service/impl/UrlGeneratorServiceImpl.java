@@ -2,12 +2,12 @@ package org.design.designurlshortenergenerator.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.design.designurlshortenergenerator.generator.allocator.api.IdProvider;
 import org.design.designurlshortenergenerator.generator.strategy.api.CodeGeneratorStrategy;
-import org.design.designurlshortenergenerator.generator.allocator.RangeAllocator;
-import org.design.designurlshortenergenerator.persistance.model.UrlMapping;
-import org.design.designurlshortenergenerator.persistance.repository.UrlMappingRepository;
-import org.design.designurlshortenergenerator.persistance.mongo.model.MongoUrlMapping;
-import org.design.designurlshortenergenerator.persistance.mongo.model.repository.MongoUrlMappingRepository;
+import org.design.designurlshortenergenerator.persistence.model.UrlMapping;
+import org.design.designurlshortenergenerator.persistence.mongo.model.MongoUrlMapping;
+import org.design.designurlshortenergenerator.persistence.mongo.model.repository.MongoUrlMappingRepository;
+import org.design.designurlshortenergenerator.persistence.repository.UrlMappingRepository;
 import org.design.designurlshortenergenerator.service.api.UrlGeneratorService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,21 +24,21 @@ public class UrlGeneratorServiceImpl implements UrlGeneratorService {
 
     private final UrlMappingRepository jpaRepo;
     private final MongoUrlMappingRepository mongoRepo;
-    private final RangeAllocator allocator;
+    private final IdProvider idProvider;
     private final CodeGeneratorStrategy codeGeneratorStrategy;
 
     @Override
     @Transactional
     public String shortenUrl(String originalUrl) {
         try {
-            long id = allocator.nextId();
+            long id = idProvider.nextId();
             String code = codeGeneratorStrategy.encode(id);
 
             UrlMapping m = new UrlMapping();
             m.setId(id);
             m.setShortCode(code);
             m.setTarget(originalUrl);
-            jpaRepo.save(m);
+            jpaRepo.saveMapping(m);
             log.info("Url is generated in SQL database!");
 
             saveToMongo(id, code, originalUrl);
@@ -75,7 +75,7 @@ public class UrlGeneratorServiceImpl implements UrlGeneratorService {
     @Transactional
     public void deleteByCode(String code) {
         long id = 0L;
-        jpaRepo.deleteById(id);
+        jpaRepo.deleteByShortCode(code);
         mongoRepo.deleteById(id);
     }
 }
