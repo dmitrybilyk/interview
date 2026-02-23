@@ -1,4 +1,4 @@
-package org.design.designurlshortenergenerator.configuration;
+package org.design.designurlshortenergenerator.configuration.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

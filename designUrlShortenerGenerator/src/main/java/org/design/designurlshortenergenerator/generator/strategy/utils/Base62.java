@@ -1,4 +1,4 @@
-package org.design.designurlshortenergenerator;
+package org.design.designurlshortenergenerator.generator.strategy.utils;
 
 public final class Base62 {
     private static final char[] ALPHABET =

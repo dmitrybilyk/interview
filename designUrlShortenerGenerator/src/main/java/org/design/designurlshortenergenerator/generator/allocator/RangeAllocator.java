@@ -1,4 +1,4 @@
-package org.design.designurlshortenergenerator;
+package org.design.designurlshortenergenerator.generator.allocator;
 
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.recipes.atomic.AtomicValue;
@@ -18,7 +18,7 @@ public class RangeAllocator {
     private final AtomicLong localCurrent = new AtomicLong(0);
     private final AtomicLong localEnd = new AtomicLong(-1);
 
-    public RangeAllocator(@Value("${ZK_CONNECT:localhost:2181}") String connectString) throws Exception {
+    public RangeAllocator(@Value("${zookeeper.connect:localhost:2181}") String connectString) throws Exception {
         System.out.println("Connecting to ZooKeeper: " + connectString);
 
         CuratorFramework client = CuratorFrameworkFactory.builder()

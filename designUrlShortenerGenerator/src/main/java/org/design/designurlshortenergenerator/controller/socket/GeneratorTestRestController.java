@@ -1,6 +1,5 @@
-package org.design.designurlshortenergenerator.controller;
+package org.design.designurlshortenergenerator.controller.socket;
 
-import org.design.designurlshortenergenerator.service.WebSocketClientService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

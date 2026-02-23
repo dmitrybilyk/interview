@@ -1,6 +1,5 @@
-package org.design.designurlshortenergenerator.service;
+package org.design.designurlshortenergenerator.controller.socket;
 
-import jakarta.annotation.PostConstruct;
 import org.springframework.messaging.converter.MappingJackson2MessageConverter;
 import org.springframework.messaging.simp.stomp.*;
 import org.springframework.stereotype.Service;

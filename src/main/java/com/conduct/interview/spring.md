@@ -1,5 +1,13 @@
 Preparing for an interview on **Spring** and **Spring Boot**, including understanding **transactions**, is essential for showcasing your expertise as a Java developer, especially given your experience with Spring Boot, Hibernate, and microservices as noted in your LinkedIn profile. Below, I’ll provide a focused guide on Spring and Spring Boot, covering core concepts, common interview topics, and a simple explanation of transactions, tailored to your background. I’ll also include sample interview questions with concise answers, leveraging your experience with projects like the Spring Boot 2 to 3 upgrade, monolith-to-microservices transition, and Auto-QM service.
 
+
+Why injecting bean via constructor is best approach:
+1. Object will not be changed as it can be marked as final. Safe for multithreading
+2. Object could not be created in half-ready state
+3. Having many parameters inside constructor is a code-smell marker
+4. It's good for Unit Tests. You don't need to up all the Spring Context but just can
+create object with one call
+
 ---
 
 ### Spring and Spring Boot Overview

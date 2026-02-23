@@ -1,6 +1,6 @@
-package org.design.designurlshortenergenerator.mongo.model;
+package org.design.designurlshortenergenerator.persistance.mongo.model;
 
-import org.design.designurlshortenergenerator.mongo.model.repository.MongoUrlMappingRepository;
+import org.design.designurlshortenergenerator.persistance.mongo.model.repository.MongoUrlMappingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

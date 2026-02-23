@@ -1,3 +1,8 @@
-cd /home/dmytro/dev/projects/interview/src/main/java
+cd com/conduct/interview/_0_bytecode_and_compiler/run_class/
+javac TestClass.java
 
-java com.conduct.interview._0_bytecode_and_compiler.TestClass
+cd /home/dik81/IdeaProjects/interview/src/main/java
+java com.conduct.interview._0_bytecode_and_compiler.run_class.TestClass
+
+if I'm in different directory:
+java -cp /home/dik81/IdeaProjects/interview/src/main/java com.conduct.interview._0_bytecode_and_compiler.run_class.TestClass

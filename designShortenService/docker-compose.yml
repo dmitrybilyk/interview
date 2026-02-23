@@ -216,44 +216,44 @@ services:
       start_period: 60s
 
 
-  generator1:
-    build:
-      context: ../designUrlShortenerGenerator
-      dockerfile: Dockerfile
-    container_name: generator1
-#    profiles:
-#      - app
-    networks:
-      - shorten-network
-    environment:
-      DISCOVERY_SERVER: discovery-server
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/shortdb
-      SPRING_DATASOURCE_USERNAME: shortuser
-      SPRING_DATASOURCE_PASSWORD: shortpass
-      ZK_CONNECT: zookeeper:2181
-      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/url-shortener
-      SERVER_PORT: 8082
-      SERVER_ADDRESS: "0.0.0.0"
-      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus
-      MONGO_HOST: mongo-demo
-      KEYCLOAK_HOST: keycloak
-      POSTGRES_HOST: postgres
-    depends_on:
-      - postgres
-      - zookeeper
-      - gateway
-      - discovery-server
-      - keycloak
-    expose:
-      - "8082"
-    ports:
-      - "8082:8082"
-    healthcheck:
-      test: [ "CMD", "curl", "-f", "http://localhost:8082/actuator/health" ]
-      interval: 10s
-      timeout: 5s
-      retries: 8
-      start_period: 20s
+#  generator1:
+#    build:
+#      context: ../designUrlShortenerGenerator
+#      dockerfile: Dockerfile
+#    container_name: generator1
+##    profiles:
+##      - app
+#    networks:
+#      - shorten-network
+#    environment:
+#      DISCOVERY_SERVER: discovery-server
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/shortdb
+#      SPRING_DATASOURCE_USERNAME: shortuser
+#      SPRING_DATASOURCE_PASSWORD: shortpass
+#      ZK_CONNECT: zookeeper:2181
+#      SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI: http://keycloak:8080/realms/url-shortener
+#      SERVER_PORT: 8082
+#      SERVER_ADDRESS: "0.0.0.0"
+#      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus
+#      MONGO_HOST: mongo-demo
+#      KEYCLOAK_HOST: keycloak
+#      POSTGRES_HOST: postgres
+#    depends_on:
+#      - postgres
+#      - zookeeper
+#      - gateway
+#      - discovery-server
+#      - keycloak
+#    expose:
+#      - "8082"
+#    ports:
+#      - "8082:8082"
+#    healthcheck:
+#      test: [ "CMD", "curl", "-f", "http://localhost:8082/actuator/health" ]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 8
+#      start_period: 20s
 
 #  generator2:
 #    build:
@@ -311,140 +311,140 @@ services:
 #      retries: 8
 #      start_period: 20s
 
-  redirector1:
-    build:
-      context: ../designUrlShortenerRedirector   # <-- new module
-      dockerfile: Dockerfile
-    container_name: redirector1
-#    profiles:
-#      - app
-    networks:
-      - shorten-network
-    environment:
-      DISCOVERY_SERVER: discovery-server
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/shortdb
-      SPRING_R2DBC_HOST: postgres
-      SPRING_R2DBC_PORT: 5432
-      SPRING_DATASOURCE_USERNAME: shortuser
-      SPRING_DATASOURCE_PASSWORD: shortpass
-      SERVER_PORT: 8085
-      SERVER_ADDRESS: "0.0.0.0"
-      SPRING_REDIS_HOST: redis
-      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus
-    depends_on:
-      discovery-server:
-        condition: service_started
-      gateway:
-        condition: service_started
-      postgres:
-        condition: service_healthy
+#  redirector1:
+#    build:
+#      context: ../designUrlShortenerRedirector   # <-- new module
+#      dockerfile: Dockerfile
+#    container_name: redirector1
+##    profiles:
+##      - app
+#    networks:
+#      - shorten-network
+#    environment:
+#      DISCOVERY_SERVER: discovery-server
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/shortdb
+#      SPRING_R2DBC_HOST: postgres
+#      SPRING_R2DBC_PORT: 5432
+#      SPRING_DATASOURCE_USERNAME: shortuser
+#      SPRING_DATASOURCE_PASSWORD: shortpass
+#      SERVER_PORT: 8085
+#      SERVER_ADDRESS: "0.0.0.0"
+#      SPRING_REDIS_HOST: redis
+#      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus
+#    depends_on:
+#      discovery-server:
+#        condition: service_started
+#      gateway:
+#        condition: service_started
+#      postgres:
+#        condition: service_healthy
+#
+#    ports:
+#      - "8085:8085"
+#    healthcheck:
+#      test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 8
+#      start_period: 30s
+#
+#  redirector2:
+#    build:
+#      context: ../designUrlShortenerRedirector   # <-- new module
+#      dockerfile: Dockerfile
+#    container_name: redirector2
+##    profiles:
+##      - app
+#    networks:
+#      - shorten-network
+#    environment:
+#      DISCOVERY_SERVER: discovery-server
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/shortdb
+#      SPRING_R2DBC_HOST: postgres
+#      SPRING_R2DBC_PORT: 5432
+#      SPRING_DATASOURCE_USERNAME: shortuser
+#      SPRING_DATASOURCE_PASSWORD: shortpass
+#      SERVER_PORT: 8086
+#      SERVER_ADDRESS: "0.0.0.0"
+#      SPRING_REDIS_HOST: redis
+#      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#      discovery-server:
+#        condition: service_started
+#      gateway:
+#        condition: service_started
+#    ports:
+#      - "8086:8086"
+#    healthcheck:
+#      test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 8
+#      start_period: 30s
 
-    ports:
-      - "8085:8085"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8085/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 8
-      start_period: 30s
-
-  redirector2:
-    build:
-      context: ../designUrlShortenerRedirector   # <-- new module
-      dockerfile: Dockerfile
-    container_name: redirector2
-#    profiles:
-#      - app
-    networks:
-      - shorten-network
-    environment:
-      DISCOVERY_SERVER: discovery-server
-      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/shortdb
-      SPRING_R2DBC_HOST: postgres
-      SPRING_R2DBC_PORT: 5432
-      SPRING_DATASOURCE_USERNAME: shortuser
-      SPRING_DATASOURCE_PASSWORD: shortpass
-      SERVER_PORT: 8086
-      SERVER_ADDRESS: "0.0.0.0"
-      SPRING_REDIS_HOST: redis
-      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: health,info,prometheus
-    depends_on:
-      postgres:
-        condition: service_healthy
-      discovery-server:
-        condition: service_started
-      gateway:
-        condition: service_started
-    ports:
-      - "8086:8086"
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
-      interval: 10s
-      timeout: 5s
-      retries: 8
-      start_period: 30s
-
-  elasticsearch:
-    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
-    container_name: elasticsearch
-    hostname: elasticsearch  # Add this line
-    networks:
-      shorten-network:
-        aliases:
-          - elasticsearch.local  # Add this line
-    environment:
-      - node.name=elasticsearch
-      - cluster.name=es-docker-cluster
-      - discovery.type=single-node
-      - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
-      - xpack.security.enabled=false
-      # Add these network settings:
-      - network.host=0.0.0.0
-      - network.publish_host=elasticsearch
-      - network.bind_host=0.0.0.0
-      - thread_pool.write.queue_size=100000
-      - thread_pool.search.queue_size=100000
-      - thread_pool.get.queue_size=100000
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
-    volumes:
-      - elasticsearch-data:/usr/share/elasticsearch/data
-    ports:
-      - "9200:9200"
-      - "9300:9300"
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
-  kibana:
-    image: docker.elastic.co/kibana/kibana:8.13.0
-    container_name: kibana
-    hostname: kibana  # Add this line
-    networks:
-      shorten-network:
-        aliases:
-          - kibana.local  # Add this line
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
-      # Add this to prevent Kibana hostname resolution issues:
-      - SERVER_NAME=kibana
-    ports:
-      - "5601:5601"
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
-    healthcheck:
-      test: [ "CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
+#  elasticsearch:
+#    image: docker.elastic.co/elasticsearch/elasticsearch:8.13.0
+#    container_name: elasticsearch
+#    hostname: elasticsearch  # Add this line
+#    networks:
+#      shorten-network:
+#        aliases:
+#          - elasticsearch.local  # Add this line
+#    environment:
+#      - node.name=elasticsearch
+#      - cluster.name=es-docker-cluster
+#      - discovery.type=single-node
+#      - bootstrap.memory_lock=true
+#      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+#      - xpack.security.enabled=false
+#      # Add these network settings:
+#      - network.host=0.0.0.0
+#      - network.publish_host=elasticsearch
+#      - network.bind_host=0.0.0.0
+#      - thread_pool.write.queue_size=100000
+#      - thread_pool.search.queue_size=100000
+#      - thread_pool.get.queue_size=100000
+#    ulimits:
+#      memlock:
+#        soft: -1
+#        hard: -1
+#    volumes:
+#      - elasticsearch-data:/usr/share/elasticsearch/data
+#    ports:
+#      - "9200:9200"
+#      - "9300:9300"
+#    healthcheck:
+#      test: [ "CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1" ]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#      start_period: 30s
+#
+#  kibana:
+#    image: docker.elastic.co/kibana/kibana:8.13.0
+#    container_name: kibana
+#    hostname: kibana  # Add this line
+#    networks:
+#      shorten-network:
+#        aliases:
+#          - kibana.local  # Add this line
+#    environment:
+#      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+#      # Add this to prevent Kibana hostname resolution issues:
+#      - SERVER_NAME=kibana
+#    ports:
+#      - "5601:5601"
+#    depends_on:
+#      elasticsearch:
+#        condition: service_healthy
+#    healthcheck:
+#      test: [ "CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1" ]
+#      interval: 10s
+#      timeout: 5s
+#      retries: 5
+#      start_period: 30s
 
 volumes:
 #  pg_primary_data:
