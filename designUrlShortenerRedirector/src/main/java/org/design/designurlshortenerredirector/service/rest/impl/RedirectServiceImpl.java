@@ -20,7 +20,7 @@ import reactor.core.scheduler.Schedulers;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Primary
+//@Primary
 public class RedirectServiceImpl implements RedirectService {
 
     private final UrlMappingRepository pgRepo;

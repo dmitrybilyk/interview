@@ -46,7 +46,7 @@ public class EmailServiceImpl implements EmailService {
         return Mono.fromRunnable(() -> {
                     try {
                         // This is the blocking call that must be executed off the event loop
-                        mailSender.send(message);
+//                        mailSender.send(message);
                         log.info("Successfully sent notification email for shortCode: {}", shortCode);
                     } catch (Exception e) {
                         // Log the exception but let it be handled by the .doOnError/.onErrorResume

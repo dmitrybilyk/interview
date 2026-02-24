@@ -1,0 +1,25 @@
+{
+  "realm": "url-shortener",
+  "enabled": true,
+  "clients": [
+    {
+      "clientId": "shortener-gateway",
+      "enabled": true,
+      "publicClient": false,
+      "redirectUris": ["*"],
+      "webOrigins": ["*"],
+      "secret": "super-secret-change-me",
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true
+    },
+    {
+      "clientId": "shortener-web",
+      "publicClient": true,
+      "redirectUris": ["http://localhost:3000/*"],
+      "webOrigins": ["http://localhost:3000"]
+    }
+  ],
+  "roles": {
+    "realm": ["user", "admin"]
+  }
+}
