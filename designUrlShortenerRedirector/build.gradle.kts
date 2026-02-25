@@ -67,6 +67,8 @@ dependencies {
 
     // R2DBC Driver - REMOVED explicit version for Spring Boot management to handle it
     implementation("io.r2dbc:r2dbc-postgresql:0.8.13.RELEASE")
+    // Kafka
+    implementation("org.springframework.kafka:spring-kafka")
 
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("org.springframework.boot:spring-boot-starter-validation")

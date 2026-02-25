@@ -39,6 +39,9 @@ dependencies {
     // Database
     implementation("org.postgresql:postgresql")
 
+    // Kafka
+    implementation("org.springframework.kafka:spring-kafka")
+
     // Metrics
     implementation("io.micrometer:micrometer-registry-prometheus")
 
