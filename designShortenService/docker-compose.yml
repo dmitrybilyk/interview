@@ -477,6 +477,20 @@ services:
     depends_on:
       - kafka
 
+  rabbitmq:
+    image: rabbitmq:3.12-management-alpine
+    container_name: rabbitmq
+    networks:
+      - shorten-network
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
 #  pg_primary_data:
 #  pg_replica1_data:
