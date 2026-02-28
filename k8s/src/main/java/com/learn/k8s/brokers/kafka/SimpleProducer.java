@@ -15,23 +15,24 @@ public class SimpleProducer {
 
         try (KafkaProducer<String, String> producer = new KafkaProducer<>(props)) {
             String topic = "my-manual-topic";
-            String key = "id_123";
-            String value = "Привіт з чистого Java коду!";
 
-            ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, value);
-            
-            // Відправка (асинхронна)
-            producer.send(record, (metadata, exception) -> {
-                if (exception == null) {
-                    System.out.println("Відправлено! Офсет: " + metadata.offset());
-                } else {
-                    exception.printStackTrace();
-                }
-            });
-            
-            // Чекаємо трохи, щоб повідомлення встигло піти перед закриттям
+            for (int i = 0; i < 10; i++) {
+                String key = "key_" + i;
+                String value = "Message-Content-" + i;
+
+                ProducerRecord<String, String> record = new ProducerRecord<>(topic, key, value);
+
+                producer.send(record, (metadata, exception) -> {
+                    if (exception == null) {
+                        System.out.printf("🚀 Надіслано: %s | Ключ: %s | Партіція: %d | Офсет: %d%n",
+                                value, key, metadata.partition(), metadata.offset());
+                    } else {
+                        exception.printStackTrace();
+                    }
+                });
+            }
             producer.flush();
         }
-        System.out.println("Повідомлення успішно надіслано в Kafka!");
+        System.out.println("🏁 Продюсер завершив роботу.");
     }
 }

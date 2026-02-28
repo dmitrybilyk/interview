@@ -12,10 +12,18 @@ public class TopicCreator {
         props.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
 
         try (AdminClient adminClient = AdminClient.create(props)) {
-            NewTopic newTopic = new NewTopic("my-manual-topic", 1, (short) 1);
+            // Створюємо топік з 2 партіціями
+            // Якщо топік вже є, його треба видалити через UI або змінити назву тут
+            String topicName = "my-manual-topic";
+            int partitions = 2;
+            short replicationFactor = 1;
+
+            NewTopic newTopic = new NewTopic(topicName, partitions, replicationFactor);
             adminClient.createTopics(Collections.singleton(newTopic)).all().get();
-            System.out.println("Топік створено успішно! 🎉");
+
+            System.out.println("✅ Топік '" + topicName + "' створено з " + partitions + " партіціями!");
         } catch (Exception e) {
+            System.err.println("❌ Помилка: можливо, топік уже існує. Видали його через Kafka UI.");
             e.printStackTrace();
         }
     }

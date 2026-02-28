@@ -10,14 +10,14 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.Properties;
 
-public class SimpleConsumer {
+public class SimpleConsumer2 {
     public static void main(String[] args) {
         // Передавай ім'я через Program Arguments в IntelliJ (наприклад, Consumer-A)
-        String consumerName = (args.length > 0) ? args[0] : "first";
+        String consumerName = (args.length > 0) ? args[0] : "second";
 
         Properties props = new Properties();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "my-learning-group1");
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "my-learning-group2");
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
