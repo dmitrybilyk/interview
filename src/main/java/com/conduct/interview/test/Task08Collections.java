@@ -2,6 +2,7 @@ package com.conduct.interview.test;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
 * Implement collections logic as described.
@@ -9,7 +10,7 @@ import java.util.stream.Collectors;
 public class Task08Collections {
 
     public static void main(String[] args) {
-        getStudentsByLanguage(students);
+        Map<String, List<Student>> studentsByLanguage = getStudentsByLanguage(students);
         getAllLanguages(students).forEach(System.out::println);
     }
 
@@ -46,25 +47,36 @@ public class Task08Collections {
     public static Map<String, List<Student>> getStudentsByLanguage(List<Student> students) {
         Map<String, List<Student>> studentsByLanguage = new HashMap<>();
 
-        for(Student student : students) {
-            for(String language : student.getLanguages()) {
-                List<Student> studentsByLanguages = studentsByLanguage.getOrDefault(language, new ArrayList<>());
-                studentsByLanguages.add(student);
-                studentsByLanguage.put(language, studentsByLanguages);
-            }
-        }
+//        for(Student student : students) {
+//            for(String language : student.getLanguages()) {
+//                List<Student> studentsByLanguages = studentsByLanguage.getOrDefault(language, new ArrayList<>());
+//                studentsByLanguages.add(student);
+//                studentsByLanguage.put(language, studentsByLanguages);
+//            }
+//        }
 
         Map<String, List<Student>> collect = students.stream()
                 .flatMap(student -> student.getLanguages().stream()
                 .map(lang -> new AbstractMap.SimpleEntry<>(lang, student)))
                 .collect(Collectors.groupingBy(Map.Entry::getKey, Collectors.mapping(Map.Entry::getValue, Collectors.toList())));
 
+//        List<String> listStream = students.stream()
+//        List<AbstractMap.SimpleEntry<String, Student>> list = students.stream()
+//        Stream<AbstractMap.SimpleEntry<String, Student>> simpleEntryStream = students.stream()
+        Map<String, List<Student>> collect2 = students.stream()
+//                .flatMap(student -> student.getLanguages().stream()).toList();
+                .flatMap(student -> student.getLanguages().stream()
+                        .map(lang -> new AbstractMap.SimpleEntry<>(lang, student)))
+                .collect(Collectors.groupingBy(o -> o.getKey(),
+                        Collectors.mapping(o -> o.getValue(), Collectors.toList())));
+//                        )).toList();
+
         Map<String, List<Student>> collect1 = students.stream()
                 .flatMap(student -> student.getLanguages().stream()
                         .map(lang -> new AbstractMap.SimpleEntry<>(lang, student)))
                 .collect(Collectors.groupingBy(Map.Entry::getKey, Collectors.mapping(Map.Entry::getValue, Collectors.toList())));
 
-        return studentsByLanguage;
+        return collect;
     }
 
     /**
