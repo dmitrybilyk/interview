@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.design.designurlshortenergenerator.generator.allocator.api.IdProvider;
 import org.design.designurlshortenergenerator.generator.strategy.api.CodeGeneratorStrategy;
+import org.design.designurlshortenergenerator.generator.strategy.impl.CodeGeneratorRegistry;
 import org.design.designurlshortenergenerator.persistence.model.UrlMapping;
 import org.design.designurlshortenergenerator.persistence.mongo.model.MongoUrlMapping;
 import org.design.designurlshortenergenerator.persistence.mongo.model.repository.MongoUrlMappingRepository;
@@ -27,14 +28,16 @@ public class UrlGeneratorServiceImpl implements UrlGeneratorService {
     private final UrlMappingRepository jpaRepo;
     private final MongoUrlMappingRepository mongoRepo;
     private final IdProvider idProvider;
-    private final CodeGeneratorStrategy codeGeneratorStrategy;
+//    private final CodeGeneratorStrategy codeGeneratorStrategy;
     private final UrlEventPublisher urlEventPublisher;
+    private final CodeGeneratorRegistry registry;
 
     @Override
     @Transactional
     public String shortenUrl(String originalUrl) {
         try {
             long id = idProvider.nextId();
+            CodeGeneratorStrategy codeGeneratorStrategy = registry.getStrategy("base62CodeGeneratorStrategy");
             String code = codeGeneratorStrategy.encode(id);
 
             UrlMapping m = new UrlMapping();

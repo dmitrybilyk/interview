@@ -7,7 +7,7 @@ import java.nio.ByteBuffer;
 import java.util.Base64;
 
 @Component
-@Primary
+//@Primary
 public class Base64CodeGenerator implements CodeGeneratorStrategy {
     
     @Override
