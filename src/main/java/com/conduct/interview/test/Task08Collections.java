@@ -45,6 +45,12 @@ public class Task08Collections {
      * Given list of students group them by language.
      */
     public static Map<String, List<Student>> getStudentsByLanguage(List<Student> students) {
+        Map<String, List<Student>> collect3 = students.stream()
+                .flatMap(student -> student.getLanguages().stream()
+                        .map(lang -> new AbstractMap.SimpleEntry<>(lang, student)))
+                .collect(Collectors.groupingBy(s -> s.getKey(), Collectors.mapping(o -> o.getValue(), Collectors.toList())));
+
+
         Map<String, List<Student>> studentsByLanguage = new HashMap<>();
 
 //        for(Student student : students) {
