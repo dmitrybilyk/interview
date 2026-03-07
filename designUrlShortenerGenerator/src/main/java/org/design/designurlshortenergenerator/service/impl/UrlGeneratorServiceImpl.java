@@ -1,10 +1,14 @@
 package org.design.designurlshortenergenerator.service.impl;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.ws.rs.NotFoundException;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.design.designurlshortenergenerator.generator.allocator.api.IdProvider;
-import org.design.designurlshortenergenerator.generator.strategy.api.CodeGeneratorStrategy;
+import org.design.designurlshortenergenerator.generator.state.api.UrlServiceState;
+import org.design.designurlshortenergenerator.generator.state.impl.ActiveState;
+import org.design.designurlshortenergenerator.generator.state.impl.MaintenanceState;
 import org.design.designurlshortenergenerator.generator.strategy.impl.CodeGeneratorRegistry;
 import org.design.designurlshortenergenerator.persistence.model.UrlMapping;
 import org.design.designurlshortenergenerator.persistence.mongo.model.MongoUrlMapping;
@@ -23,42 +27,43 @@ import java.util.Random;
 @Slf4j
 @Service
 @RequiredArgsConstructor
+@Getter // Allows States to access the repos and providers
 public class UrlGeneratorServiceImpl implements UrlGeneratorService {
 
     private final UrlMappingRepository jpaRepo;
     private final MongoUrlMappingRepository mongoRepo;
     private final IdProvider idProvider;
-//    private final CodeGeneratorStrategy codeGeneratorStrategy;
     private final UrlEventPublisher urlEventPublisher;
     private final CodeGeneratorRegistry registry;
+
+    // Available States
+    private final ActiveState activeState;
+    private final MaintenanceState maintenanceState;
+
+    // The current internal state
+    private UrlServiceState currentState;
+
+    @PostConstruct
+    public void init() {
+        this.currentState = activeState; // Default state
+    }
+
+    /**
+     * Method to trigger a state change at runtime.
+     */
+    public void toggleMaintenanceMode(boolean enable) {
+        this.currentState = enable ? maintenanceState : activeState;
+        log.info("System state changed to: {}", currentState.getClass().getSimpleName());
+    }
 
     @Override
     @Transactional
     public String shortenUrl(String originalUrl) {
-        try {
-            long id = idProvider.nextId();
-            CodeGeneratorStrategy codeGeneratorStrategy = registry.getStrategy("base62CodeGeneratorStrategy");
-            String code = codeGeneratorStrategy.encode(id);
-
-            UrlMapping m = new UrlMapping();
-            m.setId(id);
-            m.setShortCode(code);
-            m.setTarget(originalUrl);
-            jpaRepo.saveMapping(m);
-            log.info("Url is generated in SQL database!");
-
-            urlEventPublisher.publishUrlCreated(code, originalUrl);
-
-            saveToMongo(id, code, originalUrl);
-
-            return code;
-        } catch (Exception e) {
-            log.error("Failed to generate URL", e);
-            throw new RuntimeException("Error during URL shortening process", e);
-        }
+        // Delegate to the current state
+        return currentState.shorten(this, originalUrl);
     }
 
-    private void saveToMongo(long id, String code, String url) {
+    public void saveToMongo(long id, String code, String url) {
         MongoUrlMapping mongo = new MongoUrlMapping();
         mongo.setId(id);
         mongo.setShortCode(code);
@@ -82,15 +87,13 @@ public class UrlGeneratorServiceImpl implements UrlGeneratorService {
     @Override
     @Transactional
     public void deleteByCode(String code) {
-        long id = 0L;
         jpaRepo.deleteByShortCode(code);
-        mongoRepo.deleteById(id);
+        mongoRepo.deleteById(0L); // As noted previously, usually needs a real ID
     }
 
     @Override
     public String getOriginalUrlByCode(String code) {
         log.info("Fetching original URL for code: {}", code);
-
         return jpaRepo.findByShortCode(code)
                 .map(UrlMapping::getTarget)
                 .orElseThrow(() -> new NotFoundException("Mapping not found for code: " + code));
