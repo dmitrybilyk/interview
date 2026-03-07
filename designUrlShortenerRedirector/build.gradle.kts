@@ -63,6 +63,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-webflux")
     implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
 
+    implementation("org.springframework.boot:spring-boot-starter-amqp")
     implementation("javax.annotation:javax.annotation-api:1.3.2")
 
     // R2DBC Driver - REMOVED explicit version for Spring Boot management to handle it

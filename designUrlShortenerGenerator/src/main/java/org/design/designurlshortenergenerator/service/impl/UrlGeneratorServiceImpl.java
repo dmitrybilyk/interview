@@ -10,7 +10,7 @@ import org.design.designurlshortenergenerator.persistence.mongo.model.MongoUrlMa
 import org.design.designurlshortenergenerator.persistence.mongo.model.repository.MongoUrlMappingRepository;
 import org.design.designurlshortenergenerator.persistence.repository.UrlMappingRepository;
 import org.design.designurlshortenergenerator.service.api.UrlGeneratorService;
-import org.design.designurlshortenergenerator.service.kafka.UrlEventProducer;
+import org.design.designurlshortenergenerator.service.messaging.api.UrlEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,7 +28,7 @@ public class UrlGeneratorServiceImpl implements UrlGeneratorService {
     private final MongoUrlMappingRepository mongoRepo;
     private final IdProvider idProvider;
     private final CodeGeneratorStrategy codeGeneratorStrategy;
-    private final UrlEventProducer urlEventProducer;
+    private final UrlEventPublisher urlEventPublisher;
 
     @Override
     @Transactional
@@ -43,7 +43,8 @@ public class UrlGeneratorServiceImpl implements UrlGeneratorService {
             m.setTarget(originalUrl);
             jpaRepo.saveMapping(m);
             log.info("Url is generated in SQL database!");
-            urlEventProducer.sendUrlCreatedEvent(code, originalUrl);
+
+            urlEventPublisher.publishUrlCreated(code, originalUrl);
 
             saveToMongo(id, code, originalUrl);
 

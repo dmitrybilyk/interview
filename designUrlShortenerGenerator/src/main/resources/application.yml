@@ -3,6 +3,11 @@ server:
   port: ${SERVER_PORT:8082}
   address: 0.0.0.0   # Critical: bind to all interfaces
 
+app:
+  messaging:
+    type: kafka
+#    type: rabbitmq
+
 management:
   endpoints:
     web:
