@@ -25,7 +25,7 @@ public class ActiveState implements UrlServiceState {
             resetTimeout = 30000L               // Stay OPEN for 30s so you have time to test
     )
 
-    @RateLimiter(name = "mongoSaveLimit", fallbackMethod = "rateLimitFallback")
+    @RateLimiter(name = "shortenLimit", fallbackMethod = "rateLimitFallback")
     public String shorten(UrlGeneratorServiceImpl context, String originalUrl) {
         long id = context.getIdProvider().nextId();
         var strategy = context.getRegistry().getStrategy("base62CodeGeneratorStrategy");
