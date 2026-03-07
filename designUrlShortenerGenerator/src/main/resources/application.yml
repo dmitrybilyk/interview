@@ -102,3 +102,11 @@ eureka:
 #         provider:
 #           keycloak:
 #             issuer-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI}
+
+resilience4j:
+  ratelimiter:
+    instances:
+      mongoSaveLimit:
+        limitForPeriod: 5           # Max 5 calls
+        limitRefreshPeriod: 10s     # Every 10 seconds
+        timeoutDuration: 0          # Don't wait, fail immediately if over limit

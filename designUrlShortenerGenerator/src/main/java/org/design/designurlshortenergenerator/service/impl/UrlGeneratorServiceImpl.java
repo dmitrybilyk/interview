@@ -35,6 +35,7 @@ public class UrlGeneratorServiceImpl implements UrlGeneratorService {
     private final IdProvider idProvider;
     private final UrlEventPublisher urlEventPublisher;
     private final CodeGeneratorRegistry registry;
+    private boolean simulateMongoFailure = false;
 
     // Available States
     private final ActiveState activeState;
@@ -46,6 +47,10 @@ public class UrlGeneratorServiceImpl implements UrlGeneratorService {
     @PostConstruct
     public void init() {
         this.currentState = activeState; // Default state
+    }
+
+    public void toggleMongoFailure(boolean fail) {
+        this.simulateMongoFailure = fail;
     }
 
     /**
@@ -64,6 +69,10 @@ public class UrlGeneratorServiceImpl implements UrlGeneratorService {
     }
 
     public void saveToMongo(long id, String code, String url) {
+        if (simulateMongoFailure) {
+            log.error("SIMULATED ERROR: MongoDB is unreachable!");
+            throw new RuntimeException("Connection timeout to MongoDB cluster");
+        }
         MongoUrlMapping mongo = new MongoUrlMapping();
         mongo.setId(id);
         mongo.setShortCode(code);

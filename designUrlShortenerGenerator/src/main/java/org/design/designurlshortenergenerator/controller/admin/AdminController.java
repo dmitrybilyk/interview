@@ -10,7 +10,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/admin/system")
 @RequiredArgsConstructor
-public class MaintenanceController {
+public class AdminController {
 
     private final UrlGeneratorServiceImpl urlGeneratorService;
 
@@ -38,5 +38,11 @@ public class MaintenanceController {
     public ResponseEntity<String> getStatus() {
         return ResponseEntity.ok("Current Service State: " + 
                urlGeneratorService.getCurrentState().getClass().getSimpleName());
+    }
+
+    @PostMapping("/chaos/mongo")
+    public ResponseEntity<String> toggleMongo(@RequestParam boolean fail) {
+        urlGeneratorService.toggleMongoFailure(fail);
+        return ResponseEntity.ok("Mongo failure simulation: " + (fail ? "ON" : "OFF"));
     }
 }
