@@ -33,6 +33,7 @@ dependencies {
     implementation("org.springframework.boot:spring-boot-starter-amqp")
     implementation("io.github.resilience4j:resilience4j-spring-boot3")
     implementation("org.springframework.boot:spring-boot-starter-websocket")
+    implementation("com.github.ben-manes.caffeine:caffeine")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
     implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
 //    implementation("org.springframework.cloud:spring-cloud-starter-gateway")

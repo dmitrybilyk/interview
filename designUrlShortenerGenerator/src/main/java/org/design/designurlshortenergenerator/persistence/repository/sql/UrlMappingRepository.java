@@ -1,9 +1,9 @@
-package org.design.designurlshortenergenerator.persistence.repository;
+package org.design.designurlshortenergenerator.persistence.repository.sql;
 
-import org.design.designurlshortenergenerator.persistence.model.UrlMapping;
-import org.design.designurlshortenergenerator.persistence.repository.api.UrlDeleter;
-import org.design.designurlshortenergenerator.persistence.repository.api.UrlReader;
-import org.design.designurlshortenergenerator.persistence.repository.api.UrlSaver;
+import org.design.designurlshortenergenerator.persistence.model.sql.UrlMapping;
+import org.design.designurlshortenergenerator.persistence.repository.sql.api.UrlDeleter;
+import org.design.designurlshortenergenerator.persistence.repository.sql.api.UrlReader;
+import org.design.designurlshortenergenerator.persistence.repository.sql.api.UrlSaver;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

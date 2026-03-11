@@ -1,7 +1,7 @@
 package org.design.designurlshortenergenerator.configuration;
 
-import org.design.designurlshortenergenerator.persistence.mongo.model.repository.MongoUrlMappingRepository;
-import org.design.designurlshortenergenerator.persistence.repository.UrlMappingRepository;
+import org.design.designurlshortenergenerator.persistence.repository.nosql.MongoUrlMappingRepository;
+import org.design.designurlshortenergenerator.persistence.repository.sql.UrlMappingRepository;
 import org.design.designurlshortenergenerator.service.storage.api.StorageService;
 import org.design.designurlshortenergenerator.service.storage.impl.MongoStorageDecorator;
 import org.design.designurlshortenergenerator.service.storage.impl.SqlStorageService;

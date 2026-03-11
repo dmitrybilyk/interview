@@ -2,8 +2,8 @@ package org.design.designurlshortenergenerator.service.storage.impl;
 
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
-import org.design.designurlshortenergenerator.persistence.mongo.model.MongoUrlMapping;
-import org.design.designurlshortenergenerator.persistence.mongo.model.repository.MongoUrlMappingRepository;
+import org.design.designurlshortenergenerator.persistence.model.nosql.MongoUrlMapping;
+import org.design.designurlshortenergenerator.persistence.repository.nosql.MongoUrlMappingRepository;
 import org.design.designurlshortenergenerator.service.storage.api.StorageService;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;

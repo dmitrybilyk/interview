@@ -10,10 +10,10 @@ import org.design.designurlshortenergenerator.generator.state.api.UrlServiceStat
 import org.design.designurlshortenergenerator.generator.state.impl.ActiveState;
 import org.design.designurlshortenergenerator.generator.state.impl.MaintenanceState;
 import org.design.designurlshortenergenerator.generator.strategy.impl.CodeGeneratorRegistry;
-import org.design.designurlshortenergenerator.persistence.model.UrlMapping;
-import org.design.designurlshortenergenerator.persistence.mongo.model.MongoUrlMapping;
-import org.design.designurlshortenergenerator.persistence.mongo.model.repository.MongoUrlMappingRepository;
-import org.design.designurlshortenergenerator.persistence.repository.UrlMappingRepository;
+import org.design.designurlshortenergenerator.persistence.model.sql.UrlMapping;
+import org.design.designurlshortenergenerator.persistence.model.nosql.MongoUrlMapping;
+import org.design.designurlshortenergenerator.persistence.repository.nosql.MongoUrlMappingRepository;
+import org.design.designurlshortenergenerator.persistence.repository.sql.UrlMappingRepository;
 import org.design.designurlshortenergenerator.service.generator.api.UrlGeneratorService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

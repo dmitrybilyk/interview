@@ -2,9 +2,10 @@ package org.design.designurlshortenergenerator.generator.state.impl;
 
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import org.design.designurlshortenergenerator.generator.state.api.UrlServiceState;
-import org.design.designurlshortenergenerator.persistence.model.UrlMapping;
+import org.design.designurlshortenergenerator.persistence.model.sql.UrlMapping;
 import org.design.designurlshortenergenerator.service.generator.impl.UrlGeneratorServiceImpl;
 import org.design.designurlshortenergenerator.service.messaging.api.UrlEventPublisher;
+import org.design.designurlshortenergenerator.service.notification.EmailProvider;
 import org.design.designurlshortenergenerator.service.storage.api.StorageService;
 import org.springframework.http.HttpStatus;
 import org.springframework.retry.annotation.CircuitBreaker;
@@ -19,10 +20,12 @@ public class ActiveState implements UrlServiceState {
 
     private final StorageService storageService;
     private final UrlEventPublisher urlEventPublisher;
+    private final EmailProvider emailProvider;
 
-    public ActiveState(StorageService storageService, UrlEventPublisher urlEventPublisher) {
+    public ActiveState(StorageService storageService, UrlEventPublisher urlEventPublisher, EmailProvider emailProvider) {
         this.storageService = storageService;
         this.urlEventPublisher = urlEventPublisher;
+        this.emailProvider = emailProvider;
     }
 
     @Override
@@ -41,6 +44,7 @@ public class ActiveState implements UrlServiceState {
 
         storageService.save(id, code, originalUrl);
         urlEventPublisher.publishUrlCreated(code, originalUrl);
+        emailProvider.send("recipient", "message body");
         return code;
     }
 
