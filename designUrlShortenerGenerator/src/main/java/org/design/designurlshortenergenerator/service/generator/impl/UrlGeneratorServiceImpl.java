@@ -1,4 +1,4 @@
-package org.design.designurlshortenergenerator.service.impl;
+package org.design.designurlshortenergenerator.service.generator.impl;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.ws.rs.NotFoundException;
@@ -14,8 +14,7 @@ import org.design.designurlshortenergenerator.persistence.model.UrlMapping;
 import org.design.designurlshortenergenerator.persistence.mongo.model.MongoUrlMapping;
 import org.design.designurlshortenergenerator.persistence.mongo.model.repository.MongoUrlMappingRepository;
 import org.design.designurlshortenergenerator.persistence.repository.UrlMappingRepository;
-import org.design.designurlshortenergenerator.service.api.UrlGeneratorService;
-import org.design.designurlshortenergenerator.service.messaging.api.UrlEventPublisher;
+import org.design.designurlshortenergenerator.service.generator.api.UrlGeneratorService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,7 +32,6 @@ public class UrlGeneratorServiceImpl implements UrlGeneratorService {
     private final UrlMappingRepository jpaRepo;
     private final MongoUrlMappingRepository mongoRepo;
     private final IdProvider idProvider;
-    private final UrlEventPublisher urlEventPublisher;
     private final CodeGeneratorRegistry registry;
     private boolean simulateMongoFailure = false;
 

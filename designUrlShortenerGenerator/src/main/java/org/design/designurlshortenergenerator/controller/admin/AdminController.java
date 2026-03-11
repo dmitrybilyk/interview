@@ -1,7 +1,7 @@
 package org.design.designurlshortenergenerator.controller.admin;
 
 import lombok.RequiredArgsConstructor;
-import org.design.designurlshortenergenerator.service.impl.UrlGeneratorServiceImpl;
+import org.design.designurlshortenergenerator.service.generator.impl.UrlGeneratorServiceImpl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

@@ -4,7 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.design.designurlshortenergenerator.controller.dto.CreateReq;
-import org.design.designurlshortenergenerator.service.api.UrlGeneratorService;
+import org.design.designurlshortenergenerator.service.generator.api.UrlGeneratorService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 

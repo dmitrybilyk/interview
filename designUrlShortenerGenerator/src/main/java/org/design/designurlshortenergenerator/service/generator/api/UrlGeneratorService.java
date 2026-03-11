@@ -1,4 +1,4 @@
-package org.design.designurlshortenergenerator.service.api;
+package org.design.designurlshortenergenerator.service.generator.api;
 
 public interface UrlGeneratorService {
     String shortenUrl(String originalUrl);

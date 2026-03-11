@@ -1,7 +1,7 @@
 package org.design.designurlshortenergenerator.generator.state.impl;
 
 import org.design.designurlshortenergenerator.generator.state.api.UrlServiceState;
-import org.design.designurlshortenergenerator.service.impl.UrlGeneratorServiceImpl;
+import org.design.designurlshortenergenerator.service.generator.impl.UrlGeneratorServiceImpl;
 import org.springframework.stereotype.Component;
 
 @Component

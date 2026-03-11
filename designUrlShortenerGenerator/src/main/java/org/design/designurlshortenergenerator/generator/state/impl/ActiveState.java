@@ -1,10 +1,11 @@
 package org.design.designurlshortenergenerator.generator.state.impl;
 
-import io.github.resilience4j.ratelimiter.RequestNotPermitted;
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
 import org.design.designurlshortenergenerator.generator.state.api.UrlServiceState;
 import org.design.designurlshortenergenerator.persistence.model.UrlMapping;
-import org.design.designurlshortenergenerator.service.impl.UrlGeneratorServiceImpl;
+import org.design.designurlshortenergenerator.service.generator.impl.UrlGeneratorServiceImpl;
+import org.design.designurlshortenergenerator.service.messaging.api.UrlEventPublisher;
+import org.design.designurlshortenergenerator.service.storage.api.StorageService;
 import org.springframework.http.HttpStatus;
 import org.springframework.retry.annotation.CircuitBreaker;
 import org.springframework.retry.annotation.Recover;
@@ -16,6 +17,14 @@ import org.springframework.web.server.ResponseStatusException;
 @Component
 public class ActiveState implements UrlServiceState {
 
+    private final StorageService storageService;
+    private final UrlEventPublisher urlEventPublisher;
+
+    public ActiveState(StorageService storageService, UrlEventPublisher urlEventPublisher) {
+        this.storageService = storageService;
+        this.urlEventPublisher = urlEventPublisher;
+    }
+
     @Override
     // The circuit opens after 3 consecutive failures; stays open for 5 seconds
     @CircuitBreaker(
@@ -24,23 +33,14 @@ public class ActiveState implements UrlServiceState {
             openTimeout = 10000L,               // Errors within 10s count towards tripping
             resetTimeout = 30000L               // Stay OPEN for 30s so you have time to test
     )
-
     @RateLimiter(name = "shortenLimit", fallbackMethod = "rateLimitFallback")
     public String shorten(UrlGeneratorServiceImpl context, String originalUrl) {
         long id = context.getIdProvider().nextId();
         var strategy = context.getRegistry().getStrategy("base62CodeGeneratorStrategy");
         String code = strategy.encode(id);
 
-        // Save to SQL (Primary)
-        UrlMapping m = new UrlMapping();
-        m.setId(id);
-        m.setShortCode(code);
-        m.setTarget(originalUrl);
-        context.getJpaRepo().saveMapping(m);
-
-        // Potentially failing operation (MongoDB)
-        context.saveToMongo(id, code, originalUrl);
-
+        storageService.save(id, code, originalUrl);
+        urlEventPublisher.publishUrlCreated(code, originalUrl);
         return code;
     }
 
