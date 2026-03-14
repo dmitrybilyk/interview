@@ -14,7 +14,7 @@ import java.time.Duration;
 
 @Service
 @Slf4j
-@Primary
+//@Primary
 //@RequiredArgsConstructor
 public class RedirectServiceCacheDecorator implements RedirectService {
 

@@ -20,7 +20,7 @@ import reactor.core.scheduler.Schedulers;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-//@Primary
+@Primary
 public class RedirectServiceImpl implements RedirectService {
 
     private final UrlMappingRepository pgRepo;
@@ -43,20 +43,15 @@ public class RedirectServiceImpl implements RedirectService {
         log.info("Resolving shortCode: {}", shortCode);
 
         return pgRepo.findByShortCode(shortCode)
-                .publishOn(Schedulers.boundedElastic())
-                .doOnNext(urlMapping -> {
+                .flatMap(urlMapping -> {
                     String originalUrl = urlMapping.getOriginalUrl();
-
-                    Mono<Void> emailMono = emailService.sendNotificationEmail(shortCode, originalUrl)
-                            .doOnError(e -> log.error("Async email failed for shortCode: {}", shortCode, e))
-                            .onErrorResume(e -> Mono.empty());
-
-                    emailMono.subscribe();
-
-                    log.info("Email notification launched asynchronously for shortCode: {}", shortCode);
-                })
-                .map(UrlMapping::getOriginalUrl)
-                .switchIfEmpty(Mono.error(new NotFoundException("Short code not found: " + shortCode)));
+                    Schedulers.boundedElastic().schedule(() ->
+                            emailService.sendNotificationEmail(shortCode, originalUrl)
+                                    .doOnError(e -> log.error("Email failed", e))
+                                    .subscribe()
+                    );
+                    return Mono.just(originalUrl);
+                });
     }
 
     @Override
