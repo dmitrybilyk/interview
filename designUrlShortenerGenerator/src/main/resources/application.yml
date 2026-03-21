@@ -107,6 +107,6 @@ resilience4j:
   ratelimiter:
     instances:
       shortenLimit:
-        limitForPeriod: 5           # Max 5 calls
+        limitForPeriod: 50000           # Max 5 calls
         limitRefreshPeriod: 10s     # Every 10 seconds
         timeoutDuration: 0          # Don't wait, fail immediately if over limit

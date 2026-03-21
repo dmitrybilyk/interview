@@ -1,6 +1,8 @@
 package org.design.designurlshortenergenerator.generator.state.impl;
 
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
+import io.micrometer.core.instrument.FunctionCounter;
+import io.micrometer.core.instrument.MeterRegistry;
 import org.design.designurlshortenergenerator.generator.state.api.UrlServiceState;
 import org.design.designurlshortenergenerator.persistence.model.sql.UrlMapping;
 import org.design.designurlshortenergenerator.service.generator.impl.UrlGeneratorServiceImpl;
@@ -14,6 +16,9 @@ import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.LongAdder;
+
 @Slf4j
 @Component
 public class ActiveState implements UrlServiceState {
@@ -22,10 +27,24 @@ public class ActiveState implements UrlServiceState {
     private final UrlEventPublisher urlEventPublisher;
     private final EmailProvider emailProvider;
 
-    public ActiveState(StorageService storageService, UrlEventPublisher urlEventPublisher, EmailProvider emailProvider) {
+    // This is the "shared state"
+    // Using a simple long (NOT AtomicLong) to intentionally cause race conditions
+//    private AtomicLong totalRequestsProcessed = new AtomicLong();
+    private long totalRequestsProcessed = 0;
+
+    // For Grafana/Prometheus visibility
+    private final MeterRegistry meterRegistry;
+
+    public ActiveState(StorageService storageService, UrlEventPublisher urlEventPublisher, EmailProvider emailProvider,
+                       MeterRegistry meterRegistry) {
         this.storageService = storageService;
         this.urlEventPublisher = urlEventPublisher;
         this.emailProvider = emailProvider;
+        this.meterRegistry = meterRegistry;
+//        io.micrometer.core.instrument.Gauge.builder("url.shorten.shared.counter", () -> totalRequestsProcessed.get())
+        io.micrometer.core.instrument.Gauge.builder("url.shorten.shared.counter", () -> totalRequestsProcessed)
+                .description("A non-thread-safe counter to demonstrate race conditions")
+                .register(meterRegistry);
     }
 
     @Override
@@ -41,6 +60,9 @@ public class ActiveState implements UrlServiceState {
         long id = context.getIdProvider().nextId();
         var strategy = context.getRegistry().getStrategy("base62CodeGeneratorStrategy");
         String code = strategy.encode(id);
+
+        totalRequestsProcessed++;
+//        totalRequestsProcessed.incrementAndGet();
 
         storageService.save(id, code, originalUrl);
         urlEventPublisher.publishUrlCreated(code, originalUrl);
