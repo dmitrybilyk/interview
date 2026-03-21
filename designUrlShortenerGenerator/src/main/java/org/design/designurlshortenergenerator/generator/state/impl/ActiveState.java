@@ -1,9 +1,14 @@
 package org.design.designurlshortenergenerator.generator.state.impl;
 
 import io.github.resilience4j.ratelimiter.annotation.RateLimiter;
-import io.micrometer.core.instrument.FunctionCounter;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.design.designurlshortenergenerator.generator.state.api.UrlServiceState;
+import org.design.designurlshortenergenerator.model.api.ShortCode;
+import org.design.designurlshortenergenerator.model.impl.Base62ShortCode;
+import org.design.designurlshortenergenerator.model.visitor.api.ShortCodeVisitor;
+import org.design.designurlshortenergenerator.model.visitor.impl.LoggingVisitor;
+import org.design.designurlshortenergenerator.model.visitor.impl.MetricsVisitor;
+import org.design.designurlshortenergenerator.model.visitor.impl.ValidationVisitor;
 import org.design.designurlshortenergenerator.persistence.model.sql.UrlMapping;
 import org.design.designurlshortenergenerator.service.generator.impl.UrlGeneratorServiceImpl;
 import org.design.designurlshortenergenerator.service.messaging.api.UrlEventPublisher;
@@ -17,7 +22,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.atomic.LongAdder;
 
 @Slf4j
 @Component
@@ -29,8 +33,8 @@ public class ActiveState implements UrlServiceState {
 
     // This is the "shared state"
     // Using a simple long (NOT AtomicLong) to intentionally cause race conditions
-//    private AtomicLong totalRequestsProcessed = new AtomicLong();
-    private long totalRequestsProcessed = 0;
+    private AtomicLong totalRequestsProcessed = new AtomicLong();
+//    private long totalRequestsProcessed = 0;
 
     // For Grafana/Prometheus visibility
     private final MeterRegistry meterRegistry;
@@ -41,8 +45,8 @@ public class ActiveState implements UrlServiceState {
         this.urlEventPublisher = urlEventPublisher;
         this.emailProvider = emailProvider;
         this.meterRegistry = meterRegistry;
-//        io.micrometer.core.instrument.Gauge.builder("url.shorten.shared.counter", () -> totalRequestsProcessed.get())
-        io.micrometer.core.instrument.Gauge.builder("url.shorten.shared.counter", () -> totalRequestsProcessed)
+        io.micrometer.core.instrument.Gauge.builder("url.shorten.shared.counter", () -> totalRequestsProcessed.get())
+//        io.micrometer.core.instrument.Gauge.builder("url.shorten.shared.counter", () -> totalRequestsProcessed)
                 .description("A non-thread-safe counter to demonstrate race conditions")
                 .register(meterRegistry);
     }
@@ -59,15 +63,24 @@ public class ActiveState implements UrlServiceState {
     public String shorten(UrlGeneratorServiceImpl context, String originalUrl) {
         long id = context.getIdProvider().nextId();
         var strategy = context.getRegistry().getStrategy("base62CodeGeneratorStrategy");
-        String code = strategy.encode(id);
 
-        totalRequestsProcessed++;
-//        totalRequestsProcessed.incrementAndGet();
+        ShortCode code = new Base62ShortCode(strategy.encode(id));
 
-        storageService.save(id, code, originalUrl);
-        urlEventPublisher.publishUrlCreated(code, originalUrl);
+        ShortCodeVisitor validator = new ValidationVisitor();
+        ShortCodeVisitor metrics = new MetricsVisitor(meterRegistry);
+        ShortCodeVisitor logging = new LoggingVisitor();
+
+        code.accept(validator);
+        code.accept(metrics);
+        code.accept(logging);
+
+//        totalRequestsProcessed++;
+        totalRequestsProcessed.incrementAndGet();
+
+        storageService.save(id, code.getValue(), originalUrl);
+        urlEventPublisher.publishUrlCreated(code.getValue(), originalUrl);
         emailProvider.send("recipient", "message body");
-        return code;
+        return code.getValue();
     }
 
     public String rateLimitFallback(UrlGeneratorServiceImpl context, String originalUrl, Throwable t) {
