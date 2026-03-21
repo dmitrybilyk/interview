@@ -21,6 +21,8 @@ public class KafkaUrlEventPublisher implements UrlEventPublisher {
 
     @Value("${app.kafka.topic.visits:url-created}")
     private String topicName;
+    @Value("${app.kafka.topic.visits:url-deleted}")
+    private String deletionTopicName;
 
     @Override
     @SneakyThrows
@@ -30,5 +32,14 @@ public class KafkaUrlEventPublisher implements UrlEventPublisher {
             "longUrl", longUrl
         ));
         kafkaTemplate.send(topicName, shortCode, payload);
+    }
+
+    @Override
+    @SneakyThrows
+    public void publishUrlDeleted(String code) {
+        String payload = objectMapper.writeValueAsString(Map.of(
+                "shortCode", code
+        ));
+        kafkaTemplate.send(deletionTopicName, code, payload);
     }
 }

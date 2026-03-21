@@ -1,10 +1,13 @@
 package org.design.designurlshortenergenerator.controller.admin;
 
 import lombok.RequiredArgsConstructor;
+import org.design.designurlshortenergenerator.service.cleanup.DeleteUrlCommand;
 import org.design.designurlshortenergenerator.service.generator.impl.UrlGeneratorServiceImpl;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
 import java.util.Map;
 
 @RestController
@@ -13,6 +16,7 @@ import java.util.Map;
 public class AdminController {
 
     private final UrlGeneratorServiceImpl urlGeneratorService;
+    private final ApplicationEventPublisher eventPublisher;
 
     /**
      * Toggles the maintenance mode of the URL generator.
@@ -44,5 +48,20 @@ public class AdminController {
     public ResponseEntity<String> toggleMongo(@RequestParam boolean fail) {
         urlGeneratorService.toggleMongoFailure(fail);
         return ResponseEntity.ok("Mongo failure simulation: " + (fail ? "ON" : "OFF"));
+    }
+
+    @DeleteMapping("/urls/{code}")
+    public ResponseEntity<Void> deleteUrl(@PathVariable String code) {
+        // Create the command
+        DeleteUrlCommand command = new DeleteUrlCommand(
+                code,
+                Instant.now(),
+                "ADMIN_USER" // In a real app, get this from SecurityContext
+        );
+
+        // Publish the event - Spring handles finding the listeners
+        eventPublisher.publishEvent(command);
+
+        return ResponseEntity.accepted().build();
     }
 }

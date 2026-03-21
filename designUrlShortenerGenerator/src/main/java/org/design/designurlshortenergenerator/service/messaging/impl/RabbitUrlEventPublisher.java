@@ -23,6 +23,7 @@ public class RabbitUrlEventPublisher implements UrlEventPublisher {
     // These should match the names defined in the Redirector's config
     private static final String EXCHANGE_NAME = "url.exchange";
     private static final String ROUTING_KEY = "url.created";
+    private static final String DELETION_ROUTING_KEY = "url.deleted";
 
     @Override
     @SneakyThrows
@@ -36,5 +37,18 @@ public class RabbitUrlEventPublisher implements UrlEventPublisher {
         rabbitTemplate.convertAndSend(EXCHANGE_NAME, ROUTING_KEY, payload);
         
         log.info("Sent event to RabbitMQ: {}", shortCode);
+    }
+
+    @Override
+    @SneakyThrows
+    public void publishUrlDeleted(String code) {
+        String payload = objectMapper.writeValueAsString(Map.of(
+                "shortCode", code
+        ));
+
+        // RabbitMQ uses an Exchange and a Routing Key to decide where the message goes
+        rabbitTemplate.convertAndSend(EXCHANGE_NAME, DELETION_ROUTING_KEY, payload);
+
+        log.info("Sent deletion event to RabbitMQ: {}", code);
     }
 }

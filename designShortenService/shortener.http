@@ -1,0 +1,14 @@
+###
+POST http://localhost:8082/api/shorten
+Content-Type: application/json
+
+{
+  "url": "https://football.ua/"
+}
+
+###
+GET http://localhost:8085/redirect/Mp
+
+###
+DELETE http://localhost:8082/api/v1/admin/system/urls/Mp
+
