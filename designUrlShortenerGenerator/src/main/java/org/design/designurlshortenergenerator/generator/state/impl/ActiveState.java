@@ -64,22 +64,26 @@ public class ActiveState implements UrlServiceState {
         long id = context.getIdProvider().nextId();
         var strategy = context.getRegistry().getStrategy("base62CodeGeneratorStrategy");
 
-        ShortCode code = new Base62ShortCode(strategy.encode(id));
-
         ShortCodeVisitor validator = new ValidationVisitor();
         ShortCodeVisitor metrics = new MetricsVisitor(meterRegistry);
         ShortCodeVisitor logging = new LoggingVisitor();
 
+        ShortCode code = new Base62ShortCode(strategy.encode(id));
+
+// visitors
         code.accept(validator);
         code.accept(metrics);
         code.accept(logging);
 
-//        totalRequestsProcessed++;
         totalRequestsProcessed.incrementAndGet();
 
+// 1. persist FIRST
         storageService.save(id, code.getValue(), originalUrl);
+
+// 2. only then external side effects
         urlEventPublisher.publishUrlCreated(code.getValue(), originalUrl);
         emailProvider.send("recipient", "message body");
+
         return code.getValue();
     }
 

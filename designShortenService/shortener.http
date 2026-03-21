@@ -7,7 +7,7 @@ Content-Type: application/json
 }
 
 ###
-GET http://localhost:8085/redirect/Mp
+GET http://localhost:8085/redirect/F6p
 
 ###
 DELETE http://localhost:8082/api/v1/admin/system/urls/Mp
