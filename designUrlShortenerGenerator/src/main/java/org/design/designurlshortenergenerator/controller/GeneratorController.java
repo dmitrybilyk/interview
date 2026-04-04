@@ -55,4 +55,11 @@ public class GeneratorController {
         urlService.deleteByCode(code);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/test/increment/{code}")
+    public ResponseEntity<Void> testIsolation(@PathVariable String code) {
+        // We call the service which calls ActiveState.incrementClicks
+        urlService.incrementClicks(code);
+        return ResponseEntity.ok().build();
+    }
 }

@@ -3,6 +3,7 @@ package org.design.designurlshortenergenerator.service.storage.impl;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import org.design.designurlshortenergenerator.persistence.model.nosql.MongoUrlMapping;
+import org.design.designurlshortenergenerator.persistence.model.sql.UrlMapping;
 import org.design.designurlshortenergenerator.persistence.repository.nosql.MongoUrlMappingRepository;
 import org.design.designurlshortenergenerator.service.storage.api.StorageService;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -28,5 +29,15 @@ public class MongoStorageDecorator implements StorageService {
         mongo.setShortCode(code);
         mongo.setTarget(url);
         mongoRepo.save(mongo);
+    }
+
+    @Override
+    public UrlMapping findByCode(String code) {
+        return null;
+    }
+
+    @Override
+    public void saveMapping(UrlMapping mapping) {
+
     }
 }

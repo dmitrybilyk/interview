@@ -60,7 +60,6 @@ public class UrlGeneratorServiceImpl implements UrlGeneratorService {
     }
 
     @Override
-    @Transactional
     public String shortenUrl(String originalUrl) {
         // Delegate to the current state
         return currentState.shorten(this, originalUrl);
@@ -104,5 +103,10 @@ public class UrlGeneratorServiceImpl implements UrlGeneratorService {
         return jpaRepo.findByShortCode(code)
                 .map(UrlMapping::getTarget)
                 .orElseThrow(() -> new NotFoundException("Mapping not found for code: " + code));
+    }
+
+    @Override
+    public void incrementClicks(String code) {
+        activeState.incrementClicks(code);
     }
 }

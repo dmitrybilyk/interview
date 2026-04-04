@@ -26,6 +26,12 @@ public class UrlMapping {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt = Instant.now();
 
+    @Version
+    private Integer version; // Helps track concurrent modifications
+
+    @Column(name = "click_count")
+    private Long clickCount = 0L;
+
 
 
 }

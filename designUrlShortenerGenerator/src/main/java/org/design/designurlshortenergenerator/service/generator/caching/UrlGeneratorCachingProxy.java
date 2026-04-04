@@ -32,6 +32,11 @@ public class UrlGeneratorCachingProxy implements UrlGeneratorService {
         return originalUrl;
     }
 
+    @Override
+    public void incrementClicks(String code) {
+        delegate.incrementClicks(code);
+    }
+
     // Pass-through methods (no caching needed for these)
     @Override
     public String shortenUrl(String originalUrl) {

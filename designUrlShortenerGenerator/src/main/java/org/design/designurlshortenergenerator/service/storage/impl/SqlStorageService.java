@@ -21,4 +21,14 @@ public class SqlStorageService implements StorageService {
         m.setTarget(url);
         jpaRepo.saveMapping(m);
     }
+
+    @Override
+    public UrlMapping findByCode(String code) {
+        return jpaRepo.findByShortCode(code).get();
+    }
+
+    @Override
+    public void saveMapping(UrlMapping mapping) {
+        jpaRepo.saveMapping(mapping);
+    }
 }

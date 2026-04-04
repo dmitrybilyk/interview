@@ -4,4 +4,6 @@ public interface UrlGeneratorService {
     String shortenUrl(String originalUrl);
     void deleteByCode(String code);
     String getOriginalUrlByCode(String code);
+
+    void incrementClicks(String code);
 }
