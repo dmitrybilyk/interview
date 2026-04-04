@@ -5,6 +5,10 @@ import org.design.designurlshortenergenerator.persistence.repository.sql.api.Url
 import org.design.designurlshortenergenerator.persistence.repository.sql.api.UrlReader;
 import org.design.designurlshortenergenerator.persistence.repository.sql.api.UrlSaver;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 
@@ -17,4 +21,9 @@ public interface UrlMappingRepository extends JpaRepository<UrlMapping, Long>, U
 
     @Override
     Optional<UrlMapping> findByShortCode(String code); // для UrlReader
+
+    @Modifying
+    @Transactional
+    @Query("UPDATE UrlMapping u SET u.clickCount = u.clickCount + 1 WHERE u.shortCode = :code")
+    void incrementClicksAtomic(@Param("code") String code);
 }

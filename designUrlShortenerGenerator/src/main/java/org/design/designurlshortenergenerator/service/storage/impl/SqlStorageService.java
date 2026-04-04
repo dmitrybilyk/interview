@@ -31,4 +31,9 @@ public class SqlStorageService implements StorageService {
     public void saveMapping(UrlMapping mapping) {
         jpaRepo.saveMapping(mapping);
     }
+
+    @Override
+    public void incrementClicksAtomic(String code) {
+        jpaRepo.incrementClicksAtomic(code);
+    }
 }

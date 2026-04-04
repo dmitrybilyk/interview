@@ -17,8 +17,11 @@ import org.design.designurlshortenergenerator.service.generator.impl.UrlGenerato
 import org.design.designurlshortenergenerator.service.messaging.api.UrlEventPublisher;
 import org.design.designurlshortenergenerator.service.notification.EmailProvider;
 import org.design.designurlshortenergenerator.service.storage.api.StorageService;
+import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.http.HttpStatus;
+import org.springframework.retry.annotation.Backoff;
 import org.springframework.retry.annotation.Recover;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
@@ -143,9 +146,18 @@ public class ActiveState implements UrlServiceState {
     }
 
 
-    @Transactional(isolation = SERIALIZABLE)
-//    @Transactional(isolation = READ_COMMITTED)
+    @Retryable(
+            retryFor = { CannotAcquireLockException.class,
+                    org.springframework.orm.ObjectOptimisticLockingFailureException.class,
+                    org.springframework.dao.PessimisticLockingFailureException.class,
+                    java.sql.SQLException.class },
+            maxAttempts = 3,
+            backoff = @Backoff(delay = 100)
+    )
+//    @Transactional(isolation = SERIALIZABLE)
+    @Transactional(isolation = READ_COMMITTED)
     public void incrementClicks(String code) {
+//        storageService.incrementClicksAtomic(code);
         // In READ_COMMITTED, two threads can read the same value (e.g., 10)
         UrlMapping mapping = storageService.findByCode(code);
 

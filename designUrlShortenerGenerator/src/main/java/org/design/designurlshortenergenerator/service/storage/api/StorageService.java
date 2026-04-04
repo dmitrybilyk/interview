@@ -8,4 +8,6 @@ public interface StorageService {
     UrlMapping findByCode(String code);
 
     void saveMapping(UrlMapping mapping);
+
+    void incrementClicksAtomic(String code);
 }

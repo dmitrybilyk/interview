@@ -40,4 +40,9 @@ public class MongoStorageDecorator implements StorageService {
     public void saveMapping(UrlMapping mapping) {
 
     }
+
+    @Override
+    public void incrementClicksAtomic(String code) {
+
+    }
 }
