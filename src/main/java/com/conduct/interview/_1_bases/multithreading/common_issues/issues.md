@@ -44,10 +44,6 @@
 - **Issue**: Concurrent data structure use causes issues.
 - **Solution**: Use thread-safe collections like `ConcurrentHashMap`.
 
-### 12. Out-of-Order Execution
-- **Issue**: Threads observe operations in unexpected order.
-- **Solution**: Use `volatile` or synchronization for memory ordering.
-
-### 13. Fork/Join Pool Misuse
+### 12. Fork/Join Pool Misuse
 - **Issue**: Task imbalance leads to poor performance.
 - **Solution**: Divide tasks evenly and follow Fork/Join patterns.
