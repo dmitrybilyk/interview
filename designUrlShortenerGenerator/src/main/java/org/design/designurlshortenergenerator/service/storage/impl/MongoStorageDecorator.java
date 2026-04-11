@@ -9,8 +9,8 @@ import org.design.designurlshortenergenerator.service.storage.api.StorageService
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
-@Component
-@Qualifier("mongoDecorator")
+//@Component
+//@Qualifier("mongoDecorator")
 @RequiredArgsConstructor
 public class MongoStorageDecorator implements StorageService {
     

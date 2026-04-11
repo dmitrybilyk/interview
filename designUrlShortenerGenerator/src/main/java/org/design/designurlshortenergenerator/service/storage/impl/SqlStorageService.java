@@ -7,8 +7,8 @@ import org.design.designurlshortenergenerator.service.storage.api.StorageService
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
-@Component
-@Primary // Default implementation
+//@Component
+//@Primary // Default implementation
 @RequiredArgsConstructor
 public class SqlStorageService implements StorageService {
     private final UrlMappingRepository jpaRepo;
