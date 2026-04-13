@@ -38,5 +38,5 @@ files, and ensures portability across systems.
 ## Summary
 
 Java compilation turns source code into platform-independent
-bytecode, which the JVM executes for portability and compatibility.
+bytecode, which the JVM executes.
 

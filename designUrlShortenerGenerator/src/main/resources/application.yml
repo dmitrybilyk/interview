@@ -3,6 +3,11 @@ server:
   port: ${SERVER_PORT:8082}
   address: 0.0.0.0   # Critical: bind to all interfaces
 
+app:
+  messaging:
+    type: kafka
+#    type: rabbitmq
+
 management:
   endpoints:
     web:
@@ -22,7 +27,11 @@ management:
 spring:
   application:
     name: generator-service
-
+  kafka:
+    bootstrap-servers: localhost:9092
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
   security:
     oauth2:
       resourceserver:
@@ -93,3 +102,11 @@ eureka:
 #         provider:
 #           keycloak:
 #             issuer-uri: ${SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_ISSUER_URI}
+
+resilience4j:
+  ratelimiter:
+    instances:
+      shortenLimit:
+        limitForPeriod: 50000           # Max 5 calls
+        limitRefreshPeriod: 10s     # Every 10 seconds
+        timeoutDuration: 0          # Don't wait, fail immediately if over limit

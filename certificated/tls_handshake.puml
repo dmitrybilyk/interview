@@ -1,0 +1,35 @@
+@startuml
+participant Client
+participant Server
+participant CA as "CA / Truststore"
+
+Client -> Server: ClientHello\n(TLS versions, ciphers, ClientRandom)
+
+Server -> Client: ServerHello\n(Chosen cipher, ServerRandom)
+Server -> Client: Certificate Chain\n(Leaf + Intermediate)
+
+Client -> CA: Verify certificate chain
+CA --> Client: Root CA trusted
+
+note right of Client
+- Verify signatures
+- Check SAN / hostname
+- Check expiry
+- Check EKU=serverAuth
+end note
+
+Client -> Server: (implicit challenge)
+
+Server -> Client: Signature\n(Signed handshake hash\nusing server PRIVATE key)
+
+Client -> Client: Verify signature\n(using PUBLIC key from cert)
+
+note right of Client
+Only private-key holder
+can create valid signature
+end note
+
+Client -> Server: Encrypted traffic starts
+Server -> Client: Encrypted traffic starts
+
+@enduml

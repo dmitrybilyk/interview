@@ -9,8 +9,8 @@ public class FutureCheck {
     public static void main(String[] args) {
         long start = System.currentTimeMillis();
 
-//        ExecutorService executorService = Executors.newFixedThreadPool(5);
-        ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
+        ExecutorService executorService = Executors.newFixedThreadPool(5);
+//        ExecutorService executorService = Executors.newVirtualThreadPerTaskExecutor();
         Runnable runnable = () -> {
             try {
                 sleep(1000);

@@ -20,7 +20,7 @@ public class WebClientConfig {
     public WebClient secureWebClient() throws Exception {
         // Load truststore (ONLY root CA inside)
         KeyStore trustStore = KeyStore.getInstance("PKCS12");
-        try (InputStream trustStoreStream = getClass().getResourceAsStream("/client-truststore.p12")) {
+        try (InputStream trustStoreStream = getClass().getResourceAsStream("/client-truststore-new.p12")) {
             trustStore.load(trustStoreStream, "changeit".toCharArray());
         }
 

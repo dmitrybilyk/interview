@@ -19,6 +19,13 @@ management:
 #        enabled: true
 
 spring:
+  kafka:
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: redirector-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
   r2dbc:
     url: r2dbc:postgresql://${SPRING_R2DBC_HOST:localhost}:${SPRING_R2DBC_PORT:5432}/${SPRING_R2DBC_DB:shortdb}
     username: ${SPRING_R2DBC_USERNAME:shortuser}

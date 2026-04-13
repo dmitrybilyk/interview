@@ -1,6 +1,6 @@
 # REST (Representational State Transfer)
 
-**REST** is an architectural style for designing networked applications. It
+**REST** is an architectural style for designing network applications. It
 relies on standard HTTP methods like **GET**, **POST**, **PUT**, and
 **DELETE** to manage resources, which are identified by **URIs**.
 

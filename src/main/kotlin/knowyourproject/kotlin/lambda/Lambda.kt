@@ -7,7 +7,7 @@ fun main() {
     l()
 
 //    We can pass lambda as a parameter into the function
-    repeatAction(2, { println("Repeating") })
+    repeatAction(2) { println("Repeating") }
 
 //    We can return lambda from the function
 //    For instance we want behavior that will always multiply by 2, another by 3 etc.

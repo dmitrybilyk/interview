@@ -1,0 +1,243 @@
+Subject: [PATCH] re-factoring with SOLID
+---
+Index: designUrlShortenerGenerator/src/main/resources/application.yml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/designUrlShortenerGenerator/src/main/resources/application.yml b/designUrlShortenerGenerator/src/main/resources/application.yml
+--- a/designUrlShortenerGenerator/src/main/resources/application.yml	(revision 1c3ab84ea1f4804a5a04c6cda9e62b0f1fb6942d)
++++ b/designUrlShortenerGenerator/src/main/resources/application.yml	(date 1772034245696)
+@@ -22,7 +22,11 @@
+ spring:
+   application:
+     name: generator-service
+-
++  kafka:
++    bootstrap-servers: kafka:29092
++    producer:
++      key-serializer: org.apache.kafka.common.serialization.StringSerializer
++      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+   security:
+     oauth2:
+       resourceserver:
+Index: designUrlShortenerRedirector/build.gradle.kts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/designUrlShortenerRedirector/build.gradle.kts b/designUrlShortenerRedirector/build.gradle.kts
+--- a/designUrlShortenerRedirector/build.gradle.kts	(revision 1c3ab84ea1f4804a5a04c6cda9e62b0f1fb6942d)
++++ b/designUrlShortenerRedirector/build.gradle.kts	(date 1772033793543)
+@@ -67,6 +67,8 @@
+ 
+     // R2DBC Driver - REMOVED explicit version for Spring Boot management to handle it
+     implementation("io.r2dbc:r2dbc-postgresql:0.8.13.RELEASE")
++    // Kafka
++    implementation("org.springframework.kafka:spring-kafka")
+ 
+     implementation("org.springframework.boot:spring-boot-starter-actuator")
+     implementation("org.springframework.boot:spring-boot-starter-validation")
+Index: designUrlShortenerRedirector/src/main/java/org/design/designurlshortenerredirector/service/kafka/UrlEventConsumer.java
+===================================================================
+diff --git a/designUrlShortenerRedirector/src/main/java/org/design/designurlshortenerredirector/service/kafka/UrlEventConsumer.java b/designUrlShortenerRedirector/src/main/java/org/design/designurlshortenerredirector/service/kafka/UrlEventConsumer.java
+new file mode 100644
+--- /dev/null	(date 1772034561772)
++++ b/designUrlShortenerRedirector/src/main/java/org/design/designurlshortenerredirector/service/kafka/UrlEventConsumer.java	(date 1772034561772)
+@@ -0,0 +1,37 @@
++package org.design.designurlshortenerredirector.service.kafka;
++
++import com.fasterxml.jackson.databind.JsonNode;
++import com.fasterxml.jackson.databind.ObjectMapper;
++import lombok.RequiredArgsConstructor;
++import lombok.extern.slf4j.Slf4j;
++import org.springframework.data.redis.core.ReactiveRedisTemplate;
++import org.springframework.kafka.annotation.KafkaListener;
++import org.springframework.stereotype.Service;
++
++import java.time.Duration;
++
++@Service
++@RequiredArgsConstructor
++@Slf4j
++public class UrlEventConsumer {
++
++    private final ReactiveRedisTemplate<String, String> redisTemplate;
++    private final ObjectMapper objectMapper;
++
++    @KafkaListener(topics = "url-created", groupId = "redirector-group")
++    public void consume(String message) {
++        try {
++            JsonNode jsonNode = objectMapper.readTree(message);
++            String shortCode = jsonNode.get("shortCode").asText();
++            String longUrl = jsonNode.get("longUrl").asText();
++
++            // Оновлюємо кеш Redis асинхронно
++            redisTemplate.opsForValue()
++                .set(shortCode, longUrl, Duration.ofHours(24))
++                .subscribe(success -> log.info("Cache updated for: {}", shortCode));
++                
++        } catch (Exception e) {
++            log.error("Error processing Kafka message", e);
++        }
++    }
++}
+\ No newline at end of file
+Index: designShortenService/docker-compose.yml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/designShortenService/docker-compose.yml b/designShortenService/docker-compose.yml
+--- a/designShortenService/docker-compose.yml	(revision 1c3ab84ea1f4804a5a04c6cda9e62b0f1fb6942d)
++++ b/designShortenService/docker-compose.yml	(date 1772033376745)
+@@ -446,6 +446,37 @@
+ #      retries: 5
+ #      start_period: 30s
+ 
++  kafka:
++    image: confluentinc/cp-kafka:7.5.0
++    container_name: kafka
++    networks:
++      - shorten-network
++    ports:
++      - "9092:9092"
++    environment:
++      KAFKA_BROKER_ID: 1
++      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
++      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
++      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
++      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
++      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
++    depends_on:
++      - zookeeper
++
++  kafka-ui:
++    image: provectuslabs/kafka-ui:latest
++    container_name: kafka-ui
++    networks:
++      - shorten-network
++    ports:
++      - "8089:8080"  # Змінено на 8089, бо 8080 у вас під gateway
++    environment:
++      - KAFKA_CLUSTERS_0_NAME=local
++      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:29092
++      - KAFKA_CLUSTERS_0_ZOOKEEPER=zookeeper:2181
++    depends_on:
++      - kafka
++
+ volumes:
+ #  pg_primary_data:
+ #  pg_replica1_data:
+Index: designUrlShortenerGenerator/src/main/java/org/design/designurlshortenergenerator/kafka/UrlEventProducer.java
+===================================================================
+diff --git a/designUrlShortenerGenerator/src/main/java/org/design/designurlshortenergenerator/kafka/UrlEventProducer.java b/designUrlShortenerGenerator/src/main/java/org/design/designurlshortenergenerator/kafka/UrlEventProducer.java
+new file mode 100644
+--- /dev/null	(date 1772034341732)
++++ b/designUrlShortenerGenerator/src/main/java/org/design/designurlshortenergenerator/kafka/UrlEventProducer.java	(date 1772034341732)
+@@ -0,0 +1,28 @@
++package org.design.designurlshortenergenerator.kafka;
++
++import com.fasterxml.jackson.databind.ObjectMapper;
++import lombok.RequiredArgsConstructor;
++import lombok.SneakyThrows;
++import org.springframework.kafka.core.KafkaTemplate;
++import org.springframework.stereotype.Service;
++
++import java.util.Map;
++
++@Service
++@RequiredArgsConstructor
++public class UrlEventProducer {
++
++    private final KafkaTemplate<String, String> kafkaTemplate;
++    private final ObjectMapper objectMapper;
++
++    @SneakyThrows
++    public void sendUrlCreatedEvent(String shortCode, String longUrl) {
++        String payload = objectMapper.writeValueAsString(Map.of(
++            "shortCode", shortCode,
++            "longUrl", longUrl
++        ));
++        
++        // Використовуємо shortCode як ключ, щоб події для одного коду завжди йшли в одну партицію
++        kafkaTemplate.send("url-created", shortCode, payload);
++    }
++}
+\ No newline at end of file
+Index: designUrlShortenerRedirector/src/main/java/org/design/designurlshortenerredirector/configuration/KafkaConfig.java
+===================================================================
+diff --git a/designUrlShortenerRedirector/src/main/java/org/design/designurlshortenerredirector/configuration/KafkaConfig.java b/designUrlShortenerRedirector/src/main/java/org/design/designurlshortenerredirector/configuration/KafkaConfig.java
+new file mode 100644
+--- /dev/null	(date 1772033906664)
++++ b/designUrlShortenerRedirector/src/main/java/org/design/designurlshortenerredirector/configuration/KafkaConfig.java	(date 1772033906664)
+@@ -0,0 +1,22 @@
++package org.design.designurlshortenerredirector.configuration;
++
++import org.apache.kafka.clients.admin.NewTopic;
++import org.springframework.beans.factory.annotation.Value;
++import org.springframework.context.annotation.Bean;
++import org.springframework.context.annotation.Configuration;
++import org.springframework.kafka.config.TopicBuilder;
++
++@Configuration
++public class KafkaConfig {
++
++    @Value("${app.kafka.topic.visits:url-visits}")
++    private String topicName;
++
++    @Bean
++    public NewTopic urlVisitsTopic() {
++        return TopicBuilder.name(topicName)
++                .partitions(3)    // Розділяємо на 3 частини для паралельної обробки
++                .replicas(1)      // Оскільки у нас один брокер
++                .build();
++    }
++}
+\ No newline at end of file
+Index: designUrlShortenerGenerator/build.gradle.kts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/designUrlShortenerGenerator/build.gradle.kts b/designUrlShortenerGenerator/build.gradle.kts
+--- a/designUrlShortenerGenerator/build.gradle.kts	(revision 1c3ab84ea1f4804a5a04c6cda9e62b0f1fb6942d)
++++ b/designUrlShortenerGenerator/build.gradle.kts	(date 1772034210869)
+@@ -39,6 +39,9 @@
+     // Database
+     implementation("org.postgresql:postgresql")
+ 
++    // Kafka
++    implementation("org.springframework.kafka:spring-kafka")
++
+     // Metrics
+     implementation("io.micrometer:micrometer-registry-prometheus")
+ 
+Index: designUrlShortenerRedirector/src/main/resources/application.yml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/designUrlShortenerRedirector/src/main/resources/application.yml b/designUrlShortenerRedirector/src/main/resources/application.yml
+--- a/designUrlShortenerRedirector/src/main/resources/application.yml	(revision 1c3ab84ea1f4804a5a04c6cda9e62b0f1fb6942d)
++++ b/designUrlShortenerRedirector/src/main/resources/application.yml	(date 1772034385336)
+@@ -19,6 +19,19 @@
+ #        enabled: true
+ 
+ spring:
++  kafka:
++    bootstrap-servers: kafka:29092
++    producer:
++      key-serializer: org.apache.kafka.common.serialization.StringSerializer
++      value-serializer: org.apache.kafka.common.serialization.StringSerializer
++    # Налаштування для автоматичного створення топіків
++    admin:
++      auto-create: true
++    consumer:
++      group-id: redirector-group
++      auto-offset-reset: earliest
++      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
++      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+   r2dbc:
+     url: r2dbc:postgresql://${SPRING_R2DBC_HOST:localhost}:${SPRING_R2DBC_PORT:5432}/${SPRING_R2DBC_DB:shortdb}
+     username: ${SPRING_R2DBC_USERNAME:shortuser}
