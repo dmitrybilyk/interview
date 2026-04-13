@@ -1,4 +1,4 @@
-package com.conduct.interview._1_bases.multithreading.deadlock;
+package com.conduct.interview._1_bases.multithreading.common_issues.deadlock.deadlock;
 
 public class Check {
     static Object lock1 = new Object();
