@@ -24,21 +24,21 @@ public class ContextSwitchDemo {
                     // FORCE a context switch: 
                     // Thread.yield() hints to the OS that this thread is 
                     // willing to give up its current use of a processor.
-                    Thread.yield(); 
+                    Thread.yield();
                 }
             }).start();
         }
 
-        // Monitoring thread to show progress
-        new Thread(() -> {
-            while (true) {
-                long startWork = totalWork.get();
-                try { Thread.sleep(1000); } catch (InterruptedException e) {}
-                long endWork = totalWork.get();
-                
-                // This shows how many operations we are actually completing per second
-                System.out.printf("Operations per second: %,d%n", (endWork - startWork));
-            }
-        }).start();
+//        // Monitoring thread to show progress
+//        new Thread(() -> {
+//            while (true) {
+//                long startWork = totalWork.get();
+//                try { Thread.sleep(1000); } catch (InterruptedException e) {}
+//                long endWork = totalWork.get();
+//
+//                // This shows how many operations we are actually completing per second
+//                System.out.printf("Operations per second: %,d%n", (endWork - startWork));
+//            }
+//        }).start();
     }
 }

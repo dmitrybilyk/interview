@@ -9,8 +9,8 @@ public class VisibilityDemo {
 
     // WITHOUT volatile: The reader thread may never see the change.
     // WITH volatile: The change is guaranteed to be visible across threads.
-//    private static boolean ready = false;
-    private static volatile boolean ready = false;
+    private static boolean ready = false;
+//    private static volatile boolean ready = false;
 
     public static void main(String[] args) throws InterruptedException {
         
