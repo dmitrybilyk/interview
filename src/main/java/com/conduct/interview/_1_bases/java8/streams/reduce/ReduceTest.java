@@ -1,27 +1,78 @@
 package com.conduct.interview._1_bases.java8.streams.reduce;
 
-import org.jetbrains.annotations.NotNull;
-
-import java.util.HashMap;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
-import java.util.function.BiFunction;
+import java.util.stream.Stream;
 
 public class ReduceTest {
     public static void main(String[] args) {
-        var list = List.of(4, 5, 6, 8);
-        System.out.println(list.stream().reduce(Integer::sum));
-        System.out.println(list.stream().mapToInt(value -> value).sum());
-        System.out.println(list.stream().reduce(10, Integer::sum));
-        System.out.println(list.stream().reduce(10, Integer::sum, Integer::sum));
+        List<String> list = List.of("First", "Second");
+        System.out.println(list.stream()
+                .reduce("start", (s, s2) -> s + s2));
+//                .reduce("start", String::concat));
 
-        Map<Integer, Integer> map = new HashMap<>();
-        map.put(3, 5);
-        map.forEach((key, value) -> System.out.println("" + key + value));
+        int sum = List.of(1, 2, 3, 4)
+                .stream()
+                .reduce(0, (a, b) -> a + b);
+        System.out.println(sum);
 
-        Map<Integer, Integer> map2 = new HashMap<>();
-        map2.put(3, 3);
+        int sum2 = List.of(1, 2, 3, 4)
+                .stream()
+                .mapToInt(Integer::valueOf)
+                .sum();
+        System.out.println(sum2);
 
-        map2.merge(3, 3, (integer, integer2) -> integer + integer2);
+        int max = List.of(1, 2, 3, 4)
+                .stream()
+                .max(Integer::compareTo).get();
+        System.out.println(max);
+
+
+        List<Order> orders = List.of(
+                new Order(100),
+                new Order(200),
+                new Order(50)
+        );
+
+        Order total = orders.stream()
+                .reduce(new Order(), (acc, order) -> acc.combine(order));
+
+        System.out.println(total); // Order{totalPrice=350}
+
+        int total2 = orders.stream()
+                .mapToInt(o -> o.totalPrice)
+                .sum();
+
+        System.out.println(total2);
+
+        Order total3 = orders.stream()
+                .collect(
+                        Order::new,
+                        (acc, order) -> acc.totalPrice += order.totalPrice,
+                        (o1, o2) -> o1.totalPrice += o2.totalPrice
+                );
+
+    }
+}
+
+
+class Order {
+    int totalPrice;
+
+    Order() {
+        this.totalPrice = 0;
+    }
+
+    Order(int totalPrice) {
+        this.totalPrice = totalPrice;
+    }
+
+    Order combine(Order other) {
+        return new Order(this.totalPrice + other.totalPrice);
+    }
+
+    @Override
+    public String toString() {
+        return "Order{totalPrice=" + totalPrice + '}';
     }
 }
