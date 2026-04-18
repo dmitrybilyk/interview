@@ -1,5 +1,7 @@
 package com.conduct.interview._1_bases.java8.streams.groupingBy;
 
+import lombok.ToString;
+
 import java.util.*;
 import java.util.AbstractMap.SimpleEntry;
 import java.util.stream.Collectors;
@@ -22,23 +24,20 @@ public class Task08Collections {
         // Perform Transformation
         Map<String, List<Student>> studentsByLanguage = transform(students);
 
-        Map<String, List<Student>> collect = students.stream()
-                .flatMap(student -> student.languages.stream()
+        Map<String, List<Student>> collect1 = students.stream().flatMap(student -> student.languages.stream()
                         .map(lang -> new SimpleEntry<>(lang, student)))
-                .collect(
-                        Collectors.groupingBy(
-                                SimpleEntry::getKey,
-                                Collectors.mapping(SimpleEntry::getValue, Collectors.toList())
-                        )
-                );
+                .collect(Collectors.groupingBy(SimpleEntry::getKey,
+                        Collectors.mapping(SimpleEntry::getValue,
+                                Collectors.toList())));
 
-        System.out.println(collect);
+        System.out.println(collect1);
+
 
         // Beautiful Output
         System.out.println("=== Students Grouped by Language ===");
-        collect.forEach((language, studentList) -> {
-            System.out.printf("%-12s: %s%n", language, studentList);
-        });
+//        collect.forEach((language, studentList) -> {
+//            System.out.printf("%-12s: %s%n", language, studentList);
+//        });
     }
 
     /**
@@ -58,6 +57,7 @@ public class Task08Collections {
     }
 
     // --- Domain Class ---
+//    @ToString
     static class Student {
         private final String name;
         private final List<String> languages;
