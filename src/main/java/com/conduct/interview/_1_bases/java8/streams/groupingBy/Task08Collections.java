@@ -1,7 +1,9 @@
 package com.conduct.interview._1_bases.java8.streams.groupingBy;
 
 import java.util.*;
+import java.util.AbstractMap.SimpleEntry;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Modern Stream transformation: Grouping Students by Language
@@ -20,9 +22,21 @@ public class Task08Collections {
         // Perform Transformation
         Map<String, List<Student>> studentsByLanguage = transform(students);
 
+        Map<String, List<Student>> collect = students.stream()
+                .flatMap(student -> student.languages.stream()
+                        .map(lang -> new SimpleEntry<>(lang, student)))
+                .collect(
+                        Collectors.groupingBy(
+                                SimpleEntry::getKey,
+                                Collectors.mapping(SimpleEntry::getValue, Collectors.toList())
+                        )
+                );
+
+        System.out.println(collect);
+
         // Beautiful Output
         System.out.println("=== Students Grouped by Language ===");
-        studentsByLanguage.forEach((language, studentList) -> {
+        collect.forEach((language, studentList) -> {
             System.out.printf("%-12s: %s%n", language, studentList);
         });
     }
@@ -36,7 +50,7 @@ public class Task08Collections {
     public static Map<String, List<Student>> transform(List<Student> students) {
         return students.stream()
                 .flatMap(student -> student.getLanguages().stream()
-                        .map(language -> new AbstractMap.SimpleEntry<>(language, student)))
+                        .map(language -> new SimpleEntry<>(language, student)))
                 .collect(Collectors.groupingBy(
                         Map.Entry::getKey,
                         Collectors.mapping(Map.Entry::getValue, Collectors.toList())
