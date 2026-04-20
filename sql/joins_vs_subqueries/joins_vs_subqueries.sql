@@ -14,3 +14,10 @@ WHERE student_id IN (
     FROM enrollments
     WHERE version_id = 5
 );
+
+-- 1. Correlated query (loop trap):
+
+Select s.full_name from students s
+where 50 > (Select count(*)
+            from enrollments e
+            where e.student_id = s.student_id);
