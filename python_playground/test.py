@@ -1,17 +1,27 @@
-myVar = 'Dmytr'
+a = 20
+b = 5
 
-if myVar.__contains__('Dmytro'):
-    print(myVar)
-else:
-    print('no')
+print(a ** b)
 
-def printSomething(first, second = "second is here"):
-    print(first)
+# someInput = input()
+# print(someInput)
 
-printSomething('first param')
+list = ["one", "two"]
+print(list[::-1])
 
-someList = ["one", "two", "three"]
+numbers = [1, 2, 3, 4]
+new_numbers = [i**2 for i in numbers if i > 3]
+print(new_numbers)
 
-for m in myVar:
-    print(m)
+def someGenerator():
+    c = 0
+    while(True):
+        yield c
+        c += 1
 
+
+generator = someGenerator()
+print(next(generator))
+print(next(generator))
+print(next(generator))
+print(next(generator))
