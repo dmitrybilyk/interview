@@ -7,6 +7,7 @@ and lets consumers "pull" data at their own pace. This makes it ideal for Event-
 and big data processing.
 
 Key Concepts
+
 Producer - An application that publishes (sends) events to Kafka topics.
 
 Consumer - An application that subscribes to topics and processes the events.
