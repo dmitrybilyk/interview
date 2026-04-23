@@ -46,7 +46,8 @@ Set:
 3. LinkedHashSet - keeps order of insertion
 
 
-Fail-fast collection (like ArrayList) will throw a ConcurrentModificationException exception if we remove element while we iterating it.
+Fail-fast collection (like ArrayList) will throw a ConcurrentModificationException exception 
+if we remove element while we iterating it.
 But it will not fail if we remove element on iterator object itself.
 Fail-safe collection (like CopyOnWriteArrayList) will work with snapshot of original collection inside so it will
 not throw an exception (but it takes more memory and state of collection is not uptodate while iteration).
