@@ -3,9 +3,9 @@ package com.conduct.interview.coding.fibonacci;
 public class Fibonacci {
 
     public static void main(String[] args) {
-        System.out.print(fibonacciRecursive(10) + " ");
+        System.out.print(fibonacciRecursive(7) + " ");
 //        System.out.print(fibonacciFormula(10) + " ");
-//        System.out.print(fibonacciIterative(10) + " ");
+        System.out.print(fibonacciIterative(7) + " ");
     }
 
     public static int fibonacciRecursive(int n) {
