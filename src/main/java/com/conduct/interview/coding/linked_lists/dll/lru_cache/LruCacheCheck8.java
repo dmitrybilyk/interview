@@ -11,19 +11,22 @@ public class LruCacheCheck8 {
         private int value;
         private Node prev;
         private Node next;
+        private long expirationTime;
         public Node(int key, int value) {
             this.key = key;
             this.value = value;
         }
     }
     private final int capacity;
+    private final long globalTts;
     private final Map<Integer, Node> cache;
     private final Node head;
     private final Node tail;
     private final Lock lock = new ReentrantLock();
 
-    public LruCacheCheck8(int capacity) {
+    public LruCacheCheck8(int capacity, long globalTts) {
         this.capacity = capacity;
+        this.globalTts = globalTts;
         cache = new HashMap<>();
         head = new Node(0, 0);
         tail = new Node(0, 0);
@@ -55,9 +58,11 @@ public class LruCacheCheck8 {
             Node node = cache.get(key);
             if (node != null) {
                 node.value = value;
+                node.expirationTime = System.currentTimeMillis() + globalTts;
                 moveToFront(node);
             } else {
                 Node newNode = new Node(key, value);
+                newNode.expirationTime = System.currentTimeMillis() + globalTts;
                 addToFront(newNode);
                 cache.put(key, newNode);
                 if (cache.size() > capacity) {
@@ -66,8 +71,22 @@ public class LruCacheCheck8 {
                     cache.remove(lastNode.key);
                 }
             }
+            evictExpiredElements();
         } finally {
             lock.unlock();
+        }
+    }
+
+    private void evictExpiredElements() {
+        Node current;
+        while (tail.prev != head) {
+            current = tail.prev;
+            if (System.currentTimeMillis() > current.expirationTime) {
+                removeNode(current);
+                cache.remove(current.key);
+            } else {
+                break;
+            }
         }
     }
 
