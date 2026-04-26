@@ -2,7 +2,7 @@ package com.conduct.interview.coding.fibonacci;
 
 public class FactorialCheck2 {
     public static void main(String[] args) {
-//        System.out.println(factorialIterative(5));
+        System.out.println(factorialIterative(5));
         System.out.println(factorialRecursive(5));
     }
 

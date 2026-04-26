@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.sliding;
+package com.conduct.interview.coding.sliding.sliding_window_log;
 
 import java.time.Instant;
 import java.util.ArrayDeque;
