@@ -164,8 +164,32 @@ I’m comfortable using either depending on the nature of the team and the proje
 ❗ Поради:
 Підготуй 2–3 сильні історії: технічне рішення, конфлікт у команді, критичний реліз.
 
+1. Authentication with emmbeded FE
+2. AutomatedQM implementation - how improved
+
 Покажи, що ти можеш вести інших, брати ініціативу.
 
 Дай зрозуміти, що можеш вільно говорити англійською (у Luxoft це часто критично).
 
 Не бійся питати менеджера про проект, команду, плани — це показує твою залученість.
+
+
+Що я зроблю поперше:
+1. Курс по Пайтону
+2. Курс по Google Cloud
+3. Docker to install on Windows and use it
+
+Де я покращив:
+1. не чекати на запізнюваків
+2. питати в паблік чатах
+3. POC on every unknown
+
+Питання до менеджера:
+1. Scrum?
+2. Windows or Mac is possible? 
+3. Вдається дотримуватися плану на Спринти?
+4. Це своя ОС або VDI, якщо працювати не можна на своєму, то обмеження?
+5. How onboarding is looking like?
+6. Is business well documented - confluence, java docs?
+7. Performance reviews
+8. 
