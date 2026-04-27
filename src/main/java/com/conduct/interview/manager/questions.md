@@ -178,6 +178,8 @@ I’m comfortable using either depending on the nature of the team and the proje
 1. Курс по Пайтону
 2. Курс по Google Cloud
 3. Docker to install on Windows and use it
+4. TestContainers
+5. K8s and Docker
 
 Де я покращив:
 1. не чекати на запізнюваків
@@ -192,4 +194,10 @@ I’m comfortable using either depending on the nature of the team and the proje
 5. How onboarding is looking like?
 6. Is business well documented - confluence, java docs?
 7. Performance reviews
-8. 
+8. Do you have a FE?
+9. Theoretical possibility to start locally? to mock downstream services?
+
+//TODO:
+1. UML - 2 types to know
+2. Oauth2 to know
+3. certs to know
