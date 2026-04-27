@@ -1,0 +1,30 @@
+@startuml
+
+start
+
+:Enter creds;
+note right
+    Entering creds hereddddd
+end note
+:Validate input;
+
+if (Valid creds?) then (yes)
+    :Create Session; <<success>>
+    :Redirect to dashboard;
+else (no)
+    partition "Popup" {
+        if (good message?) then (yes)
+            :Goooddd popup;
+        else
+            :Baaaad popup;
+        endif
+            :Show error message;
+            note right
+                errror
+            end note
+    }
+endif
+
+stop
+
+@enduml
