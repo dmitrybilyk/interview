@@ -164,8 +164,10 @@ I’m comfortable using either depending on the nature of the team and the proje
 ❗ Поради:
 Підготуй 2–3 сильні історії: технічне рішення, конфлікт у команді, критичний реліз.
 
-1. Authentication with emmbeded FE
+1. Authentication with embedded FE
 2. AutomatedQM implementation - how improved
+3. Splitting of monolith to microservices
+4. Conflict situation because of violating of KISS principle
 
 Покажи, що ти можеш вести інших, брати ініціативу.
 
@@ -179,7 +181,9 @@ I’m comfortable using either depending on the nature of the team and the proje
 2. Курс по Google Cloud
 3. Docker to install on Windows and use it
 4. TestContainers
-5. K8s and Docker
+5. Okta
+6. K8s and Docker
+7. Terraform
 
 Де я покращив:
 1. не чекати на запізнюваків
@@ -196,6 +200,9 @@ I’m comfortable using either depending on the nature of the team and the proje
 7. Performance reviews
 8. Do you have a FE?
 9. Theoretical possibility to start locally? to mock downstream services?
+10. Any big stories are planned
+11. ratio of bugfixing
+12. Any Frontend?
 
 //TODO:
 1. UML - 2 types to know

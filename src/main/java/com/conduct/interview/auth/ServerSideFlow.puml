@@ -1,0 +1,35 @@
+@startuml
+actor User
+participant "Frontend (SPA)" as FE
+participant "Backend" as BE
+participant "Keycloak" as KC
+participant "Resource API" as API
+
+User -> FE : Open app
+
+FE -> KC : Redirect to login (client_id, redirect_uri)
+KC -> User : Login page
+User -> KC : Enter credentials
+
+KC -> FE : Redirect back with code
+
+FE -> BE : POST /auth/exchange (code)
+
+BE -> KC : POST /token\n(client_id + client_secret + code)
+KC -> BE : access_token + refresh_token
+
+BE -> BE : Store tokens (session / httpOnly cookie)
+
+FE -> BE : GET /api/data (cookie)
+
+BE -> KC : (optional) validate token (introspection or JWKS)
+BE -> API : call with access_token
+API -> BE : data
+BE -> FE : data
+
+== Token expired ==
+
+BE -> KC : POST /token (refresh_token)
+KC -> BE : new access_token + refresh_token
+
+@enduml

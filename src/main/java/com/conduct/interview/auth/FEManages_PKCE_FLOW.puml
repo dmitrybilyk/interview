@@ -1,0 +1,32 @@
+@startuml
+actor User
+participant "Frontend (SPA)" as FE
+participant "Keycloak" as KC
+participant "Backend API" as API
+
+User -> FE : Open app
+
+FE -> FE : Generate code_verifier + code_challenge
+
+FE -> KC : Redirect to login\n(client_id + code_challenge)
+KC -> User : Login page
+User -> KC : Enter credentials
+
+KC -> FE : Redirect back with code
+
+FE -> KC : POST /token\n(code + code_verifier)
+KC -> FE : access_token + refresh_token
+
+FE -> FE : Store tokens (memory / sessionStorage)
+
+FE -> API : GET /api/data\nAuthorization: Bearer access_token
+
+API -> API : Validate JWT (public key)
+API -> FE : data
+
+== Token expired ==
+
+FE -> KC : POST /token\n(refresh_token)
+KC -> FE : new access_token + refresh_token
+
+@enduml
