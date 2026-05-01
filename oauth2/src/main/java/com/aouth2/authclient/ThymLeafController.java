@@ -7,7 +7,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
 @Controller
-public class TestController {
+public class ThymLeafController {
 
     @GetMapping("/")
     public String index(Model model, @AuthenticationPrincipal OidcUser user) {
@@ -17,10 +17,5 @@ public class TestController {
             model.addAttribute("email", user.getEmail());
         }
         return "index"; // Шукає src/main/resources/templates/index.html
-    }
-
-    @GetMapping("/test")
-    public String getTest() {
-        return "result";
     }
 }

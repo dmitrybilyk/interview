@@ -1,0 +1,37 @@
+#First we need to run this in browser
+
+#code_verifier=very-long-and-random-string-that-is-hard-to-guess-1234567890
+#echo -n "very-long-and-random-string-that-is-hard-to-guess-1234567890" | openssl dgst -binary -sha256 | openssl base64 | tr '/+' '_-' | tr -d '='
+
+#raRSeTXNhbcUIFGECPom7sbsjuWfrLf5Vwsl8n8zxy4
+
+http://localhost:8080/realms/my-realm/protocol/openid-connect/auth?response_type=code&client_id=spring-boot-app-public&scope=openid profile email&redirect_uri=http://localhost:8088/callback&code_challenge=raRSeTXNhbcUIFGECPom7sbsjuWfrLf5Vwsl8n8zxy4&code_challenge_method=S256
+
+#Then we need to enter creds and in browser to see url and find code in it
+
+#it will look like this:
+http://localhost:8088/callback?session_state=7FTPlvyn5-HC1s1uK4gL_oNy&iss=http%3A%2F%2Flocalhost%3A8080%2Frealms%2Fmy-realm&code=e2b174ec-b7aa-3b67-104e-f0cb9bf90f96.7FTPlvyn5-HC1s1uK4gL_oNy.eb7924f4-f028-481c-b3e1-28b7cf83049e
+
+### Обмін коду на токен (Authorization Code Flow)
+# Важливо: код одноразовий і живе зазвичай 1-5 хвилин!
+POST http://localhost:8080/realms/my-realm/protocol/openid-connect/token
+Content-Type: application/x-www-form-urlencoded
+
+grant_type=authorization_code &
+client_id=spring-boot-app-public &
+code=45ff76c1-c013-627b-2e03-96148cb1fa44.0MK4dIEjs2VHEROTe4PituwX.eb7924f4-f028-481c-b3e1-28b7cf83049e &
+redirect_uri=http://localhost:8088/callback &
+code_verifier=very-long-and-random-string-that-is-hard-to-guess-1234567890
+
+> {%
+    client.global.set("auth_token", response.body.access_token);
+    client.global.set("refresh_token", response.body.refresh_token);
+    client.log("AccessToken та RefreshToken отримані успішно!");
+%}
+
+###
+
+### Виклик API з отриманим токеном
+GET http://localhost:8088/api/test
+Authorization: Bearer {{auth_token}}
+Accept: application/json
