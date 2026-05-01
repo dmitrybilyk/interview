@@ -1,0 +1,37 @@
+@startuml
+autonumber
+skinparam Style strictuml
+skinparam SequenceMessageAlignment center
+
+actor "Користувач\n(Браузер)" as Browser
+participant "Ваш Java Додаток\n(localhost:8088)" as App
+participant "Keycloak\n(localhost:8080)" as Keycloak
+
+== 1. Discovery (При старті додатка) ==
+App -> Keycloak: GET /.well-known/openid-configuration
+Keycloak -> App: JSON з усіма адресами (Login, Token, Keys)
+App -> Keycloak: GET /protocol/openid-connect/certs
+Keycloak -> App: Публічні ключі (JWKS) для перевірки підписів
+
+== 2. Ініціація входу (Redirect) ==
+Browser -> App: GET / (захищений шлях)
+App -> Browser: 302 Redirect на Keycloak (Login URL + Client ID + State)
+Browser -> Keycloak: GET сторінку логіну
+Keycloak -> Browser: HTML Форма логіну
+
+== 3. Автентифікація ==
+Browser -> Keycloak: POST (Username + Password)
+Keycloak -> Browser: 302 Redirect назад на App + **CODE** + State
+
+== 4. Обмін Коду на Токени (Back-channel) ==
+Browser -> App: GET /login/oauth2/code/keycloak?code=**CODE**
+note over App, Keycloak: Пряме з'єднання між серверами
+App -> Keycloak: POST /token (CODE + Client ID + **Client Secret**)
+Keycloak -> App: JSON (Access Token, ID Token, Refresh Token)
+
+== 5. Створення сесії ==
+App -> App: Перевіряє токен публічним ключем\nСтворює сесію в пам'яті (Heap)
+App -> Browser: 302 Redirect на / + **JSESSIONID** (кука)
+Browser -> App: GET / (з кукою JSESSIONID)
+App -> Browser: 200 OK (Ваші дані з токена)
+@enduml

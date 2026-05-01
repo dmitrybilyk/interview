@@ -1,0 +1,26 @@
+@startuml
+autonumber
+skinparam Style strictuml
+
+actor "Користувач\n(Браузер + React)" as Browser
+participant "Keycloak\n(localhost:8080)" as Keycloak
+participant "Java API\n(localhost:8088)" as App
+
+== 1. Ініціація входу (React контролює все) ==
+Browser -> Keycloak: Редірект на логін (виконує JS в браузері)
+Keycloak -> Browser: HTML Форма логіну
+Browser -> Keycloak: POST (Username + Password)
+Keycloak -> Browser: 302 Redirect на React App + **CODE**
+
+== 2. Обмін Коду на токени (Public Client) ==
+note over Browser, Keycloak: React сам робить запит без Client Secret!
+Browser -> Keycloak: POST /token (CODE + Client ID)
+Keycloak -> Browser: JSON (Access Token, ID Token, Refresh Token)
+note right Browser: React зберігає токени\nв пам'яті браузера
+
+== 3. Виклик API (Stateless) ==
+Browser -> App: GET /api/resource\nHeader: **Authorization: Bearer <JWT>**
+App -> App: Перевіряє підпис JWT (офлайн)\nвикористовуючи публічні ключі
+App -> Browser: 200 OK (Дані)
+
+@enduml
