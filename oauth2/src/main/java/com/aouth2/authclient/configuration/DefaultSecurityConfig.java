@@ -3,16 +3,20 @@ package com.aouth2.authclient.configuration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.client.oidc.web.logout.OidcClientInitiatedLogoutSuccessHandler;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Configuration
 @EnableWebSecurity
-@Profile("!auth-server")
+@Profile("!auth-client")
 // Ця конфігурація буде активна, якщо не вибрано жодного профілю (default)
 public class DefaultSecurityConfig {
 
@@ -23,16 +27,29 @@ public class DefaultSecurityConfig {
     }
 
     @Bean
+    public UserDetailsService userDetailsService() {
+        return new InMemoryUserDetailsManager(
+                User.withUsername("dima")
+                        .password("{noop}12345") // {noop} для plain text
+                        .roles("USER")
+                        .build()
+        );
+    }
+
+    @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .httpBasic(Customizer.withDefaults())
+                .formLogin(Customizer.withDefaults())
             // 1. Управління запитами: робимо головну та статичні ресурси публічними
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/error", "/webjars/**").permitAll()
-//                .anyRequest().authenticated()
-                .anyRequest().permitAll()
+                .anyRequest().authenticated()
+//                .anyRequest().permitAll()
             )
-            
-            // 2. OAuth2 Login (BFF механізм)
+
+//                .oauth2Login((Customizer.withDefaults()))
+//             2. OAuth2 Login (BFF механізм)
             .oauth2Login(oauth2 -> oauth2
                 // Тут можна додати кастомну сторінку логіну, якщо захочете пізніше
                 .defaultSuccessUrl("/", true)

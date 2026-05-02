@@ -1,2 +1,8 @@
 ###
 GET http://localhost:8088/api/test
+
+
+### Запит з Basic Auth (автоматичне кодування)
+GET http://localhost:8088/api/test
+Authorization: Basic dima 12345
+Accept: application/json

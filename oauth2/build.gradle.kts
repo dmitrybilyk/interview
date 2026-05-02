@@ -27,6 +27,15 @@ dependencies {
     testImplementation("org.springframework.boot:spring-boot-starter-test")
     testImplementation("org.springframework.security:spring-security-test")
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+    // Spring Data Redis - для зв'язку з базою Redis
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
+
+    // Spring Session Redis - магія, яка підміняє HttpSession на Redis
+    implementation("org.springframework.session:spring-session-data-redis")
+
+    // Для коректної роботи серіалізації (якщо захочете зберігати сесії в JSON)
+    implementation("com.fasterxml.jackson.core:jackson-databind")
 }
 
 tasks.withType<Test> {

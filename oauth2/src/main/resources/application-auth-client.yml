@@ -7,7 +7,7 @@ spring:
           keycloak:
             client-id: spring-boot-app-client
             # Секрет, який ви скопіюєте з вкладки Credentials у Keycloak
-            client-secret: pCXQEywt1PAL4fbbuqoiGZih2NZAIBAD
+            client-secret: 8YQ5er0Kx0dDIE4y6U7sPvT9EAOgS5nW
             # Набір дозволів, які ми просимо у Keycloak
             scope:
               - openid
@@ -18,3 +18,12 @@ spring:
           keycloak:
             # Шлях до вашого Realm (Spring автоматично підтягне всі метадані)
             issuer-uri: http://localhost:8080/realms/my-realm
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
+    session:
+      store-type: redis
+      redis:
+        namespace: "security:session"
