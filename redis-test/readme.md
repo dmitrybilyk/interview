@@ -3,9 +3,9 @@ http://localhost:8001/
 # Redis Developer Guide
 
 ## What is Redis?
-**Redis** (Remote Dictionary Server) is an **in-memory** data structure store used as a database, cache, and message broker. It is designed for high-performance scenarios where sub-millisecond response times are required.
-
-
+**Redis** (Remote Dictionary Server) is an **in-memory** data structure store used as a database, 
+cache, and message broker. It is designed for high-performance scenarios where sub-millisecond 
+response times are required.
 
 ### Key Properties:
 *   **Memory-First:** Data is stored in RAM for maximum speed.
