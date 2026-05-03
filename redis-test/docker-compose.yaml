@@ -1,26 +1,40 @@
 services:
   redis:
-    image: redis:7-alpine
+    image: redis/redis-stack-server:latest
     container_name: redis-playground
     ports:
       - "6379:6379"
     volumes:
       - redis_data:/data
-    # Запускаємо з підтримкою збереження даних на диск (AOF)
-    command: redis-server --appendonly yes
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 5s
-      timeout: 3s
-      retries: 5
+    command: [
+      "redis-server",
+      "--appendonly", "yes",
+      "--protected-mode", "no",
+      "--maxmemory", "100mb",           # Limit to 100 Megabytes
+      "--maxmemory-policy", "allkeys-lru" # Use LRU strategy
+    ]
 
   redis-insight:
     image: redis/redisinsight:latest
-    container_name: redis-insight
+    container_name: redis-insight-standalone
     ports:
-      - "8001:5540"  # Тепер твій 8001 веде на їхній 5540
+      - "8002:5540" # Visit http://localhost:8002
     depends_on:
       - redis
 
+  db:
+    image: postgres:15-alpine
+    container_name: postgres-db
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: inventory
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+# THIS SECTION WAS MISSING OR INCOMPLETE
 volumes:
   redis_data:
+  postgres_data:
