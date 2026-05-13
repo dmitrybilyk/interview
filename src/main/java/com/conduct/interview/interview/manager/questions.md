@@ -184,6 +184,7 @@ I’m comfortable using either depending on the nature of the team and the proje
 5. Okta
 6. K8s and Docker
 7. Terraform
+8. Claude code
 
 Де я покращив:
 1. не чекати на запізнюваків
