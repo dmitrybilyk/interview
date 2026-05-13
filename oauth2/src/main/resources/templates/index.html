@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>OAuth2 Java Demo</title>
+</head>
+<body>
+<h1>Вітаю в додатку Spring Boot + Keycloak!</h1>
+
+<div sec:authorize="isAnonymous()">
+    <p>Ви не увійшли в систему.</p>
+    <a th:href="@{/oauth2/authorization/keycloak}">Увійти через Keycloak</a>
+</div>
+
+<div sec:authorize="isAuthenticated()">
+    <p>Привіт, <span th:text="${username}">Користувач</span>!</p>
+    <p>Ваш Email: <span th:text="${email}">email@example.com</span></p>
+
+    <form th:action="@{/logout}" method="post">
+        <button type="submit">Вийти</button>
+    </form>
+</div>
+</body>
+</html>

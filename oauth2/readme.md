@@ -1,0 +1,1 @@
+curl http://localhost:8080/realms/my-realm/.well-known/openid-configuration

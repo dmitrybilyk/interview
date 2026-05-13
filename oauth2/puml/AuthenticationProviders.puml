@@ -1,0 +1,38 @@
+@startuml
+autonumber
+skinparam style strictuml
+skinparam SequenceMessageAlignment center
+
+participant "AuthenticationFilter" as Filter
+participant "ProviderManager\n(AuthenticationManager)" as Manager
+participant "DaoAuthenticationProvider\n(Database Expert)" as DaoProvider
+participant "JwtAuthenticationProvider\n(JWT Expert)" as JwtProvider
+participant "LdapAuthenticationProvider\n(LDAP Expert)" as LdapProvider
+database "SecurityContextHolder" as SCH
+
+User -> Filter: Запит з Bearer Token
+Filter -> Manager: authenticate(BearerTokenAuthenticationToken)
+
+note over Manager: Manager ітерує список провайдерів
+
+group Цикл по провайдерах
+    Manager -> DaoProvider: supports(BearerTokenAuthenticationToken?)
+    return false
+
+    Manager -> LdapProvider: supports(BearerTokenAuthenticationToken?)
+    return false
+
+    Manager -> JwtProvider: supports(BearerTokenAuthenticationToken?)
+    return true
+end
+
+note right of JwtProvider: Знайдено потрібний провайдер!
+
+Manager -> JwtProvider: authenticate(BearerToken)
+JwtProvider -> JwtProvider: Перевірка підпису JWT\n(Validation)
+return Authentication (Authenticated)
+
+Manager --> Filter: Повертає повний Authentication
+Filter -> SCH: Зберігає результат у Контекст
+
+@enduml
