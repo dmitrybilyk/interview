@@ -1,3 +1,8 @@
+Lucene → Java library that actually does indexing and searching.
+Solr and Elasticsearch → server applications built on top of Lucene.
+Kibana → visualization/UI tool mainly for Elasticsearch.
+
+Search languages → ways to ask Solr/Elasticsearch for results
 # Apache Solr & Lucene: Interview Cheat Sheet
 
 ## 1. What is Apache Solr & Lucene?
@@ -50,6 +55,15 @@ Before text fields hit the Inverted Index, Lucene processes them through a stric
 4.  **Stemming/Morphology:** Reduces words to their base root (e.g., `"Techniques"` and `"technical"` both map to `techniqu`), allowing a query for `technique`
     to match a document containing `"Techniques"`.
 
+Apache Solr — це open-source платформа для повнотекстового пошуку, побудована на базі бібліотеки Apache Lucene.
+
+Ключова ідея: На відміну від реляційних БД (де ми шукаємо по рядках), 
+Solr використовує Inverted Index (інвертований індекс). 
+Це схоже на покажчик у кінці книги: замість того, щоб гортати всі сторінки, 
+ти дивишся слово "Spring" і бачиш список сторінок (ID документів), де воно зустрічається.
+
+Чому не SQL? SQL погано справляється з нечітким пошуком, морфологією (шукаємо "running" — знаходимо "run") 
+та ранжуванням результатів за релевантністю. Solr робить це блискавично.
 ---
 
 ## 5. Division of Labor: Feature Breakdown
