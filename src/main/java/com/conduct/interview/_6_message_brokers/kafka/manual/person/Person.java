@@ -1,4 +1,4 @@
-package com.conduct.interview.messaging.kafka.person;
+package com.conduct.interview._6_message_brokers.kafka.manual.person;
 
 public class Person {
     public String name;

@@ -54,6 +54,11 @@ partition.
 *   **Broker:** A single Kafka server.
 *   **Cluster:** A group of brokers working together to share the processing load,
     manage scalability, and provide infrastructure backup.
+*   **Controller:** One broker in the cluster elected by ZooKeeper to act as the
+    manager — it assigns partition leaders and handles broker failures. With a single
+    broker there is no election; it becomes the controller automatically. If the
+    controller goes down, ZooKeeper elects a new one from the remaining brokers, and
+    that broker already has all the data because it was replicating it continuously.
 
 ---
 
@@ -67,6 +72,10 @@ partition.
 *   **Leader/Follower:** Every partition has one **Leader** broker handling all
     reads and writes, and multiple **Follower** brokers replicating data in the
     background.
+*   **Replication Factor:** The number of copies of a topic's data across brokers,
+    not the number of brokers itself. `replication-factor=2` on a 3-broker cluster
+    means only 2 of the 3 brokers hold that topic's data — the third may hold other
+    topics. The replication factor cannot exceed the total number of brokers.
 
 ### Retention Policy
 Defines how long Kafka preserves data before discarding it. Unlike AMQP brokers,

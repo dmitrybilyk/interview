@@ -1,4 +1,4 @@
-package com.conduct.interview.messaging.kafka;
+package com.conduct.interview._6_message_brokers.kafka.manual;
 
 import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.clients.producer.*;

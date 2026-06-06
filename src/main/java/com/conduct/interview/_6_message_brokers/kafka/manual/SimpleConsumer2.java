@@ -1,4 +1,4 @@
-package com.conduct.interview.messaging.kafka;
+package com.conduct.interview._6_message_brokers.kafka.manual;
 
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -10,7 +10,7 @@ import java.time.Duration;
 import java.util.Collections;
 import java.util.Properties;
 
-public class SimpleConsumer {
+public class SimpleConsumer2 {
     public static void main(String[] args) {
         // 1️⃣ Consumer configuration
         Properties props = new Properties();
@@ -19,7 +19,7 @@ public class SimpleConsumer {
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class.getName());
 
         // group.id identifies the consumer group (required)
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "test-group");
+        props.put(ConsumerConfig.GROUP_ID_CONFIG, "test-group2");
 
         // read from the beginning if no offset is stored for this group
         props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");

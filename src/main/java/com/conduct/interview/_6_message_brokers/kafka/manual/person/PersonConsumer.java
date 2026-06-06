@@ -1,18 +1,15 @@
-package com.conduct.interview.messaging.kafka.person;
+package com.conduct.interview._6_message_brokers.kafka.manual.person;
 
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.consumer.*;
 import org.apache.kafka.common.serialization.StringDeserializer;
-
 import java.time.Duration;
-import java.util.Collections;
-import java.util.Properties;
+import java.util.*;
 
-public class PersonConsumer2 {
+public class PersonConsumer {
+
     public static void main(String[] args) {
-        consumePeople("person-topic", "person-group-2");
+        String topic = "person-topic";
+        consumePeople(topic, "person-group-1");
     }
 
     public static void consumePeople(String topic, String groupId) {
