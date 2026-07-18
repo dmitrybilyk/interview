@@ -1,0 +1,97 @@
+@startuml request_response_flow
+title Що відбувається від запиту до відповіді (LLM / Copilot-подібний асистент)
+
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 160
+
+actor Користувач as User
+participant "Плагін\n(локально)" as Plugin
+participant "Токенізатор\n(локальний, словник\nспільний для всього світу)" as LocalTok
+participant "Локальне сховище\n(історія чату/сесій)" as LocalStore
+participant "Векторна база (RAG)\n[ОПЦІЙНО — локальна\nчи хмарна]" as VectorDB
+participant "Мережа" as Net
+participant "Сервер" as Server
+participant "Embedding-шар\n(id → вектор, ОБОВ'ЯЗКОВО,\nчастина моделі)" as Embed
+participant "Нейромережа\n(трансформер, увага)" as Model
+participant "Семплінг\n(температура)" as Sampling
+
+note over Model, Sampling
+  Ваги вже натреновані ЗАЗДАЛЕГІДЬ.
+  Тренування — окремий, одноразовий, дорогий процес
+  (мільярди прикладів), що стався ДО цього запиту.
+  Тут відбувається лише інференс — нічого не тренується.
+end note
+
+User -> Plugin: питання + відкритий файл/код
+activate Plugin
+
+Plugin -> LocalTok: порахувати токени
+LocalTok --> Plugin: кількість токенів\n(влізає в ліміт контексту?)
+note right of LocalTok
+  Словник токенів (наприклад cl100k_base) —
+  ФІКСОВАНИЙ, один для всіх користувачів.
+  Це не тренування і не запис нових даних.
+end note
+
+Plugin -> LocalStore: зберегти запит в історію сесії
+
+alt RAG — якщо потрібен додатковий контекст
+  Plugin -> VectorDB: знайти релевантні файли\n(пошук за схожістю векторів)
+  VectorDB --> Plugin: топ-N найближчих шматків
+  Plugin -> Plugin: підклеїти знайдений текст\nу запит
+  note right of VectorDB
+    Не завжди присутньо!
+    У перевіреному Copilot IntelliJ плагіні
+    локальної векторної бази НЕ знайдено —
+    лише історія чату та словник токенів.
+  end note
+end
+
+Plugin -> Net: відправити ТЕКСТ (JSON: питання + контекст)\nа НЕ номери токенів
+Net -> Server: HTTPS запит
+activate Server
+
+Server -> Server: токенізація тексту\n(тим самим спільним словником)
+Server -> Embed: token id → вектор
+activate Embed
+note right of Embed
+  Це ОБОВ'ЯЗКОВИЙ крок для будь-якого тексту,
+  включно з кодом. Без вектора мережа
+  не має з чим рахувати — це не опція.
+end note
+Embed -> Model: вектори токенів
+deactivate Embed
+activate Model
+
+loop генерація — поки відповідь не завершена
+  Model -> Model: увага по всьому контексту →\nймовірності наступного токена
+  Model -> Sampling: розподіл ймовірностей
+  activate Sampling
+  Sampling -> Sampling: обрати токен\n(temp≈0 → найімовірніший;\nвище temp → різноманітніше)
+  note right of Sampling
+    Тут можлива галюцинація:
+    модель ЗАВЖДИ видає щось ймовірне,
+    навіть якщо не "знає" правильної відповіді.
+  end note
+  Sampling --> Model: обраний токен додається\nдо контексту, цикл повторюється
+  deactivate Sampling
+end
+
+Model --> Server: згенерований текст
+deactivate Model
+Server --> Net: відповідь
+deactivate Server
+Net --> Plugin: текст відповіді
+
+Plugin -> LocalStore: зберегти відповідь в історію
+Plugin --> User: показати відповідь
+deactivate Plugin
+
+note over User, Sampling
+  Агент = той самий цикл, але плагін сам, без нового
+  питання від User, може викликати інструменти
+  (прочитати файл, запустити команду) і повторити
+  весь цей запит-відповідь ще раз перед фінальною відповіддю.
+end note
+
+@enduml
