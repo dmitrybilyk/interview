@@ -1,7 +1,5 @@
 package com.conduct.interview._7_patterns.structural.adapter;
 
-import com.conduct.interview._1_bases.java8.trainings2.SomeObject;
-
 public class Check {
     public static void main(String[] args) {
         int someInteger = 10;

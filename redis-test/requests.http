@@ -1,0 +1,326 @@
+###
+GET http://localhost:8081/producers?page=2&size=10
+
+###
+POST http://localhost:8081/producers
+Content-Type: application/json
+
+{
+  "name": "Producer7",
+  "country": "USA7",
+  "address": "home5"
+}
+
+###
+GET http://localhost:8081/producers/688f09f2c90eca7b7794d516
+
+###
+PUT http://localhost:8081/producers/688f09f2c90eca7b7794d516
+Content-Type: application/json
+
+{
+  "id": "688f09f2c90eca7b7794d516",
+  "name": "Producer7788",
+  "country": "USA7",
+  "address": "home5"
+}
+
+
+#ITEMS
+
+###
+POST http://localhost:8081/items
+Content-Type: application/json
+
+{
+  "name": "First item",
+  "price": 50,
+  "producerId": "688f09f2c90eca7b7794d516"
+}
+
+//it.pathMatchers("/items/learn-group**").permitAll() // Allow anonymous access
+//it.pathMatchers("/items").authenticated() // Require authentication for /items?page=2&size=10
+//it.pathMatchers("/items/**").hasRole("USER") // Require USER role for /items/{id}
+//it.anyExchange().authenticated() // Default: require authentication
+
+<> 2025-08-07T163814.200.json
+
+###
+GET http://localhost:8081/items/688de1018a2a121f1174a568
+#Authorization: Basic dXNlcjpwYXNzd29yZA==
+#Authorization: Basic dXNlcjI6cGFzc3dvcmQ=
+
+<> 2025-08-07T144402.200.json
+<> 2025-08-04T105329.200.json
+<> 2025-08-04T105244.200.json
+
+
+###
+GET http://localhost:8081/items?page=2&size=10
+Authorization: Basic dXNlcjpwYXNzd29yZA==
+#Authorization: Basic dXNlcjI6cGFzc3dvcmQ=
+
+<> 2025-08-07T142933.200.json
+
+###
+PUT http://localhost:8081/items/688dfc5461d2c1376adecc73
+Content-Type: application/json
+
+{
+  "id": "688dfc5461d2c1376adecc73",
+  "name": "Super Enriched for TRTRTRTR",
+  "price": 4.0,
+  "embeddedManufacturer": null
+}
+
+###
+GET http://localhost:8081/items/learn-group?page=0&size=10
+
+###
+GET http://localhost:8081/humans
+
+###
+POST http://localhost:8081/humans
+Content-Type: application/json
+
+{
+  "id": "dfdf",
+  "name": "rrrr",
+  "age": 20,
+  "activityIds": ["football"]
+}
+
+###
+POST http://localhost:8081/items
+Content-Type: application/json
+
+{
+  "name": "good",
+  "price": 300
+}
+
+<> 2025-08-07T142922.200.json
+<> 2025-08-06T133440.200.json
+<> 2025-08-06T133015.200.json
+<> 2025-08-06T132700.200.json
+<> 2025-08-06T132329.200.json
+<> 2025-08-06T124239.200.json
+<> 2025-08-06T123922.200.json
+<> 2025-08-06T123714.200.json
+<> 2025-08-06T122952.200.json
+<> 2025-08-06T122256.200.json
+<> 2025-08-06T122048.200.json
+<> 2025-08-06T112329.200.json
+<> 2025-08-06T110921.200.json
+<> 2025-08-06T110627.200.json
+<> 2025-08-06T110120.200.json
+
+###
+GET http://localhost:8081/webclient/items/688de1018a2a121f1174a568
+
+###
+POST http://localhost:8081/webclient/items
+Content-Type: application/json
+
+{
+  "id": "444",
+  "name": "First item",
+  "price": 50
+}
+
+<> 2025-08-07T165005.500.json
+
+###
+POST http://localhost:8081/items
+Content-Type: application/json
+
+{
+  "name": "First item",
+  "price": 50,
+  "producerId": "688f09f2c90eca7b7794d516"
+}
+
+###
+POST http://localhost:8081/users
+
+<> 2025-08-22T183213.403.txt
+
+###
+POST http://localhost:8081/users
+Content-Type: application/json
+
+{
+  "firstName": "gfdgfdg",
+  "lastName": "gdfgdfg",
+  "email": "fsdfsd",
+  "password": "fdgfdgyhyh"
+}
+
+<> 2025-08-22T200307.201.json
+<> 2025-08-22T195016.500.json
+<> 2025-08-22T194420.201.json
+<> 2025-08-22T192255.200.json
+<> 2025-08-22T191524.200.txt
+<> 2025-08-22T191520.200.txt
+<> 2025-08-22T185044.400.json
+
+###
+GET http://localhost:8080/result
+
+###
+GET http://localhost:8081/people
+Content-Type: application/json
+
+{
+  "id": "",
+  "name": "",
+  "email": "",
+  "resource": "",
+  "age": 0,
+  "child": {},
+  "children": []
+}
+
+<> 2025-10-02T231423.200.json
+<> 2025-10-02T231056.200.json
+<> 2025-10-02T231048.200.json
+<> 2025-10-02T230712.200.json
+
+###
+GET http://localhost:8082/
+
+###
+GET http://localhost:8080/interview/interview
+
+###
+GET http://localhost:8080/test/api/client
+
+###
+GET https://localhost:8082/api/hello
+
+###
+POST http://localhost:8080/api/shorten
+Content-Type: application/json
+
+{
+  "url": "https://chat.deepseek.com/"
+}
+
+###
+GET http://localhost:8080/redirect/1
+
+
+
+### Register new user
+POST http://localhost:8087/api/users/register
+Content-Type: application/json
+
+{
+  "email": "testuser@example.com",
+  "password": "12345678",
+  "firstName": "John",
+  "lastName": "Doe"
+}
+
+###
+GET http://localhost:8087/api/users/me
+
+###
+POST http://localhost:8082/api/shorten
+Content-Type: application/json
+
+{
+  "url": "https://football.ua/"
+}
+
+<> 2026-04-11T070635.201.txt
+<> 2026-04-04T205250.201.txt
+<> 2026-04-04T204902.201.txt
+
+
+
+###
+GET http://localhost:8085/redirect/Fmx
+
+<> 2026-04-11T070646.200.html
+
+
+###
+POST http://localhost:8082/api/test/increment/TESTCODE
+Content-Type: application/x-www-form-urlencoded
+
+###
+GET http://localhost:8080/hello/client
+
+###
+GET http://localhost:8080/user
+
+###
+POST http://localhost:8080/hello
+Content-Type: application/json
+
+{
+  "name": "",
+  "actionType": ""
+}
+
+###
+GET http://localhost:8082/api/v1/admin/system/status
+
+###
+POST http://localhost:8082/api/v1/admin/system/maintenance
+Content-Type: application/json
+
+{"enabled": false}
+
+###
+POST http://localhost:8082/api/v1/admin/system/chaos/mongo?fail=true
+Content-Type: application/x-www-form-urlencoded
+
+###
+GET http://localhost:8085/redirect/wMi
+
+###
+GET http://localhost:8085/debug/stats
+
+
+###
+GET http://localhost:8080/test
+
+###
+GET http://localhost:8088/api/test
+
+<> 2026-05-01T192904.200.txt
+
+###
+GET /api
+
+###
+GET http://localhost:8080/api/products/1
+
+<> 2026-05-03T091358.200.json
+<> 2026-05-03T091331.200.json
+
+###
+GET http://localhost:8080/api/hash/products/1
+
+<> 2026-05-03T092655.200.json
+<> 2026-05-03T092604.404.json
+
+###
+PATCH http://localhost:8080/api/hash/products/1/price?newPrice=55
+Content-Type: application/x-www-form-urlencoded
+
+
+###
+GET http://localhost:8080/api/repo/products/1
+
+###
+POST http://localhost:8080/api/repo/products
+Content-Type: application/json
+
+{
+  "name": "gggg666",
+  "price": 200,
+  "stock": 300
+}

@@ -1,5 +1,11 @@
 import org.gradle.kotlin.dsl.*
 
+repositories {
+    mavenCentral()
+    maven {
+        url = uri("https://packages.confluent.io/maven/")
+    }
+}
 
 plugins {
     java
@@ -133,11 +139,17 @@ dependencies {
         implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
         implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
 //        implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
+        implementation("com.rabbitmq:amqp-client")
         implementation("org.springframework.boot:spring-boot-starter-webflux")
         implementation("io.projectreactor.netty:reactor-netty-http")
         implementation("org.apache.kafka:kafka-clients:3.7.0")
         implementation("org.springframework.ws:spring-ws-core")
         implementation("redis.clients:jedis")
+
+        implementation("org.apache.kafka:kafka-clients:3.7.0")
+        implementation("org.apache.avro:avro:1.11.3")
+        implementation("io.confluent:kafka-avro-serializer:7.6.0")
+        implementation("org.slf4j:slf4j-simple:2.0.13")
 //    }
     implementation("org.springframework.boot:spring-boot-starter-actuator")
     implementation("commons-io:commons-io:2.11.0")

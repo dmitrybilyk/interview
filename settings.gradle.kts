@@ -4,3 +4,4 @@ pluginManagement {
     }
 }
 rootProject.name = "interview"
+include("solr")

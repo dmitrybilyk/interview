@@ -1,0 +1,56 @@
+@startuml
+autonumber
+skinparam style strictuml
+skinparam SequenceMessageAlignment center
+skinparam shadowing false
+
+actor "Користувач / Клієнт" as User
+participant "Servlet Container\n(Tomcat)" as Tomcat
+
+box "Spring Security Filter Chain" #f0f0f0
+    participant "SecurityContextPersistenceFilter" as ContextFilter
+    participant "LogoutFilter" as LogoutFilter
+    participant "AuthenticationFilter\n(JWT / Basic / Form)" as AuthFilter
+    participant "ExceptionTranslationFilter" as ExFilter
+    participant "AuthorizationFilter" as AuthzFilter
+end box
+
+box "Authentication Manager Layer" #e3f2fd
+    participant "ProviderManager\n(AuthenticationManager)" as Manager
+    participant "AuthenticationProvider\n(Jwt/Dao/etc)" as Provider
+end box
+
+database "SecurityContextHolder" as SCH
+participant "Controller / Service" as App
+
+User -> Tomcat: HTTP Request (наприклад, з JWT)
+Tomcat -> ContextFilter: Перевірка існуючого контексту
+ContextFilter -> ContextFilter: Завантаження сесії (якщо є)
+
+group Процес Автентифікації
+    AuthFilter -> Manager: authenticate(Unauthenticated Token)
+
+    loop Для кожного провайдера у списку
+        Manager -> Provider: supports(Token.class)?
+    end
+
+    Provider -> Provider: Перевірка (JWT signature / DB)
+    return Authenticated Object (Principal + Authorities)
+
+    AuthFilter -> SCH: Збереження Authentication у ThreadLocal
+end
+
+group Процес Авторизації
+    AuthzFilter -> SCH: getAuthentication()
+    AuthzFilter -> AuthzFilter: Перевірка Roles/Authorities\n(Access Decision)
+
+    alt Доступ дозволено
+        AuthzFilter -> App: Виклик методу @RestController
+        App --> User: 200 OK + Data
+    else Доступ заборонено
+        AuthzFilter -> ExFilter: AccessDeniedException
+        ExFilter --> User: 403 Forbidden / Redirect to Login
+    end
+end
+
+@enduml

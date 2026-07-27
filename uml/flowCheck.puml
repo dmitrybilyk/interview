@@ -1,0 +1,28 @@
+@startuml
+
+start
+
+'component First
+'component Second
+'component Third
+
+'First -> Second: Some comment
+'Second -> Third: Some comment2
+:gogo;
+:gogo2;
+if (ddd?) then (yes)
+:dfdf;
+else (no)
+:dfdf;
+endif
+
+
+
+
+
+
+
+
+stop
+
+@enduml

@@ -2,7 +2,7 @@ package com.conduct.interview.coding.factorial;
 
 public class Factorial {
     public static void main(String[] args) {
-//        System.out.println(factorialRecursive(5));
+        System.out.println(factorialRecursive(5));
         System.out.println(factorialIterative(5));
     }
 

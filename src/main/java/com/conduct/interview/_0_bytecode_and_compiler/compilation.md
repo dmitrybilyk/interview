@@ -20,6 +20,7 @@ files, and ensures portability across systems.
       ```
       Produces `MyClass.class`.
 
+after java -jar
 3. **Load Bytecode**:
     - **Class Loader**: Loads `.class` files into memory.
 
@@ -39,4 +40,7 @@ files, and ensures portability across systems.
 
 Java compilation turns source code into platform-independent
 bytecode, which the JVM executes.
+
+Both bytecode and machine code are binary just byte code is 
+prepared for virtual CPU - JVM, not for particular CPU. 
 

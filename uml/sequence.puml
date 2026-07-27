@@ -1,0 +1,15 @@
+@startuml
+
+actor User
+
+participant "first" as first
+participant "first" as second
+participant "first" as third
+database "Postgres" as DB
+
+first -> second: firs step
+second -> third: second step
+third -> DB: Saving values
+DB -> first:
+
+@enduml
