@@ -1,3 +1,4 @@
 initial change on master branch
 
 change made on newBranch2
+change2 made on newBranch2
