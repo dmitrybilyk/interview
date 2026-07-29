@@ -7,3 +7,4 @@ change2 made on newBranch branch
 added change in master
 
 new commit on master for rebase to check
+new commit2 on master for rebase to check
