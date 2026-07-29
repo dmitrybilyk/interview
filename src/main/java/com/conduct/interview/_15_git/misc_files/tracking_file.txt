@@ -5,3 +5,5 @@ change2 made on newBranch2
 change made on newBranch branch
 change2 made on newBranch branch
 added change in master
+
+new commit on master for rebase to check
