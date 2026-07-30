@@ -1,78 +1,81 @@
 @startuml
-title TLS Handshake — Full Client/Server Message Flow
+title TLS Handshake - Explained for a Java Developer
 
 participant Client
 participant Server
 
-== 1. Hello: negotiate version & cipher ==
+' Think of it like this:
+' - Server has a KeyStore (private key + its own certificate)
+' - Client has a TrustStore (list of CA certificates it trusts)
+' This is exactly what SSLContext / KeyManager / TrustManager do in Java.
 
-Client -> Server: ClientHello\n(supported TLS versions, cipher suites, ClientRandom)
+== Step 1: Say hello, agree on how to talk ==
 
-Server -> Client: ServerHello\n(chosen TLS version, chosen cipher suite, ServerRandom)
+Client -> Server: "Hi, here are the TLS versions/ciphers I support"
+Server -> Client: "OK, let's use this version + cipher"
+' Same idea as an API version negotiation
 
-== 2. Server proves its identity ==
+== Step 2: Server shows its ID (certificate) ==
 
-Server -> Client: Certificate\n(Leaf cert [contains Server PUBLIC key] + Intermediate CA cert)
-
-Server -> Client: ServerKeyExchange\n(ephemeral ECDHE public key,\nSIGNED with Server's PRIVATE key)
-
-Server -> Client: ServerHelloDone
-
-note right of Client
-**Check leaf certificate (public key check):**
-1. Walk chain: Leaf -> Intermediate -> Root CA
-2. Verify each signature using issuer's public key
-3. Root CA must be in local Truststore
-4. Check validity dates (not expired)
-5. Check hostname matches SAN
-6. Check EKU = serverAuth
-end note
-
-Client -> Client: Verify ServerKeyExchange signature\nusing PUBLIC key extracted from leaf cert
+Server -> Client: Sends its Certificate\n(contains Server's PUBLIC key)
 
 note right of Client
-**This is the "challenge":**
-Signature only validates if it was produced
-by the PRIVATE key matching the leaf cert's
-public key. Proves Server really owns
-the identity in the certificate.
+Client checks the certificate, like checking an ID card:
+- Was it signed by a CA I trust? (chain leads to my TrustStore)
+- Is it still valid (not expired)?
+- Does the domain name match?
+
+This is exactly what Java's TrustManager
+does automatically under the hood.
 end note
 
-== 3. Key exchange ==
+== Step 3: Server proves it really owns that certificate ==
 
-Client -> Server: ClientKeyExchange\n(Client's ephemeral ECDHE public key)
+Server -> Client: Sends a message SIGNED with its PRIVATE key
 
-Client -> Client: Compute Pre-Master Secret\n(ECDH: own private key + Server's public key)
-Server -> Server: Compute Pre-Master Secret\n(ECDH: own private key + Client's public key)
+Client -> Client: Verifies the signature using\nthe PUBLIC key from the certificate
+
+note right of Client
+Same logic as:
+  publicKey.verify(signature) == true
+
+Only the real owner of the private key
+could produce a valid signature.
+This is how the client knows it's
+really talking to the right server,
+not an impostor.
+end note
+
+== Step 4: Both sides agree on one shared secret (the session key) ==
+
+Client -> Server: Sends its part of the key exchange data
 
 note over Client, Server
-Both sides now derive the same
-**Master Secret** = PRF(PreMasterSecret, ClientRandom, ServerRandom)
-then derive symmetric **Session Keys**
-(encryption key + MAC key) from it.
+Both sides independently calculate
+the SAME secret value.
+
+This shared secret becomes the SESSION KEY -
+just a normal symmetric key, like an AES key
+you'd use with Cipher.getInstance("AES/GCM/NoPadding").
+
+From here on, no more public/private key math -
+everything is fast symmetric encryption.
 end note
 
-== 4. Confirm handshake (mutual proof) ==
+== Step 5: Confirm both sides really have the same key ==
 
-Client -> Server: ChangeCipherSpec
-Client -> Server: Finished\n(hash of all handshake messages,\nencrypted with new session key)
-
-Server -> Server: Verify Client's Finished message
-
-Server -> Client: ChangeCipherSpec
-Server -> Client: Finished\n(hash of all handshake messages,\nencrypted with new session key)
-
-Client -> Client: Verify Server's Finished message
+Client -> Server: "Proof I have the key" (small encrypted message)
+Server -> Client: "Proof I have the key too" (small encrypted message)
 
 note over Client, Server
-Both sides confirmed they derived
-the identical session key.
-Handshake complete.
+If either side computed a different key,
+decrypting this message fails and the
+connection is aborted here.
 end note
 
-== 5. Application data ==
+== Step 6: Normal traffic, now encrypted ==
 
-Client -> Server: Encrypted Application Data\n(symmetric session key)
-Server -> Client: Encrypted Application Data\n(symmetric session key)
+Client -> Server: Encrypted request (e.g. GET /api/data)
+Server -> Client: Encrypted response (e.g. 200 OK + JSON body)
 
 @enduml
