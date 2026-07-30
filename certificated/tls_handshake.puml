@@ -1,35 +1,78 @@
 @startuml
+title TLS Handshake — Full Client/Server Message Flow
+
 participant Client
 participant Server
-participant CA as "CA / Truststore"
 
-Client -> Server: ClientHello\n(TLS versions, ciphers, ClientRandom)
+== 1. Hello: negotiate version & cipher ==
 
-Server -> Client: ServerHello\n(Chosen cipher, ServerRandom)
-Server -> Client: Certificate Chain\n(Leaf + Intermediate)
+Client -> Server: ClientHello\n(supported TLS versions, cipher suites, ClientRandom)
 
-Client -> CA: Verify certificate chain
-CA --> Client: Root CA trusted
+Server -> Client: ServerHello\n(chosen TLS version, chosen cipher suite, ServerRandom)
 
-note right of Client
-- Verify signatures
-- Check SAN / hostname
-- Check expiry
-- Check EKU=serverAuth
-end note
+== 2. Server proves its identity ==
 
-Client -> Server: (implicit challenge)
+Server -> Client: Certificate\n(Leaf cert [contains Server PUBLIC key] + Intermediate CA cert)
 
-Server -> Client: Signature\n(Signed handshake hash\nusing server PRIVATE key)
+Server -> Client: ServerKeyExchange\n(ephemeral ECDHE public key,\nSIGNED with Server's PRIVATE key)
 
-Client -> Client: Verify signature\n(using PUBLIC key from cert)
+Server -> Client: ServerHelloDone
 
 note right of Client
-Only private-key holder
-can create valid signature
+**Check leaf certificate (public key check):**
+1. Walk chain: Leaf -> Intermediate -> Root CA
+2. Verify each signature using issuer's public key
+3. Root CA must be in local Truststore
+4. Check validity dates (not expired)
+5. Check hostname matches SAN
+6. Check EKU = serverAuth
 end note
 
-Client -> Server: Encrypted traffic starts
-Server -> Client: Encrypted traffic starts
+Client -> Client: Verify ServerKeyExchange signature\nusing PUBLIC key extracted from leaf cert
+
+note right of Client
+**This is the "challenge":**
+Signature only validates if it was produced
+by the PRIVATE key matching the leaf cert's
+public key. Proves Server really owns
+the identity in the certificate.
+end note
+
+== 3. Key exchange ==
+
+Client -> Server: ClientKeyExchange\n(Client's ephemeral ECDHE public key)
+
+Client -> Client: Compute Pre-Master Secret\n(ECDH: own private key + Server's public key)
+Server -> Server: Compute Pre-Master Secret\n(ECDH: own private key + Client's public key)
+
+note over Client, Server
+Both sides now derive the same
+**Master Secret** = PRF(PreMasterSecret, ClientRandom, ServerRandom)
+then derive symmetric **Session Keys**
+(encryption key + MAC key) from it.
+end note
+
+== 4. Confirm handshake (mutual proof) ==
+
+Client -> Server: ChangeCipherSpec
+Client -> Server: Finished\n(hash of all handshake messages,\nencrypted with new session key)
+
+Server -> Server: Verify Client's Finished message
+
+Server -> Client: ChangeCipherSpec
+Server -> Client: Finished\n(hash of all handshake messages,\nencrypted with new session key)
+
+Client -> Client: Verify Server's Finished message
+
+note over Client, Server
+Both sides confirmed they derived
+the identical session key.
+Handshake complete.
+end note
+
+== 5. Application data ==
+
+Client -> Server: Encrypted Application Data\n(symmetric session key)
+Server -> Client: Encrypted Application Data\n(symmetric session key)
 
 @enduml
