@@ -1,1 +1,0 @@
-Pattern guarantees having just single instance of some class.

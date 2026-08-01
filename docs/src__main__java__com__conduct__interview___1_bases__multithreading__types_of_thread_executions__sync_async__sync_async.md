@@ -1,1 +1,0 @@
-Caller thread doesn't wait for result

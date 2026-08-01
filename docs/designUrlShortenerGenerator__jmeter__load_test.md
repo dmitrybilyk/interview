@@ -1,1 +1,0 @@
-rm -rf ./report results.jtl && jmeter -n -t load_test.jmx -l results.jtl -e -o ./report

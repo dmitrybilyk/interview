@@ -1,2 +1,0 @@
-- cron jobs
-- retry logic
