@@ -1,35 +1,81 @@
 @startuml
+title TLS Handshake - Explained for a Java Developer
+
 participant Client
 participant Server
-participant CA as "CA / Truststore"
 
-Client -> Server: ClientHello\n(TLS versions, ciphers, ClientRandom)
+' Think of it like this:
+' - Server has a KeyStore (private key + its own certificate)
+' - Client has a TrustStore (list of CA certificates it trusts)
+' This is exactly what SSLContext / KeyManager / TrustManager do in Java.
 
-Server -> Client: ServerHello\n(Chosen cipher, ServerRandom)
-Server -> Client: Certificate Chain\n(Leaf + Intermediate)
+== Step 1: Say hello, agree on how to talk ==
 
-Client -> CA: Verify certificate chain
-CA --> Client: Root CA trusted
+Client -> Server: "Hi, here are the TLS versions/ciphers I support"
+Server -> Client: "OK, let's use this version + cipher"
+' Same idea as an API version negotiation
 
-note right of Client
-- Verify signatures
-- Check SAN / hostname
-- Check expiry
-- Check EKU=serverAuth
-end note
+== Step 2: Server shows its ID (certificate) ==
 
-Client -> Server: (implicit challenge)
-
-Server -> Client: Signature\n(Signed handshake hash\nusing server PRIVATE key)
-
-Client -> Client: Verify signature\n(using PUBLIC key from cert)
+Server -> Client: Sends its Certificate\n(contains Server's PUBLIC key)
 
 note right of Client
-Only private-key holder
-can create valid signature
+Client checks the certificate, like checking an ID card:
+- Was it signed by a CA I trust? (chain leads to my TrustStore)
+- Is it still valid (not expired)?
+- Does the domain name match?
+
+This is exactly what Java's TrustManager
+does automatically under the hood.
 end note
 
-Client -> Server: Encrypted traffic starts
-Server -> Client: Encrypted traffic starts
+== Step 3: Server proves it really owns that certificate ==
+
+Server -> Client: Sends a message SIGNED with its PRIVATE key
+
+Client -> Client: Verifies the signature using\nthe PUBLIC key from the certificate
+
+note right of Client
+Same logic as:
+  publicKey.verify(signature) == true
+
+Only the real owner of the private key
+could produce a valid signature.
+This is how the client knows it's
+really talking to the right server,
+not an impostor.
+end note
+
+== Step 4: Both sides agree on one shared secret (the session key) ==
+
+Client -> Server: Sends its part of the key exchange data
+
+note over Client, Server
+Both sides independently calculate
+the SAME secret value.
+
+This shared secret becomes the SESSION KEY -
+just a normal symmetric key, like an AES key
+you'd use with Cipher.getInstance("AES/GCM/NoPadding").
+
+From here on, no more public/private key math -
+everything is fast symmetric encryption.
+end note
+
+== Step 5: Confirm both sides really have the same key ==
+
+Client -> Server: "Proof I have the key" (small encrypted message)
+Server -> Client: "Proof I have the key too" (small encrypted message)
+
+note over Client, Server
+If either side computed a different key,
+decrypting this message fails and the
+connection is aborted here.
+end note
+
+== Step 6: Normal traffic, now encrypted ==
+
+Client -> Server: Encrypted request (e.g. GET /api/data)
+Server -> Client: Encrypted response (e.g. 200 OK + JSON body)
 
 @enduml

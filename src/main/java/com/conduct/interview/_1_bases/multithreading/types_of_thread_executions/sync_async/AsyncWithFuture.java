@@ -7,17 +7,20 @@ import java.util.concurrent.Future;
 
 public class AsyncWithFuture {
     public static void main(String[] args) throws InterruptedException, ExecutionException {
-        ExecutorService executorService = Executors.newSingleThreadExecutor();
-        long start = System.currentTimeMillis();
-        System.out.println("a");
-        System.out.println("b");
-        Future<?> future = executorService.submit(() -> {
-            try {
-                sleeping1000();
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-        });
+        long start;
+        Future<?> future;
+        try (ExecutorService executorService = Executors.newSingleThreadExecutor()) {
+            start = System.currentTimeMillis();
+            System.out.println("a");
+            System.out.println("b");
+            future = executorService.submit(() -> {
+                try {
+                    sleeping1000();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+        }
 //        sleeping1000();
         Thread.sleep(1000);
         future.get();
@@ -26,7 +29,7 @@ public class AsyncWithFuture {
     }
 
     static void sleeping1000() throws InterruptedException {
-        System.out.println("In Sleep100 - " + Thread.currentThread().getName());
+        System.out.println("In Sleeping1000 - " + Thread.currentThread().getName());
         Thread.sleep(1000);
     }
 }

@@ -6,7 +6,7 @@ public class AsyncWithOldCallbackStyle {
 
     public static void main(String[] args) throws InterruptedException {
         asyncOperation(result -> {
-            System.out.println("Callback received: " + result);
+            System.out.println("Callback result received: " + result);
         });
 
         System.out.println("Main thread continues...");
