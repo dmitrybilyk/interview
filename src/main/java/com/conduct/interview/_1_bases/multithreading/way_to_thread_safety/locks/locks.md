@@ -1,13 +1,11 @@
-Locks are more flexible. they allow for several thread to get inside
-the critical section in case they just wanted to read. You can
-`tryLock`, `lockInterrupidly`, critical section can start in one method
-and end in another.
+`Lock` is a more flexible alternative to `synchronized`: supports `tryLock()` (don't block if
+busy), `lockInterruptibly()`, and the lock/unlock can happen in different methods (`synchronized`
+must start and end in the same block).
 
-Reentrant lock allows the same thread to enter the critical section 
-several times (with count usage). The fairness feature allows to build
-a priority based on how much time threads are waiting for the lock.
+- `reentrant/reentrant_locks` - direct `synchronized` replacement, same thread can re-acquire it
+- `reentrant/reentrant_read_write_locks` - many readers at once, but only one writer, never both
+- `stamped_locks/stamped_lock` - faster non-reentrant alternative, unlocked via a returned stamp
+- `stamped_locks/stamped_with_optimistic_lock` - readers don't block writers at all, just verify
+  after reading that no write happened; retry with a real read lock if one did
 
-Stamped locks are not reentrant, stamp long value is used to unlock
-the lock in more safe way though should be careful not to escape the stamp.
-Stamped locks provide the optimistic locking when reader can read regardless 
-of writing operation is done or not. To be able to see current results.
+(For a Condition-based producer/consumer example, see `producer_consumer/with_reentrant_lock`.)

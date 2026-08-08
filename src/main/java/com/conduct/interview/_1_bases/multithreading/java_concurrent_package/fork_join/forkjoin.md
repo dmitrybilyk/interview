@@ -1,4 +1,3 @@
-Fork join pool is a feature which allows to fork task to many tasks, 
-execute them in many cores (thread) and then join the result in the end.
-It's a special implementation of the ExecutorService which uses recursion
-and uses principle - divide and conquer.
+A special `ExecutorService` for divide-and-conquer work: split a big task into smaller ones
+recursively (`fork`), run them in parallel across CPU cores, then combine the results (`join`).
+Use `RecursiveTask<V>` if the task returns a result, `RecursiveAction` if it doesn't.

@@ -1,11 +1,12 @@
-Synchronized keyword (on method, static method or block of code) helps to avoid race condition.
-Synchronization is achieved with the help of monitor - mechanism to achieve mutual exclusion (just 
-one thread can execute in the critical part), conditional executions with notifications.
-There is a lock object associated with every object or class called mutex (binary semaphore, intrinsic locking).
-It's better to appUser external object for locking  for the security (attacker can cause a deadlock and Denial Of
-Service in case of using 'this').
-It's better to avoid Strings as mutex because of String pool. the same for Integer, Long pool.
+`synchronized` (on a method or a block) makes sure only one thread at a time can run that code -
+it uses a monitor lock tied to an object (every object has one, "intrinsic lock"). A synchronized
+instance method locks on `this`; a synchronized block locks on whatever object you pass it.
 
-There are two main problems in the multithreading:
-- visibility (two threads can't predict what other thread can do)
-- accessibility (two thread try to access the same resource at the same time)
+Prefer locking on a dedicated private `Object`, not `this` or a String/boxed number - those can
+be shared/interned elsewhere in the JVM, so an attacker (or unrelated code) could lock on the
+same object and cause a deadlock.
+
+**happens-before**: the formal guarantee behind all of this. Everything a thread does before
+`unlock()` is guaranteed visible to the next thread that `lock()`s the same monitor - that's why
+`synchronized` fixes both visibility AND atomicity, not just mutual exclusion. `volatile`
+writes/reads have the same happens-before guarantee for that one variable (see `volatile_keyword`).
