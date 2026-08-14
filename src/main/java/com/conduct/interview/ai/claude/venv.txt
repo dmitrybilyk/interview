@@ -1,0 +1,4 @@
+cd src/main/java/com/conduct/interview/ai/claude/  # або де там лежить test_tools.py
+python3 -m venv venv
+source venv/bin/activate
+pip install anthropic
