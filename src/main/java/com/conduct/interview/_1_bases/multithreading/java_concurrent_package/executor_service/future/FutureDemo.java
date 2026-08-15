@@ -8,21 +8,52 @@ import java.util.concurrent.Future;
 /**
  * submit() returns immediately with a Future - the task keeps running in the background.
  * future.get() blocks until the result is ready (or rethrows the task's exception).
+ *
+ * This demo shows true parallelism: 3 tasks * 2 seconds each = ~2 seconds total (not 6)
+ * because they run in parallel on a 3-thread pool.
  */
 public class FutureDemo {
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
-        ExecutorService executor = Executors.newSingleThreadExecutor();
+        long startTime = System.currentTimeMillis();
 
-        Future<Integer> future = executor.submit(() -> {
-            Thread.sleep(1000);
-            return 42;
+        ExecutorService executor = Executors.newFixedThreadPool(3);
+
+        Future<Integer> future1 = executor.submit(() -> {
+            System.out.println("Task 1 started on " + Thread.currentThread().getName());
+            Thread.sleep(2000);
+            System.out.println("Task 1 finished");
+            return 1;
         });
 
-        System.out.println("isDone right after submit: " + future.isDone()); // false, task still running
+        Future<Integer> future2 = executor.submit(() -> {
+            System.out.println("Task 2 started on " + Thread.currentThread().getName());
+            Thread.sleep(2000);
+            System.out.println("Task 2 finished");
+            return 2;
+        });
 
-        Integer result = future.get(); // blocks here until the task finishes
-        System.out.println("Result: " + result);
+        Future<Integer> future3 = executor.submit(() -> {
+            System.out.println("Task 3 started on " + Thread.currentThread().getName());
+            Thread.sleep(2000);
+            System.out.println("Task 3 finished");
+            return 3;
+        });
+
+        System.out.println("Main thread doing other work...");
+        Thread.sleep(1000);
+        System.out.println("Main thread work done");
+
+        Integer result1 = future1.get();
+        Integer result2 = future2.get();
+        Integer result3 = future3.get();
+
+        System.out.println("Result 1: " + result1);
+        System.out.println("Result 2: " + result2);
+        System.out.println("Result 3: " + result3);
+
+        long endTime = System.currentTimeMillis();
+        System.out.println("Total time: " + (endTime - startTime) + " ms");
 
         executor.shutdown();
     }

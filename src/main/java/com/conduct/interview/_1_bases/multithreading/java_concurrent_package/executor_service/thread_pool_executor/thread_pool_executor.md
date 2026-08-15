@@ -1,14 +1,9 @@
-`ThreadPoolExecutor` is what `Executors.newFixedThreadPool()` etc. actually build underneath.
-Four knobs control it:
+`ThreadPoolExecutor` is the real class behind `Executors.newFixedThreadPool()` etc.
 
-- **core pool size** - threads always kept alive, even when idle
-- **max pool size** - hard ceiling on threads, only grows past core size once the queue is full
-- **work queue** - holds tasks once core threads are busy, before spinning up more (up to max)
-- **RejectedExecutionHandler** - kicks in once BOTH the queue and max threads are full:
-  - `AbortPolicy` (default) - throws `RejectedExecutionException`
-  - `CallerRunsPolicy` - runs the task on the calling thread itself (built-in backpressure)
-  - `DiscardPolicy` / `DiscardOldestPolicy` - silently drop the new/oldest task
+It has: a fixed number of threads always running (core), a queue where extra tasks wait, and a
+max limit on threads it can grow to. If the queue AND max threads are both full, it rejects the
+task (throws by default).
 
-`Executors.newFixedThreadPool()` uses an **unbounded** queue - that's exactly why unrestrained
-task submission through it can quietly exhaust memory instead of ever rejecting anything (see
+Gotcha: `newFixedThreadPool()` has an unlimited queue, so it never actually rejects - it just
+piles up tasks forever, which can quietly eat all your memory (see
 `common_issues/_9_improper_thread_pool_usage`).

@@ -230,6 +230,40 @@ A more powerful `Future`: instead of blocking on `get()`, you chain steps that r
 once the previous one completes (`thenApply`, `thenAccept`...), and you can combine results from
 several async calls or handle their exceptions (`exceptionally`) without blocking a thread to wait.
 
+### Not blocking: callbacks instead of get()
+`Future` gives you exactly one way to get the result: call `get()` and block until it's ready.
+`CompletableFuture` adds a second option: attach a callback (`thenAccept`, etc.) that runs
+automatically, on whatever thread finishes the work, whenever it's ready - your own thread never
+stops to wait, it just keeps going to its next line immediately. See `CompletableFutureCallbackDemo`:
+the timestamps show `main` reaching its own next lines instantly, while the callback fires ~2s
+later on a pool thread, after `main` already moved on. Use this when you don't need the result
+right there in your current method; use `join()`/`get()` (like `CompletableFutureParallelDemo`
+does) when you do need it synchronously, e.g. to print a combined result next.
+
+### Exceptions: handled inline, not just at a blocking checkpoint
+With `Future`, the only place you can react to a failure is at `get()`, wrapped in try/catch -
+and if you never call `get()`, you never find out it failed (see `future.md`). With
+`CompletableFuture`, the "what to do if this fails" step can be part of the chain itself:
+
+- `exceptionally(ex -> fallback)` - only runs on failure, supplies a fallback value, and the
+  rest of the chain (`thenApply`, `thenAccept`...) keeps running with it instead of just dying
+- `handle((result, ex) -> ...)` - runs on EITHER outcome, one place, check `ex != null` to tell
+  which happened
+
+Neither of these blocks anything - the recovery is just another chain step, not a separate
+try/catch around a blocking call. See `CompletableFutureExceptionDemo`. (If you skip both and
+just call `get()`/`join()` on a failed chain, you get the same `ExecutionException`/
+`CompletionException`-wrapped-cause behavior as plain `Future`.)
+
+### Gotcha: it can get silently killed in a short-lived program
+`supplyAsync()` with no explicit executor runs on `ForkJoinPool.commonPool()`, whose worker
+threads are **daemon threads** (see `daemon_threads`). If nothing else keeps the JVM alive (e.g.
+in a plain `main()` demo, not a long-running server), the JVM can exit the instant `main()`
+returns - even mid-task - and the async work is abandoned with no error, no log, nothing. That's
+why `CompletableFutureDemo` ends with a `Thread.sleep(...)`: without it, `"Final result"` never
+prints. In a real server app this isn't an issue, since the app never returns from `main` while
+serving requests - but any short-lived program (CLI tool, batch job) needs something to block on.
+
 
 ---
 
@@ -264,6 +298,22 @@ result is ready (or throws if the task failed). `future.isDone()` checks without
 Downside: `get()` has no way to combine/chain with other futures - that's what
 `CompletableFuture` is for.
 
+### Exceptions
+If the task throws, the exception is just **captured**, not delivered - `isDone()` becomes
+`true` either way (success or failure), so it tells you nothing about whether it succeeded.
+The exception only surfaces when you call `get()`, and it's re-thrown **on the calling thread**,
+wrapped:
+
+- `ExecutionException` - the task itself threw; real exception is `e.getCause()`
+- `InterruptedException` - the calling thread (not the task) was interrupted while blocked in `get()`
+- `CancellationException` (unchecked) - the task was cancelled via `future.cancel(true)`
+
+Gotcha: if a task submitted via `submit()` throws and you never call `get()` on its `Future`,
+the exception is silently swallowed - no log, no crash, nothing. (Tasks run via `execute()`
+instead go to the thread's `UncaughtExceptionHandler` and print a stack trace, so at least
+that's visible - `submit()` without `get()` is the dangerous, silent case.) See
+`FutureExceptionDemo` for all of this live.
+
 
 ---
 
@@ -281,19 +331,14 @@ Runs tasks after a delay, or repeatedly, without a manual `Timer`/`sleep` loop.
 
 ## `java_concurrent_package/executor_service/thread_pool_executor/thread_pool_executor.md`
 
-`ThreadPoolExecutor` is what `Executors.newFixedThreadPool()` etc. actually build underneath.
-Four knobs control it:
+`ThreadPoolExecutor` is the real class behind `Executors.newFixedThreadPool()` etc.
 
-- **core pool size** - threads always kept alive, even when idle
-- **max pool size** - hard ceiling on threads, only grows past core size once the queue is full
-- **work queue** - holds tasks once core threads are busy, before spinning up more (up to max)
-- **RejectedExecutionHandler** - kicks in once BOTH the queue and max threads are full:
-  - `AbortPolicy` (default) - throws `RejectedExecutionException`
-  - `CallerRunsPolicy` - runs the task on the calling thread itself (built-in backpressure)
-  - `DiscardPolicy` / `DiscardOldestPolicy` - silently drop the new/oldest task
+It has: a fixed number of threads always running (core), a queue where extra tasks wait, and a
+max limit on threads it can grow to. If the queue AND max threads are both full, it rejects the
+task (throws by default).
 
-`Executors.newFixedThreadPool()` uses an **unbounded** queue - that's exactly why unrestrained
-task submission through it can quietly exhaust memory instead of ever rejecting anything (see
+Gotcha: `newFixedThreadPool()` has an unlimited queue, so it never actually rejects - it just
+piles up tasks forever, which can quietly eat all your memory (see
 `common_issues/_9_improper_thread_pool_usage`).
 
 
@@ -328,9 +373,15 @@ lock (1 owner at a time), a semaphore can allow several threads in at once.
 
 ## `java_concurrent_package/thread_factory/thread_factory.md`
 
-A factory for creating threads with custom settings (name, daemon flag, priority) instead of
-default ones. Usually passed to an `ExecutorService` so its pool threads get readable names -
-handy for logs/thread dumps instead of generic "pool-1-thread-1".
+`ThreadFactory` is the hook that lets you control how a pool's threads get created, instead of
+getting default ones. What people actually use it for:
+
+- **naming** - so logs/thread dumps say `payment-worker-3` instead of `pool-1-thread-3`
+- **catching uncaught exceptions** - a task that throws (via `execute()`) normally just dumps a
+  stack trace to stderr and vanishes; a factory can attach a proper handler (log it, alert, etc.)
+- **daemon flag** - decide if these threads should keep the JVM alive or not
+
+Pass it to an `ExecutorService`, e.g. `Executors.newFixedThreadPool(n, factory)`.
 
 
 ---
