@@ -34,3 +34,4 @@ out/
 ### VS Code ###
 .vscode/
 src/main/java/com/conduct/interview/ai/claude/key.txt
+src/main/java/com/conduct/interview/ai/claude/venv/
