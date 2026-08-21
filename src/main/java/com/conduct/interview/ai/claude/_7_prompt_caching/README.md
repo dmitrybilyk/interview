@@ -48,14 +48,16 @@ r.usage.cache_read_input_tokens      # > 0 on cache hit (reading)
                   ↑ change anything here = cache miss
 ```
 
-## What the script demonstrates
-1. First call → `cache_creation_input_tokens` (cache being written)
-2. Second call → `cache_read_input_tokens` (cache hit, 10x cheaper)
-3. One-character change → cache miss again
-4. Caching tool definitions
+## Scripts
+| File | Demonstrates |
+|---|---|
+| `_common.py` | Shared: the large cache-worthy `LARGE_SYSTEM` prompt — not runnable on its own |
+| `cache_hit_vs_miss.py` | First call → `cache_creation_input_tokens` (write); second call → `cache_read_input_tokens` (hit, 10x cheaper) |
+| `cache_invalidation.py` | One-character change → cache miss again |
+| `cache_tool_definitions.py` | Caching tool definitions |
 
 ## Run
 ```bash
 export ANTHROPIC_API_KEY=$(cat key.txt)
-cd _7_prompt_caching && python script.py
+cd _7_prompt_caching && python cache_hit_vs_miss.py   # or any other file in this directory
 ```

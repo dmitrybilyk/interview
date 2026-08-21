@@ -40,15 +40,17 @@ if final.stop_reason == "max_tokens":
     # Retry original request with higher max_tokens
 ```
 
-## What the script demonstrates
-1. Basic text streaming with live output
-2. Raw event type names
-3. Stream with system prompt
-4. Detecting and handling `max_tokens` cutoff
-5. Collecting full text after stream ends
+## Scripts
+| File | Demonstrates |
+|---|---|
+| `text_streaming.py` | Basic text streaming with live output |
+| `raw_event_stream.py` | Raw event type names |
+| `streaming_with_system_prompt.py` | Stream with system prompt |
+| `incomplete_stream_handling.py` | Detecting and handling `max_tokens` cutoff |
+| `collect_full_text_after_stream.py` | Collecting full text after stream ends |
 
 ## Run
 ```bash
 export ANTHROPIC_API_KEY=$(cat key.txt)
-cd _3_streaming && python script.py
+cd _3_streaming && python text_streaming.py   # or any other file in this directory
 ```

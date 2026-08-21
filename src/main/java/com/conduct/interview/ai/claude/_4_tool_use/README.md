@@ -40,14 +40,16 @@
 | `end_turn` | Claude is done — read the text answer |
 | `max_tokens` | Cut short — discard, retry |
 
-## What the script demonstrates
-1. Two tool definitions (weather + population)
-2. Claude calling a single tool
-3. Claude calling two tools in one turn (parallel tool calls)
-4. Claude deciding no tool is needed (end_turn directly)
+## Scripts
+| File | Demonstrates |
+|---|---|
+| `_common.py` | Shared: tool definitions (weather + population), `execute_tool`, `run_with_tools` loop — not runnable on its own |
+| `single_tool_call.py` | Claude calling a single tool |
+| `two_tool_calls.py` | Claude calling two tools in one turn (parallel tool calls) |
+| `no_tool_needed.py` | Claude deciding no tool is needed (end_turn directly) |
 
 ## Run
 ```bash
 export ANTHROPIC_API_KEY=$(cat key.txt)
-cd _4_tool_use && python script.py
+cd _4_tool_use && python single_tool_call.py   # or any other scenario file
 ```

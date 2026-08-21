@@ -24,16 +24,18 @@ response.stop_reason    # why generation stopped
 response.content[0].text
 ```
 
-## What the script demonstrates
-1. Call with Haiku vs Sonnet — different latency and cost
-2. Temperature 0.0 vs 1.0 on a creative prompt
-3. `stop_reason: max_tokens` when response is cut short
-4. Token count grows with prompt size
+## Scripts
+| File | Demonstrates |
+|---|---|
+| `basic_call.py` | Haiku vs Sonnet — different latency and cost |
+| `temperature_effect.py` | Temperature 0.0 vs 1.0 on a creative prompt |
+| `max_tokens_cutoff.py` | `stop_reason: max_tokens` when response is cut short |
+| `context_window_tokens.py` | Token count grows with prompt size |
 
 ## Run
 ```bash
 cd src/main/java/com/conduct/interview/ai/claude
 source venv/bin/activate
 export ANTHROPIC_API_KEY=$(cat key.txt)
-cd _1_basic_call && python script.py
+cd _1_basic_call && python basic_call.py   # or any other file in this directory
 ```

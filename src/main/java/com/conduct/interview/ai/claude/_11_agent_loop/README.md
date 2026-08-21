@@ -42,16 +42,16 @@ tool_results.append({"type": "tool_result", "tool_use_id": block.id, "content": 
 > Too many tools — Claude gets confused about when to use which one.  
 > Keep descriptions precise and non-overlapping.
 
-## What the script demonstrates
-1. 4 tools: `search_products`, `check_stock`, `place_order`, `task_complete`
-2. Full loop with iteration counter and max_iterations guard
-3. Human approval gate before `place_order` (destructive)
-4. Claude chains: search → check_stock → (ask human) → place_order → task_complete
-5. Two scenarios: read-only search vs full order flow
+## Scripts
+| File | Demonstrates |
+|---|---|
+| `_common.py` | Shared: 4 tools (`search_products`, `check_stock`, `place_order`, `task_complete`), the full loop with iteration counter + max_iterations guard, and the human approval gate before `place_order` — not runnable on its own |
+| `scenario_search_and_check_stock.py` | Read-only flow: search → check_stock → task_complete, no approval needed |
+| `scenario_order_with_approval.py` | Full order flow: search → check_stock → (ask human) → place_order → task_complete |
 
 ## Run
 ```bash
 export ANTHROPIC_API_KEY=$(cat key.txt)
-cd _11_agent_loop && python script.py
-# Script will prompt for approval before placing an order — type "y" to confirm
+cd _11_agent_loop && python scenario_order_with_approval.py
+# Prompts for approval before placing an order — type "y" to confirm
 ```

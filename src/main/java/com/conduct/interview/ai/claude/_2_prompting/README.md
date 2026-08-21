@@ -46,16 +46,18 @@ messages=[
 <input>The actual data</input>
 ```
 
-## What the script demonstrates
-1. Zero-shot classification (uncontrolled output)
-2. Output constraint (single word reply)
-3. System prompt enforcing JSON-only
-4. 2-example few-shot
-5. XML tags for edge case (empty input)
-6. Full JSON extraction with `json.loads()`
+## Scripts
+| File | Demonstrates |
+|---|---|
+| `zero_shot.py` | Zero-shot classification (uncontrolled output) |
+| `output_constraint.py` | Output constraint (single word reply) |
+| `system_prompt.py` | System prompt enforcing JSON-only |
+| `few_shot.py` | 2-example few-shot |
+| `xml_structure.py` | XML tags for edge case (empty input) |
+| `structured_json_output.py` | Full JSON extraction with `json.loads()` |
 
 ## Run
 ```bash
 export ANTHROPIC_API_KEY=$(cat key.txt)
-cd _2_prompting && python script.py
+cd _2_prompting && python zero_shot.py   # or any other file in this directory
 ```

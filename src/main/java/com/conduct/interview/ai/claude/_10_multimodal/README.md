@@ -47,17 +47,18 @@ Good prompt: `"This is a screenshot of our CI/CD pipeline dashboard. Which stage
 - Supported formats: PNG, JPEG, GIF, WEBP
 - Token cost scales with image dimensions
 
-## What the script demonstrates
-1. Generate a PNG programmatically (no external files needed)
-2. Send image via base64
-3. Multiple images in one message
-4. Load image from disk and send
-5. Resolve visual ambiguity in the text prompt
-6. PDF pattern (code shown, commented out — needs a real PDF)
+## Scripts
+| File | Demonstrates |
+|---|---|
+| `_common.py` | Shared: `make_test_png()` — generates a PNG programmatically, no external files needed — not runnable on its own |
+| `image_base64.py` | Send image via base64 |
+| `multiple_images.py` | Multiple images in one message |
+| `image_from_disk.py` | Load image from disk and send (creates `test_image.png` in this directory) |
+| `vision_prompting_ambiguity.py` | Resolve visual ambiguity in the text prompt |
+| `pdf_pattern.py` | PDF pattern (code shown, printed — needs a real PDF to actually run) |
 
 ## Run
 ```bash
 export ANTHROPIC_API_KEY=$(cat key.txt)
-cd _10_multimodal && python script.py
-# Creates test_image.png in this directory
+cd _10_multimodal && python image_base64.py   # or any other file in this directory
 ```

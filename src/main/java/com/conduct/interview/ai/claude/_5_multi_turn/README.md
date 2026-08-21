@@ -51,15 +51,18 @@ messages = [
 - System prompt: constant per-call cost, not in `messages[]`, cheapest way to persist instructions
 - History: grows every turn, paid every call
 
-## What the script demonstrates
-1. Token growth over conversation turns
-2. Pruning (keep last N messages)
-3. Compacting (summarize + restart)
-4. Clearing (fresh session, memory lost)
-5. System prompt as a constant-cost alternative
+## Scripts
+| File | Demonstrates |
+|---|---|
+| `_common.py` | Shared: `client`, `count_tokens`, `chat` helpers — not runnable on its own |
+| `multi_turn_basics.py` | Token growth over conversation turns |
+| `pruning_strategy.py` | Pruning (keep last N messages) |
+| `compacting_strategy.py` | Compacting (summarize + restart) |
+| `clearing_strategy.py` | Clearing (fresh session, memory lost) |
+| `system_prompt_persists.py` | System prompt as a constant-cost alternative |
 
 ## Run
 ```bash
 export ANTHROPIC_API_KEY=$(cat key.txt)
-cd _5_multi_turn && python script.py
+cd _5_multi_turn && python multi_turn_basics.py   # or any other file in this directory
 ```

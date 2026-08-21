@@ -1,10 +1,6 @@
 """
-Topic: Full agent loop — multiple tools, exit condition, human-in-the-loop
-Cert notes section: "Building Production Agents"
-  Agent = loop that calls tools, manages context, has a goal
-  4 things every agent needs: tools, clear system prompt, tool results, exit condition
-  Human-in-the-loop: before destructive actions, after plan, when tool result looks broken
-Run: ../venv/bin/python script.py
+Shared tools, catalog, human-in-the-loop gate, and agent loop for _11_agent_loop.
+Not runnable on its own — imported by the scenario scripts in this directory.
 """
 
 import os, json
@@ -187,8 +183,3 @@ def run_agent(user_request: str, max_iterations: int = 10):
 
     else:
         print(f"\nMax iterations ({max_iterations}) reached — stopping agent.")
-
-# ── Run two scenarios ──────────────────────────────────────────────────────
-run_agent("Find me a laptop and check if it's in stock.")
-
-run_agent("I want to order 1 mechanical keyboard. Search for it, check stock, then order it.")

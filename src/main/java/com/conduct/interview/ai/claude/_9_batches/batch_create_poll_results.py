@@ -1,7 +1,7 @@
 """
-Topic: Message Batches API — fire-and-forget, polling, results iteration
+Topic: Message Batches API — create, poll until done, iterate results
 Cert notes section: "Async patterns for high-volume work — Message Batches API"
-Run: ../venv/bin/python script.py
+Run: ../venv/bin/python batch_create_poll_results.py
 Note: batch processing is async — the script polls until done (may take 1-5 min)
 """
 
@@ -93,12 +93,6 @@ for result in client.messages.batches.results(batch.id):
         print(f"  [{cid}] '{text}'  (in={tokens.input_tokens} out={tokens.output_tokens})")
     elif result.result.type == "errored":
         print(f"  [{cid}] ERROR: {result.result.error}")
-
-# ── 4. List all batches (useful for monitoring) ────────────────────────────
-print("\n=== 4. Recent batches ===")
-for b in client.messages.batches.list(limit=3):
-    print(f"  {b.id}  status={b.processing_status}  "
-          f"created={b.created_at.strftime('%Y-%m-%d %H:%M')}")
 
 print("""
 KEY TAKEAWAYS (cert notes):

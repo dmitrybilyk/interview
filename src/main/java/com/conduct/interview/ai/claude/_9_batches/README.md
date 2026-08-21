@@ -45,17 +45,17 @@ elif result.result.type == "errored":
     error = result.result.error
 ```
 
-## What the script demonstrates
-1. Create a batch of 5 requests (3 sentiment + 2 capital lookups)
-2. Poll every 10 seconds until `processing_status == "ended"`
-3. Iterate and print all results
-4. List recent batches
+## Scripts
+| File | Demonstrates |
+|---|---|
+| `batch_create_poll_results.py` | Create a batch of 5 requests, poll every 10s until `"ended"`, iterate and print results |
+| `list_batches.py` | List recent batches |
 
-**Note:** the script blocks while polling — in production this would be a background job.
+**Note:** `batch_create_poll_results.py` blocks while polling — in production this would be a background job. Create/poll/results stay in one file since they operate on the same batch ID sequentially; they can't be meaningfully split further.
 
 ## Run
 ```bash
 export ANTHROPIC_API_KEY=$(cat key.txt)
-cd _9_batches && python script.py
+cd _9_batches && python batch_create_poll_results.py
 # Expect to wait 1-5 minutes for the batch to complete
 ```

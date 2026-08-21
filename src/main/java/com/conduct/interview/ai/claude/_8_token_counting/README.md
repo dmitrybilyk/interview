@@ -38,16 +38,19 @@ if check.input_tokens > MAX_TOKENS:
 | Sonnet 4.6 | $3.00 | $15.00 |
 | Opus 4.7 | $15.00 | $75.00 |
 
-## What the script demonstrates
-1. Count tokens for a simple message
-2. System prompt adds tokens
-3. Tools add tokens (schema overhead)
-4. Token growth over conversation turns
-5. Same request — cost comparison across models
-6. Guard pattern: block request if too large
+## Scripts
+| File | Demonstrates |
+|---|---|
+| `_common.py` | Shared: `client`, `PRICES`, `estimate_cost` — not runnable on its own |
+| `count_tokens_simple.py` | Count tokens for a simple message |
+| `system_prompt_cost.py` | System prompt adds tokens |
+| `tools_cost.py` | Tools add tokens (schema overhead) |
+| `token_growth_over_turns.py` | Token growth over conversation turns |
+| `cost_across_models.py` | Same request — cost comparison across models |
+| `token_guard_pattern.py` | Guard pattern: block request if too large |
 
 ## Run
 ```bash
 export ANTHROPIC_API_KEY=$(cat key.txt)
-cd _8_token_counting && python script.py
+cd _8_token_counting && python count_tokens_simple.py   # or any other file in this directory
 ```

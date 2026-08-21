@@ -41,13 +41,15 @@ for block in response.content:
 - Multi-step planning where intermediate steps matter
 - Ambiguous specifications where trade-offs need to be weighed
 
-## What the script demonstrates
-1. Same problem without thinking (may get it wrong)
-2. Same problem with thinking (shows reasoning process)
-3. A classic logic puzzle with visible thought process
+## Scripts
+| File | Demonstrates |
+|---|---|
+| `thinking_disabled_baseline.py` | Same problem without thinking (may get it wrong) |
+| `thinking_enabled.py` | Same problem with thinking (shows reasoning process) |
+| `thinking_logic_puzzle.py` | A classic logic puzzle with visible thought process |
 
 ## Run
 ```bash
 export ANTHROPIC_API_KEY=$(cat key.txt)
-cd _6_extended_thinking && python script.py
+cd _6_extended_thinking && python thinking_disabled_baseline.py   # or any other file in this directory
 ```

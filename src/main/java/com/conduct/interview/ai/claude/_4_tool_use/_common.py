@@ -1,7 +1,6 @@
 """
-Topic: Tool use — define schema, detect tool_use block, execute, return tool_result
-Cert notes section: Tool use — "Claude never runs code, it requests a tool_use block"
-Run: ../venv/bin/python script.py
+Shared tool schemas, execution functions, and the tool-use loop for _4_tool_use.
+Not runnable on its own — imported by the scenario scripts in this directory.
 """
 
 import os, json
@@ -9,7 +8,7 @@ from anthropic import Anthropic
 
 client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
-# ── Step 1: Define tool schemas ────────────────────────────────────────────
+# ── Tool schemas ────────────────────────────────────────────────────────────
 # Claude reads these to know what tools exist and when to call them.
 # The description is critical — Claude decides based on it.
 TOOLS = [
@@ -38,7 +37,7 @@ TOOLS = [
     }
 ]
 
-# ── Step 2: YOUR execution functions — Claude never runs these ─────────────
+# ── YOUR execution functions — Claude never runs these ─────────────────────
 def get_weather(city: str, unit: str = "celsius") -> dict:
     fake_db = {
         "berlin":  {"temp": 18, "condition": "cloudy"},
@@ -61,7 +60,7 @@ def execute_tool(name: str, inputs: dict) -> str:
         return json.dumps(get_population(**inputs))
     return json.dumps({"error": f"Unknown tool: {name}"})
 
-# ── Step 3: The tool loop ─────────────────────────────────────────────────
+# ── The tool loop ────────────────────────────────────────────────────────────
 def run_with_tools(user_message: str):
     print(f"\nUser: {user_message}")
     messages = [{"role": "user", "content": user_message}]
@@ -104,15 +103,3 @@ def run_with_tools(user_message: str):
 
         # Return all results in a single user message
         messages.append({"role": "user", "content": tool_results})
-
-# ── Run examples ──────────────────────────────────────────────────────────
-print("=== Example 1: Single tool call ===")
-run_with_tools("What's the weather in Berlin?")
-
-print("\n" + "="*50)
-print("=== Example 2: Two tool calls in one turn ===")
-run_with_tools("Compare the weather in Paris and Tokyo in fahrenheit.")
-
-print("\n" + "="*50)
-print("=== Example 3: Claude decides no tool is needed ===")
-run_with_tools("What is 2 + 2?")
