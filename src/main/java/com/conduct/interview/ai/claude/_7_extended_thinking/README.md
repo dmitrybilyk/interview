@@ -1,4 +1,4 @@
-# _6 — Extended Thinking
+# _7 — Extended Thinking
 
 **Cert notes section:** Extended thinking — "Effort — how deep to think"
 
@@ -51,5 +51,5 @@ for block in response.content:
 ## Run
 ```bash
 export ANTHROPIC_API_KEY=$(cat key.txt)
-cd _6_extended_thinking && python thinking_disabled_baseline.py   # or any other file in this directory
+cd _7_extended_thinking && python thinking_disabled_baseline.py   # or any other file in this directory
 ```

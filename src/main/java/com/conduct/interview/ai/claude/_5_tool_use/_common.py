@@ -71,6 +71,7 @@ def run_with_tools(user_message: str):
             max_tokens=1024,
             tools=TOOLS,
             messages=messages,
+            # system="You are a helpful assistant. Reply in plain text only. Higlight with ||| instead of **."
         )
 
         print(f"\nStop reason: {response.stop_reason}")

@@ -1,4 +1,4 @@
-# _9 — Message Batches API
+# _10 — Message Batches API
 
 **Cert notes section:** "Async patterns for high-volume work — Message Batches API"
 
@@ -56,6 +56,6 @@ elif result.result.type == "errored":
 ## Run
 ```bash
 export ANTHROPIC_API_KEY=$(cat key.txt)
-cd _9_batches && python batch_create_poll_results.py
+cd _10_batches && python batch_create_poll_results.py
 # Expect to wait 1-5 minutes for the batch to complete
 ```

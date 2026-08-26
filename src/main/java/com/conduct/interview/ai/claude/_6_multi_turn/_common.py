@@ -10,6 +10,8 @@ client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 MODEL = "claude-haiku-4-5-20251001"
 
 def count_tokens(messages: list, system: str = "") -> int:
+    if not messages:
+        return 0
     r = client.messages.count_tokens(model=MODEL, system=system, messages=messages)
     return r.input_tokens
 

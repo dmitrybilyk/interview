@@ -1,4 +1,4 @@
-# _7 — Prompt Caching
+# _8 — Prompt Caching
 
 **Cert notes section:** "2 API features reduce what you pay: Prompt caching, Token counting"  
 "Cache — set up cache and save up to 90%; a single character change invalidates the cache"
@@ -59,5 +59,5 @@ r.usage.cache_read_input_tokens      # > 0 on cache hit (reading)
 ## Run
 ```bash
 export ANTHROPIC_API_KEY=$(cat key.txt)
-cd _7_prompt_caching && python cache_hit_vs_miss.py   # or any other file in this directory
+cd _8_prompt_caching && python cache_hit_vs_miss.py   # or any other file in this directory
 ```

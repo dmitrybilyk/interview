@@ -1,4 +1,4 @@
-# _4 — Tool Use
+# _5 — Tool Use
 
 **Cert notes section:** Tool use — "Claude never runs code, it requests a tool_use block (name + args) as JSON, my app executes, sends back tool_result, Claude continues."
 
@@ -51,5 +51,5 @@
 ## Run
 ```bash
 export ANTHROPIC_API_KEY=$(cat key.txt)
-cd _4_tool_use && python single_tool_call.py   # or any other scenario file
+cd _5_tool_use && python single_tool_call.py   # or any other scenario file
 ```

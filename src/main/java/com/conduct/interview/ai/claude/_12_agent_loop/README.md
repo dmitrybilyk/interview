@@ -1,4 +1,4 @@
-# _11 — Full Agent Loop
+# _12 — Full Agent Loop
 
 **Cert notes section:** "Building Production Agents"  
 "Agent is a loop that calls tools, manages context, and has a goal"  
@@ -52,6 +52,6 @@ tool_results.append({"type": "tool_result", "tool_use_id": block.id, "content": 
 ## Run
 ```bash
 export ANTHROPIC_API_KEY=$(cat key.txt)
-cd _11_agent_loop && python scenario_order_with_approval.py
+cd _12_agent_loop && python scenario_order_with_approval.py
 # Prompts for approval before placing an order — type "y" to confirm
 ```

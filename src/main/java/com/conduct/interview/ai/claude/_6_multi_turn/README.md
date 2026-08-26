@@ -1,4 +1,4 @@
-# _5 — Multi-Turn Conversation & Context Budget
+# _6 — Multi-Turn Conversation & Context Budget
 
 **Cert notes section:** Model selection and keeping multi-turn session in budget
 
@@ -64,5 +64,5 @@ messages = [
 ## Run
 ```bash
 export ANTHROPIC_API_KEY=$(cat key.txt)
-cd _5_multi_turn && python multi_turn_basics.py   # or any other file in this directory
+cd _6_multi_turn && python multi_turn_basics.py   # or any other file in this directory
 ```

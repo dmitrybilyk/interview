@@ -1,4 +1,4 @@
-# _8 — Token Counting
+# _9 — Token Counting
 
 **Cert notes section:** "2 API features reduce what you pay" + "What affects budget"
 
@@ -52,5 +52,5 @@ if check.input_tokens > MAX_TOKENS:
 ## Run
 ```bash
 export ANTHROPIC_API_KEY=$(cat key.txt)
-cd _8_token_counting && python count_tokens_simple.py   # or any other file in this directory
+cd _9_token_counting && python count_tokens_simple.py   # or any other file in this directory
 ```

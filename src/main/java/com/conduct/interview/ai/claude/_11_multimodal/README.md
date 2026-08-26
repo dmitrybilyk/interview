@@ -1,4 +1,4 @@
-# _10 — Multimodal (Images & PDFs)
+# _11 — Multimodal (Images & PDFs)
 
 **Cert notes section:** "Images, PDFs and high-volume processing"  
 "PDF is a document, treated the same as image file"  
@@ -60,5 +60,5 @@ Good prompt: `"This is a screenshot of our CI/CD pipeline dashboard. Which stage
 ## Run
 ```bash
 export ANTHROPIC_API_KEY=$(cat key.txt)
-cd _10_multimodal && python image_base64.py   # or any other file in this directory
+cd _11_multimodal && python image_base64.py   # or any other file in this directory
 ```
