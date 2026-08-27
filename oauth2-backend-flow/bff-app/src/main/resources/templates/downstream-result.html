@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Backend as Client → Resource Server</title>
+    <th:block th:replace="~{fragments/common :: style}"></th:block>
+</head>
+<body>
+<h1>Backend виступив Client-ом і викликав окремий Resource Server</h1>
+<div class="card">
+    <p>Це <b>інший процес на порту 8189</b>, який ніколи не бачив пароль користувача і не робив
+        token exchange — він тільки перевірив підпис Bearer-токена, який приніс Backend.</p>
+    <pre th:text="${rawResponse}"></pre>
+    <a class="btn" href="/">← Назад</a>
+</div>
+<div th:replace="~{fragments/common :: trace(${trace})}"></div>
+</body>
+</html>

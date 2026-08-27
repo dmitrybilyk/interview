@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <th:block th:fragment="style">
+        <style>
+            body { font-family: system-ui, sans-serif; max-width: 900px; margin: 2rem auto; padding: 0 1rem; color: #1a1a1a; }
+            h1 { font-size: 1.4rem; }
+            h2 { font-size: 1.1rem; margin-top: 2rem; }
+            .card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem 1.25rem; margin: 1rem 0; background: #fafafa; }
+            .btn { display: inline-block; background: #2563eb; color: #fff; text-decoration: none; padding: 0.5rem 1rem; border-radius: 6px; border: none; cursor: pointer; font-size: 0.95rem; }
+            .btn.secondary { background: #6b7280; }
+            .btn.danger { background: #dc2626; }
+            pre { background: #0f172a; color: #d1e7ff; padding: 0.75rem; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; white-space: pre-wrap; word-break: break-all; }
+            .trace-entry { border-left: 3px solid #2563eb; padding-left: 0.75rem; margin-bottom: 1rem; }
+            .trace-time { color: #6b7280; font-size: 0.8rem; }
+            .ok { color: #16a34a; }
+            .bad { color: #dc2626; font-weight: bold; }
+        </style>
+    </th:block>
+</head>
+<body>
+    <div th:fragment="trace(entries)">
+        <h2>📜 Trace (усе, що вже сталося в цій сесії)</h2>
+        <div th:if="${entries.isEmpty()}"><em>Ще нічого не відбулося.</em></div>
+        <div class="trace-entry" th:each="e : ${entries}">
+            <div class="trace-time" th:text="${e.time()}">12:00:00</div>
+            <strong th:text="${e.title()}">title</strong>
+            <div><em>Request:</em></div>
+            <pre th:text="${e.request()}"></pre>
+            <div><em>Response:</em></div>
+            <pre th:text="${e.response()}"></pre>
+        </div>
+    </div>
+</body>
+</html>

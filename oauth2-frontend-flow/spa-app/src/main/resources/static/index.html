@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>SPA flow — Frontend-controlled OAuth2</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<h1>🌐 Frontend-controlled OAuth2 flow (SPA + PKCE)</h1>
+<p>Тут <b>немає backend OAuth-логіки взагалі</b> — цей сервер тільки віддає ці статичні файли.
+    Весь authorization_code+PKCE флоу робить JS прямо в твоєму браузері. Client тут — <b>public</b>
+    (без client_secret), тому захист від перехоплення code — саме PKCE.</p>
+
+<div class="card">
+    <h2>Крок 1: Почати логін</h2>
+    <button class="btn" onclick="beginLogin()">Згенерувати PKCE і показати Authorization URL</button>
+    <a id="go-link" class="btn" style="display:none; margin-left: 0.5rem" href="#">Redirect на Keycloak →</a>
+</div>
+
+<h2>📜 Log</h2>
+<div id="log"></div>
+
+<script src="config.js"></script>
+<script src="pkce.js"></script>
+<script src="log.js"></script>
+<script src="start.js"></script>
+</body>
+</html>

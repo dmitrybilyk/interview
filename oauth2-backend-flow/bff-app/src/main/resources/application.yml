@@ -1,0 +1,13 @@
+server:
+  port: 8188
+
+keycloak:
+  base-url: http://localhost:8181
+  realm: backend-flow-realm
+  client-id: bff-client
+  client-secret: bff-client-secret
+  redirect-uri: http://localhost:8188/callback
+  post-logout-redirect-uri: http://localhost:8188/
+
+resource-server:
+  base-url: http://localhost:8189

@@ -1,0 +1,15 @@
+server:
+  port: 8189
+
+spring:
+  application:
+    name: bff-flow-resource-server
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8181/realms/backend-flow-realm
+
+logging:
+  level:
+    org.springframework.security: DEBUG

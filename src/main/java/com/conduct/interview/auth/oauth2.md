@@ -1,16 +1,21 @@
-OAuth2 — це стандарт авторизації, який дозволяє одному додатку (наприклад, твоєму сайту) отримати обмежений доступ 
-до ресурсів користувача на іншому сервісі (наприклад, Google, GitHub, Keycloak) без передачі пароля.
+OAuth2 — це стандарт авторизації, який дозволяє одному додатку отримати обмежений доступ до захищених ресурсів 
+користувача без передачі пароля. Пароль перевіряє Authorization Server і видає токен, а сам ресурс віддає 
+окремий Resource Server, який цей токен перевіряє.
 
 # OAuth2 / OIDC — Backend-controlled flow
 
 ## Учасники
-- Frontend (Browser)
-- Backend
-- Authorization Server (Keycloak)
-- Resource Server (API)
-  Resource Server — це роль сервісу, який захищає ресурси і перевіряє токени.
-  У більшості випадків наш backend є resource server для frontend.
-  Але той самий backend може виступати як client, коли викликає інші сервіси.
+
+| Компонент | OAuth роль | Чому |
+| :--- | :--- | :--- |
+| User | Resource Owner | Власник даних, логіниться на Keycloak. |
+| Keycloak | Authorization Server | Логінить юзера, видає `code` і токени. |
+| Frontend (Browser) | Client — публічна частина | Ініціює authorization request, редіректить на Keycloak з `client_id` (крок 2). Не має `client_secret`. |
+| Backend | Client — confidential частина | Тримає `client_secret`, обмінює `code` на токен (крок 6). |
+| Backend | Resource Server | Приймає сесійну cookie від Frontend і віддає `/api/data`. |
+
+Frontend і Backend разом складають одну OAuth-роль **Client**, зареєстровану в Keycloak під одним `client_id` 
+(тип — confidential client, бо секрет тримає backend). Окремо Backend додатково виступає Resource Server-ом для Frontend.
 
 ---
 

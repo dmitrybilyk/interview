@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Крок 1: Authorization Request</title>
+    <th:block th:replace="~{fragments/common :: style}"></th:block>
+</head>
+<body>
+<h1>Крок 1 з 3: Authorization Request</h1>
+<div class="card">
+    <p>Backend щойно сам побудував цей URL (client_id, redirect_uri, response_type=code, scope, state) —
+        нікуди ще не сходили. Це те, куди зараз піде твій браузер:</p>
+    <pre th:text="${authorizeUrl}"></pre>
+    <a class="btn" th:href="${authorizeUrl}">Перейти на Keycloak і залогінитись →</a>
+</div>
+<div th:replace="~{fragments/common :: trace(${trace})}"></div>
+</body>
+</html>

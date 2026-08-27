@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>/api/data — Backend as Resource Server</title>
+    <th:block th:replace="~{fragments/common :: style}"></th:block>
+</head>
+<body>
+<h1>Backend виступив Resource Server-ом для Frontend'а</h1>
+<div class="card">
+    <p>Запит браузера ніс лише <code>Cookie: JSESSIONID=...</code>. Жодного access_token/id_token
+        у ньому не було — і не могло бути, бо браузер їх ніколи не отримував.</p>
+    <p>Backend сам дістав <code>id_token</code> зі своєї сесії і розкодував його claims:</p>
+    <pre th:text="${claims}"></pre>
+    <a class="btn" href="/">← Назад</a>
+</div>
+<div th:replace="~{fragments/common :: trace(${trace})}"></div>
+</body>
+</html>

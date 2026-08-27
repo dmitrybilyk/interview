@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>SPA flow — Callback</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body onload="onCallbackLoaded()">
+<h1>🌐 Крок 2-4: Code → Token → API</h1>
+
+<div class="card">
+    <p><b>Отриманий code:</b> <span id="code-value">...</span></p>
+    <button class="btn" onclick="exchangeCode()">3. Обміняти code на токени (fetch, без secret)</button>
+</div>
+
+<div class="card">
+    <button id="call-api-btn" class="btn" disabled onclick="callApi()">4. Викликати захищений API (Bearer token)</button>
+</div>
+
+<p><a href="index.html">← Почати заново</a></p>
+
+<h2>📜 Log</h2>
+<div id="log"></div>
+
+<script src="config.js"></script>
+<script src="pkce.js"></script>
+<script src="log.js"></script>
+<script src="callback.js"></script>
+</body>
+</html>

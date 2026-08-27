@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>BFF flow — Backend-controlled OAuth2</title>
+    <th:block th:replace="~{fragments/common :: style}"></th:block>
+</head>
+<body>
+<h1>🔒 Backend-controlled (BFF) OAuth2 flow</h1>
+<p>Кожен крок виконується вручну і показує сирий HTTP. Ролі: <b>Browser</b> (лише cookie),
+    <b>Backend</b> (Client + Resource Server для браузера), <b>Keycloak</b> (Authorization Server),
+    окремий <b>Resource Server</b> на порту 8189.</p>
+
+<div class="card" th:if="${!loggedIn}">
+    <p>Ти ще не залогінений.</p>
+    <a class="btn" href="/login">Увійти через Keycloak</a>
+</div>
+
+<div class="card" th:if="${loggedIn}">
+    <p class="ok">✅ Залогінений. Backend тримає токени у своїй HttpSession, браузер їх не бачить.</p>
+    <p>
+        <a class="btn" href="/api/data">GET /api/data (Frontend → Backend, тільки cookie)</a>
+    </p>
+    <form method="post" action="/call-downstream" style="display:inline">
+        <button class="btn" type="submit">Backend → окремий Resource Server (Bearer token)</button>
+    </form>
+    <p style="margin-top:1rem">
+        <form method="post" action="/logout" style="display:inline">
+            <button class="btn danger" type="submit">Вийти (локально)</button>
+        </form>
+        <a class="btn secondary" href="/keycloak-logout">Також вийти з Keycloak SSO</a>
+    </p>
+</div>
+
+<div th:replace="~{fragments/common :: trace(${trace})}"></div>
+</body>
+</html>

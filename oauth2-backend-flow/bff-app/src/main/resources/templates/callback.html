@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Крок 2: Authorization Code</title>
+    <th:block th:replace="~{fragments/common :: style}"></th:block>
+</head>
+<body>
+<h1>Крок 2 з 3: Keycloak повернув Authorization Code</h1>
+<div class="card">
+    <p>Браузер щойно сам (без твоєї участі) прийшов на <code>GET /callback?code=...&amp;state=...</code>,
+        бо Keycloak зробив 302 redirect після логіну.</p>
+    <p><b>code:</b> <span th:text="${code}"></span></p>
+    <p><b>state перевірено:</b>
+        <span th:if="${stateOk}" class="ok">так, співпадає ✅</span>
+        <span th:unless="${stateOk}" class="bad">НІ, підозріло! ⚠️</span>
+    </p>
+    <p>Цей code одноразовий і живе дуже недовго. Наступний крок — backend обміняє його на токени
+        напряму до Keycloak (back-channel, з client_secret), браузер у цьому обміні участі не бере.</p>
+    <form method="post" action="/exchange">
+        <input type="hidden" name="code" th:value="${code}"/>
+        <button class="btn" type="submit">Обміняти code на токени →</button>
+    </form>
+</div>
+<div th:replace="~{fragments/common :: trace(${trace})}"></div>
+</body>
+</html>
