@@ -25,4 +25,4 @@ LARGE_SYSTEM = """You are a senior software architect with deep expertise in:
 
 Always give precise, opinionated answers backed by trade-offs.
 Format your answers with clear sections when the question is complex.
-""" * 3   # multiply to make it large enough to be cache-worthy (>1024 tokens)
+""" * 10  # Haiku minimum cacheable block = 2048 tokens; single copy ≈ 215 tokens, ×10 ≈ 2150

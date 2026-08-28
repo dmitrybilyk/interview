@@ -21,7 +21,7 @@ QUESTION = "What is the main trade-off between B-tree and LSM-tree indexes?"
 print("=== First call — cache MISS (cache being written) ===")
 t0 = time.time()
 r1 = client.messages.create(
-    model="claude-haiku-4-5-20251001",
+    model="claude-sonnet-4-6",
     max_tokens=256,
     system=[{
         "type": "text",
@@ -34,6 +34,7 @@ t1 = time.time()
 
 u1 = r1.usage
 print(f"  Latency: {t1-t0:.2f}s")
+print(f"  raw usage: {u1}")
 print(f"  input_tokens:             {u1.input_tokens}")
 print(f"  cache_creation_tokens:    {getattr(u1, 'cache_creation_input_tokens', 0)}")
 print(f"  cache_read_tokens:        {getattr(u1, 'cache_read_input_tokens', 0)}")
@@ -43,7 +44,7 @@ print(f"  Answer: {r1.content[0].text[:100]}...")
 print("\n=== Second call — cache HIT (cache_read_input_tokens) ===")
 t2 = time.time()
 r2 = client.messages.create(
-    model="claude-haiku-4-5-20251001",
+    model="claude-sonnet-4-6",
     max_tokens=256,
     system=[{
         "type": "text",

@@ -1,63 +1,36 @@
 # _8 — Prompt Caching
 
-**Cert notes section:** "2 API features reduce what you pay: Prompt caching, Token counting"  
-"Cache — set up cache and save up to 90%; a single character change invalidates the cache"
+Mark static content with `cache_control: ephemeral`. Second call reads from cache: ~10x cheaper.  
+Any byte change BEFORE the cached block → cache miss, full price.  
+Cache TTL: 5 min, refreshed on every hit.
 
-## What this covers
-| Concept | Detail |
-|---|---|
-| `cache_control: ephemeral` | Marks a content block to be cached |
-| Cache write | Slightly more expensive than normal input (~20%) |
-| Cache read | ~10x cheaper than normal input (~90% saving) |
-| Cache TTL | 5 minutes; refreshed on every cache hit |
-| Invalidation | Any byte change BEFORE the cached block kills the cache |
-
-## Cost breakdown (Haiku, per 1M tokens)
-| Type | Price |
-|---|---|
-| Normal input | $0.80 |
-| Cache write | ~$0.96 |
-| Cache read | ~$0.08 ← 10x cheaper |
-
-## Key API
 ```python
-# Mark a system prompt block for caching
 system=[{
     "type": "text",
-    "text": "... large system prompt ...",
+    "text": "... large static prompt ...",
     "cache_control": {"type": "ephemeral"}
 }]
 
-# Check cache usage in response
-r.usage.cache_creation_input_tokens  # > 0 on cache miss (writing)
-r.usage.cache_read_input_tokens      # > 0 on cache hit (reading)
+# Check result:
+r.usage.cache_creation_input_tokens  # > 0 → cache was written (slightly more expensive)
+r.usage.cache_read_input_tokens      # > 0 → cache hit (~90% cheaper)
 ```
 
-## What to cache (static parts)
-- System prompt (large instructions, personas, domain knowledge)
-- Tool definitions (especially large schemas)
-- Reference documents attached to every request
+**Minimum cacheable block:** 1024 tokens for Sonnet/Opus (Haiku 4.5 does not support caching). Below the threshold `cache_control` is silently ignored — both cache counters stay 0.
 
-## What NOT to cache
-- User messages (dynamic per request)
-- Conversation history (changes every turn)
-
-## Cache invalidation rule
-```
-[system_prompt CACHED][tool_list CACHED][user_message NOT CACHED]
-                  ↑ change anything here = cache miss
-```
+**Cache this:** system prompt, tool definitions, large reference docs (static per request).  
+**Don't cache:** user messages, conversation history (dynamic, change every turn).
 
 ## Scripts
 | File | Demonstrates |
 |---|---|
-| `_common.py` | Shared: the large cache-worthy `LARGE_SYSTEM` prompt — not runnable on its own |
-| `cache_hit_vs_miss.py` | First call → `cache_creation_input_tokens` (write); second call → `cache_read_input_tokens` (hit, 10x cheaper) |
-| `cache_invalidation.py` | One-character change → cache miss again |
+| `_common.py` | Shared: `LARGE_SYSTEM` prompt — not runnable |
+| `cache_hit_vs_miss.py` | First call = write; second call = hit (10x cheaper) |
+| `cache_invalidation.py` | One-character change → cache miss |
 | `cache_tool_definitions.py` | Caching tool definitions |
 
 ## Run
 ```bash
 export ANTHROPIC_API_KEY=$(cat key.txt)
-cd _8_prompt_caching && python cache_hit_vs_miss.py   # or any other file in this directory
+cd _8_prompt_caching && ../venv/bin/python cache_hit_vs_miss.py
 ```
