@@ -13,7 +13,10 @@
 
 <div class="card" th:if="${!loggedIn}">
     <p>Ти ще не залогінений.</p>
-    <a class="btn" href="/login">Увійти через Keycloak</a>
+    <p>
+        <a class="btn secondary" href="/api/data">Крок 0: GET /api/data без токена → отримаєш 401</a>
+    </p>
+    <a class="btn" href="/login">Крок 1: Увійти через Keycloak →</a>
 </div>
 
 <div class="card" th:if="${loggedIn}">

@@ -123,10 +123,15 @@ public class FlowController {
     }
 
     @GetMapping("/api/data")
-    public String apiData(HttpSession session, Model model) {
+    public String apiData(HttpServletRequest request, HttpSession session, Model model) {
         Map<String, Object> tokens = tokens(session);
         if (tokens == null) {
-            return "redirect:/";
+            String cookieHeader = request.getHeader("Cookie");
+            addTrace(session, "0. FE спробував GET /api/data → Backend повернув 401",
+                    "GET /api/data\nCookie: " + (cookieHeader != null ? cookieHeader : "(відсутній — нова сесія)"),
+                    "HTTP 401 Unauthorized\n(Сесія не містить токенів. Потрібна автентифікація.)");
+            model.addAttribute("trace", trace(session));
+            return "unauthorized";
         }
 
         String idToken = (String) tokens.get("id_token");
