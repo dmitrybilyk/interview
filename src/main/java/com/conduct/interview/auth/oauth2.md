@@ -1,146 +1,209 @@
-OAuth2 — це стандарт авторизації, який дозволяє одному додатку отримати обмежений доступ до захищених ресурсів 
-користувача без передачі пароля. Пароль перевіряє Authorization Server і видає токен, а сам ресурс віддає 
-окремий Resource Server, який цей токен перевіряє.
-
-# OAuth2 / OIDC — Backend-controlled flow
-
-## Учасники
-
-| Компонент | OAuth роль | Чому |
-| :--- | :--- | :--- |
-| User | Resource Owner | Власник даних, логіниться на Keycloak. |
-| Keycloak | Authorization Server | Логінить юзера, видає `code` і токени. |
-| Frontend (Browser) | Client — публічна частина | Ініціює authorization request, редіректить на Keycloak з `client_id` (крок 2). Не має `client_secret`. |
-| Backend | Client — confidential частина | Тримає `client_secret`, обмінює `code` на токен (крок 6). |
-| Backend | Resource Server | Приймає сесійну cookie від Frontend і віддає `/api/data`. |
-
-Frontend і Backend разом складають одну OAuth-роль **Client**, зареєстровану в Keycloak під одним `client_id` 
-(тип — confidential client, бо секрет тримає backend). Окремо Backend додатково виступає Resource Server-ом для Frontend.
+# Auth Theory: Authentication, Authorization, OAuth2, OIDC, SSO
 
 ---
 
-## Конфігурація Backend
-```
-client_id
-client_secret
-redirect_uri = https://app.com/callback
-```
+## Authentication vs Authorization
+
+### Authentication (AuthN) — "Хто ти?"
+Перевірка особи. Ти доводиш, що ти — це ти.
+
+- Надаєш логін/пароль, біометрію, OTP
+- Система каже: "Так, це Аліса"
+- Результат: **identity** (ідентичність)
+
+### Authorization (AuthZ) — "Що тобі можна?"
+Перевірка прав. Система вирішує, що Аліса може робити.
+
+- Після аутентифікації: "Аліса може читати /orders, але не /admin"
+- Результат: **permissions / scopes / roles**
+
+> Спочатку — Authentication. Потім — Authorization.
+> Не можна авторизувати того, кого ще не ідентифікував.
 
 ---
 
-## Flow
+## OAuth2
 
-### 1. User → Frontend
+**OAuth2** — це стандарт **авторизації** (RFC 6749).
+
+Він вирішує одну задачу: як дати додатку доступ до твоїх ресурсів,
+**не передаючи йому твій пароль**.
+
+### Учасники
+
+| Роль | Хто | Що робить |
+|:--|:--|:--|
+| **Resource Owner** | Користувач | Власник даних, дає дозвіл |
+| **Client** | Твій додаток | Хоче доступ до даних |
+| **Authorization Server** | Keycloak / Google Auth | Перевіряє юзера, видає токени |
+| **Resource Server** | API | Захищений ресурс, перевіряє токен |
+
+### Що OAuth2 дає
+
+Замість пароля — **access_token**. Це обмежений за часом і scope ключ доступу.
+
 ```
-GET /app
+Client отримує:  access_token  (для API)
+                 refresh_token (щоб оновити access_token)
 ```
 
-### 2. Frontend → Keycloak (redirect)
+### Що OAuth2 НЕ дає
+
+OAuth2 **не говорить, хто цей юзер**. Він тільки видає доступ.
+Для ідентифікації потрібен OIDC.
+
+### Grant types (способи отримати токен)
+
+| Grant Type | Коли використовується |
+|:--|:--|
+| **Authorization Code** | Web-app / мобільний: юзер логіниться через браузер |
+| **Authorization Code + PKCE** | SPA / мобільний без backend: без `client_secret` |
+| **Client Credentials** | Server-to-server: без юзера |
+| **Refresh Token** | Оновлення access_token без повторного логіну |
+
+---
+
+## OIDC (OpenID Connect)
+
+**OIDC** — це шар поверх OAuth2, який додає **аутентифікацію**.
+
+OAuth2 відповідає на "що можна?", OIDC додає "хто це?".
+
+### Що додає OIDC
+
+- **id_token** — JWT із даними про юзера (`sub`, `email`, `name`)
+- **UserInfo endpoint** — `/userinfo` для додаткових claims
+- **scope `openid`** — обов'язковий, вмикає OIDC поверх OAuth2
+
 ```
-302 https://keycloak/auth
-  ?client_id=app-client
-  &redirect_uri=https://app.com/callback
-  &response_type=code
-  &scope=openid
+Запит:  scope=openid profile email
+Отримуємо:  access_token  (OAuth2 — для API)
+            id_token      (OIDC  — хто залогінився)
+            refresh_token
 ```
 
-### 3. User login на Keycloak
+### id_token (JWT)
 
-### 4. Keycloak → Frontend (redirect)
-```
-302 https://app.com/callback?code=abc123
-```
-
-### 5. Frontend → Backend
-```
-POST /auth/exchange
+```json
 {
-  "code": "abc123"
+  "sub": "dc55f38a-ca4c-45c5-ace4-920fb49893ed",
+  "email": "alice@example.com",
+  "name": "Alice Demo",
+  "iss": "http://localhost:8191/realms/bff-real-realm",
+  "aud": "bff-real-client",
+  "exp": 1753682523,
+  "iat": 1753682223
 }
 ```
 
-### 6. Backend → Keycloak (/token)
-```
-POST /token
+- `sub` — унікальний ID юзера (не змінюється)
+- `iss` — хто видав токен (Authorization Server)
+- `aud` — для кого токен (твій `client_id`)
+- `exp` — коли закінчується
 
-grant_type=authorization_code
-code=abc123
-client_id=app-client
-client_secret=SECRET
-redirect_uri=https://app.com/callback
-```
+### OAuth2 vs OIDC — коротко
 
-### 7. Keycloak → Backend
-```
-access_token
-refresh_token
-id_token
-```
-
-### 8. Backend storage
-- session / Redis / DB
-
-### 9. Backend → Frontend
-```
-Set-Cookie: SESSION=xyz; HttpOnly; Secure
-```
+| | OAuth2 | OIDC |
+|:--|:--|:--|
+| Призначення | Authorization | Authentication |
+| Питання | "Що можна?" | "Хто це?" |
+| Токен | access_token | id_token (JWT) |
+| Активується | завжди | `scope=openid` |
 
 ---
 
-## Виклики API
+## SSO (Single Sign-On)
 
-### Frontend → Backend
-```
-GET /api/data
-Cookie: SESSION=xyz
-```
+**SSO** — коли одне логінування дає доступ до багатьох додатків.
+
+### Як працює
+
+1. Юзер логіниться в Keycloak → отримує **session** у Keycloak
+2. Відкриває App2 → App2 редіректить на Keycloak
+3. Keycloak бачить активну сесію → **не питає пароль знову**
+4. Видає токени для App2 автоматично
+
+### Де зберігається сесія
+
+У Keycloak є **SSO session** (зберігається на сервері + cookie `KEYCLOAK_SESSION` у браузері).
+Ця session відокремлена від сесій твоїх додатків.
+
+### Logout у SSO
+
+Є два варіанти:
+
+**Local logout** — тільки твій додаток забуває сесію. Інші додатки і Keycloak — не знають.
+
+**Global logout (Back-channel / Front-channel)** — Keycloak інвалідує SSO session і сповіщає всі підключені додатки.
 
 ---
 
-## Перевірка JWT
+## JWT — як перевіряється токен
 
-### Отримання ключів
+Resource Server перевіряє підпис JWT **без звернення до Authorization Server** (stateless).
+
 ```
-GET /realms/{realm}/protocol/openid-connect/certs
+1. Отримати JWKS: GET /realms/{realm}/protocol/openid-connect/certs
+2. Взяти `kid` з JWT header
+3. Знайти відповідний публічний ключ у JWKS
+4. Перевірити підпис RSA/ECDSA
+5. Перевірити exp (не протермінований)
+6. Перевірити iss (відповідає очікуваному realm)
+7. Перевірити aud (твій client_id або resource server)
 ```
 
-### Перевірка
-- взяти `kid` з JWT header
-- знайти ключ у JWKS
-- перевірити підпис
-- перевірити `exp`
-- перевірити `iss`
-- перевірити `aud`
+Ключі кешуються — реальне звернення до Keycloak відбувається рідко (тільки при ротації ключів).
+
+---
+
+## Flows — коротке порівняння
+
+### Backend-controlled (Authorization Code, BFF pattern)
+
+```
+Browser → BFF → Keycloak (back-channel для токенів)
+Токени зберігаються на сервері. Браузер отримує лише httpOnly cookie.
+```
+- Безпечно: токени ніколи не в браузері
+- Потребує backend
+
+### SPA + PKCE (Authorization Code + PKCE)
+
+```
+Browser → Keycloak (code) → Browser POST /token з code_verifier
+Токени зберігаються в браузері (memory / sessionStorage).
+```
+- Немає `client_secret` (публічний клієнт)
+- PKCE замінює secret: `code_verifier` → `code_challenge = SHA-256(verifier)`
+- Токени доступні JS → ризик XSS
 
 ---
 
 ## Refresh token
 
-### Backend → Keycloak
+Коли `access_token` протермінується (зазвичай 5 хв):
+
 ```
 POST /token
-
 grant_type=refresh_token
-refresh_token=XYZ
-client_id=app-client
-client_secret=SECRET
+refresh_token=...
+client_id=...
+client_secret=...   ← тільки для confidential clients
 ```
 
-### Keycloak → Backend
-```
-new access_token
-new refresh_token
-```
+Отримуємо новий `access_token` (і новий `refresh_token`).
+`client_secret` потрібен тільки для обміну токенів, **не** для перевірки JWT.
 
 ---
 
-## client_secret
+## Keycloak — що це
 
-Використовується:
-- authorization_code → token
-- refresh_token → token
+Keycloak — open-source Authorization Server і Identity Provider (IdP).
 
-Не використовується:
-- для перевірки JWT
-- для доступу до API
-```
+Реалізує OAuth2 + OIDC + SSO + SAML.
+
+Ключові поняття:
+- **Realm** — ізольована область (окремий tenant). Своя БД юзерів, свої клієнти.
+- **Client** — зареєстрований додаток (`client_id` + `client_secret`)
+- **Scope** — на що клієнт просить дозвіл (`openid`, `profile`, `email`, кастомні)
+- **Role** — роль юзера (йде в токен як claim)
