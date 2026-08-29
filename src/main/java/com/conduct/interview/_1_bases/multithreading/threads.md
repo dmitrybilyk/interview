@@ -38,6 +38,41 @@ cores (see `types_of_work/cpu_heavy_work.md`).
 - `thread_creation` - the 3 ways to run code on a thread, and why Runnable/Callable is preferred
 - `thread_lifecycle` - the states a thread moves through (NEW, RUNNABLE, BLOCKED, ...)
 - `daemon_threads` - threads that don't keep the JVM alive
+- `interrupting_a_thread` - what `interrupt()` actually does (and doesn't)
+
+---
+
+## Topic index (everything below, by package)
+
+Every folder in `multithreading/` has a full section in the combined dump below - this is just
+a map so you don't have to scroll/Ctrl+F blind.
+
+**Execution model**
+- `types_of_thread_executions/sync_async` - caller waits vs caller keeps going
+- `types_of_thread_executions/blocking_noneBlocking` - a call parks the thread vs returns immediately
+- `types_of_work/*` - cpu_heavy, io_work, parallel_tasks, reactive__event_driven_tasks,
+  scheduled_delayed_tasks - which threading strategy fits which kind of work
+
+**`java.util.concurrent`** (`java_concurrent_package/`)
+- Executors: `executor_interface`, `executors`, `thread_pool_executor`, `scheduled_executor_service`,
+  `thread_factory`
+- Async results: `future`, `completable_future`
+- Coordination: `countdown_latch`, `cyclic_barrier`, `phaser`, `exchanger`, `semaphore`
+- Data structures: `blocking_queue`
+- Divide-and-conquer: `fork_join`
+
+**Producer-Consumer** (`producer_consumer/`) - same problem, 3 implementations:
+`wait_notify` (manual) -> `with_reentrant_lock` (explicit Lock/Condition) -> `with_blocking_queue` (built-in)
+
+**Ways to thread safety** (`way_to_thread_safety/`, cheapest/simplest first)
+`stateless_implementations` / `immutable_implementations` -> `thread_local_variables` ->
+`atomic_objects` -> `volatile_keyword` -> `synchronized_keyword` / `locks`
+(`reentrant_locks`, `reentrant_read_write_locks`, `stamped_lock`, `stamped_with_optimistic_lock`) ->
+`synchronized_collections` / `concurrent_collections` -> `semaphore` -> `double_checked_locking`
+
+**Common issues** (`common_issues/`) - the problem side: `issues` (overview of all 11), plus
+dedicated deep-dives on `deadlock`, `blocking_operations`, `thread_leaks`,
+`concurrency_bugs_data_structures`
 
 ---
 
