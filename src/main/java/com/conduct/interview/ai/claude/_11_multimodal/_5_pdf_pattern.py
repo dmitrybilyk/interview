@@ -2,24 +2,21 @@
 Topic: PDF pattern — same content-block mechanism as images, document type instead
 Cert notes section: "PDF is a document, treated the same as image file"
 Run: ../venv/bin/python _5_pdf_pattern.py
-Note: this file only prints the pattern — it needs a real PDF file to execute.
 """
 
-print("=== PDF pattern (code shown, not executed) ===")
-print("""
-# PDF is sent as a document block, not an image block:
-
-import base64
+import os, base64
 from anthropic import Anthropic
+from _common import make_test_pdf
 
-client = Anthropic()
+client = Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
 
-with open("document.pdf", "rb") as f:
-    pdf_b64 = base64.standard_b64encode(f.read()).decode()
+print("=== PDF via document content block ===")
+pdf_bytes = make_test_pdf("Hello Claude, this is a test PDF.")
+pdf_b64 = base64.standard_b64encode(pdf_bytes).decode("utf-8")
 
-response = client.messages.create(
-    model="claude-sonnet-4-6",
-    max_tokens=1024,
+r5 = client.messages.create(
+    model="claude-haiku-4-5-20251001",
+    max_tokens=128,
     messages=[{
         "role": "user",
         "content": [
@@ -31,8 +28,9 @@ response = client.messages.create(
                     "data": pdf_b64,
                 }
             },
-            {"type": "text", "text": "Summarize this document in 3 bullet points."}
+            {"type": "text", "text": "What text is written in this PDF? Quote it exactly."}
         ]
     }]
 )
-""")
+print(r5.content[0].text.strip())
+print(f"Tokens: in={r5.usage.input_tokens}  out={r5.usage.output_tokens}")

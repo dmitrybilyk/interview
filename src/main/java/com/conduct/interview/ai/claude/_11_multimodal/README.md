@@ -19,12 +19,12 @@ Limits: max 5MB per image, max 20 images per request. Supported: PNG, JPEG, GIF,
 ## Scripts
 | File | Demonstrates |
 |---|---|
-| `_common.py` | Shared: `make_test_png()` — generates PNG programmatically — not runnable |
+| `_common.py` | Shared: `make_test_png()` / `make_test_pdf()` — generate PNG/PDF bytes programmatically, pure stdlib — not runnable |
 | `image_base64.py` | Send image via base64 |
 | `multiple_images.py` | Multiple images in one message |
 | `image_from_disk.py` | Load image from disk |
 | `vision_prompting_ambiguity.py` | Resolve visual ambiguity in the prompt |
-| `pdf_pattern.py` | PDF pattern (needs a real PDF to actually run) |
+| `pdf_pattern.py` | PDF as a `document` content block — generates its own minimal PDF, no external file needed |
 
 ## Run
 ```bash
