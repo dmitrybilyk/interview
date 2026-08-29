@@ -115,6 +115,9 @@ Rules:
 2. Always check stock before placing an order.
 3. Call task_complete when your task is fully done.
 4. Never place an order without confirming the product and stock first.
+5. Do NOT ask the user for confirmation in plain text before calling place_order.
+   The system already pauses for human approval automatically before that tool
+   executes — just call place_order directly once stock is confirmed.
 """
 
 def run_agent(user_request: str, max_iterations: int = 10):
