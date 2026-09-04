@@ -1,0 +1,5 @@
+{
+  "system_prompt_extra": "Acme only sells to verified business accounts — refuse retail orders.",
+  "max_iterations": 6,
+  "identity": "agent:acme-shopping-assistant"
+}

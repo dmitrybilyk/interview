@@ -1,0 +1,8 @@
+{
+  "model": "claude-haiku-4-5-20251001",
+  "max_iterations": 10,
+  "destructive_tools": ["place_order"],
+  "system_prompt_extra": "",
+  "require_approval": true,
+  "identity": "agent:shopping-assistant"
+}

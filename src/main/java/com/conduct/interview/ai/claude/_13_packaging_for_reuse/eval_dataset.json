@@ -1,0 +1,13 @@
+[
+  {
+    "id": "search_and_check",
+    "request": "Find me a laptop and check if it's in stock.",
+    "expected_tools_called": ["search_products", "check_stock"]
+  },
+  {
+    "id": "order_with_approval",
+    "request": "I want to order 1 mechanical keyboard. Search for it, check stock, then order it.",
+    "expected_tools_called": ["search_products", "check_stock", "place_order"],
+    "requires_approval_for": ["place_order"]
+  }
+]
