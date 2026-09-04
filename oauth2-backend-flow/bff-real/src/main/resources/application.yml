@@ -1,0 +1,33 @@
+server:
+  port: 8190
+
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          keycloak:
+            client-id: bff-real-client
+            client-secret: bff-real-secret
+            scope: openid, profile, email
+            authorization-grant-type: authorization_code
+        provider:
+          keycloak:
+            issuer-uri: http://localhost:8191/realms/bff-real-realm
+
+resource-server:
+  base-url: http://localhost:8192
+
+app:
+  post-logout-redirect-uri: http://localhost:8190/
+
+logging:
+  level:
+    # Our back-channel interceptor — shows POST /token request/response
+    BFF-BACK-CHANNEL: INFO
+    # Spring Security OAuth2 — shows state generation, filter processing, token parsing
+    org.springframework.security.oauth2: DEBUG
+    # Shows which security filter chain rules are evaluated
+    org.springframework.security.web.FilterChainProxy: DEBUG
+    # Shows session creation / JSESSIONID assignment
+    org.springframework.security.web.context.HttpSessionSecurityContextRepository: DEBUG

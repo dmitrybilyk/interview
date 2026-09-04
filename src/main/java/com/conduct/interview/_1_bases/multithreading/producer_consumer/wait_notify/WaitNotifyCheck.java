@@ -1,41 +1,48 @@
-package com.conduct.interview._1_bases.multithreading.producer_consumer.wait_notify;// File: WaitNotifyCheck.java
+package com.conduct.interview._1_bases.multithreading.producer_consumer.wait_notify;
+
+import java.util.LinkedList;
+import java.util.Queue;
 
 public class WaitNotifyCheck {
-
-    private static final Object lock = new Object();
-    private static boolean ready = false;
-
     public static void main(String[] args) {
-        Thread waitingThread = new Thread(() -> {
-            synchronized (lock) {
-                System.out.println(Thread.currentThread().getName() + ": Waiting for signal...");
-                while (!ready) {
-                    try {
-                        lock.wait(); // release lock and wait
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        System.out.println(Thread.currentThread().getName() + ": Interrupted!");
+        Queue<Integer> queue = new LinkedList<>();
+        int CAPACITY = 3;
+        int MAX_ITEMS = 5;
+
+        Thread producer = new Thread(() -> {
+            for (int i = 1; i <= MAX_ITEMS; i++) {
+                synchronized (queue) {
+                    while(queue.size() == CAPACITY) {
+                        try {
+                            queue.wait();
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
                     }
+                    queue.add(i);
+                    queue.notifyAll();
                 }
-                System.out.println(Thread.currentThread().getName() + ": Received signal, proceeding...");
             }
-        }, "WaitingThread");
+        });
 
-        Thread notifyingThread = new Thread(() -> {
-            try {
-                Thread.sleep(2000); // simulate some work before notifying
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
+        Thread consumer = new Thread(() -> {
+            for (int i = 1; i <= MAX_ITEMS; i++) {
+                synchronized (queue) {
+                    while (queue.isEmpty()) {
+                        try {
+                            queue.wait();
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                    System.out.println(queue.poll());
+                    queue.notifyAll();
+                }
             }
+        });
 
-            synchronized (lock) {
-                ready = true;
-                System.out.println(Thread.currentThread().getName() + ": Sending signal...");
-                lock.notify(); // wake up waiting thread
-            }
-        }, "NotifyingThread");
+        producer.start();
+        consumer.start();
 
-        waitingThread.start();
-        notifyingThread.start();
     }
 }

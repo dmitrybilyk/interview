@@ -2,21 +2,14 @@ package com.conduct.interview._1_bases.multithreading.java_concurrent_package.ex
 
 import java.util.concurrent.Executor;
 
+/**
+ * Executor is the base interface: just one method, execute(Runnable) - fire and forget,
+ * no result, no shutdown, no pooling built in. ExecutorService extends it and adds all of that.
+ */
 public class ExecutorDemo {
-  public static void main(String[] args) {
-    Executor executor = new ExecutorImpl();
-    executor.execute(new RunnableImpl());
-  }
-}
 
-class ExecutorImpl implements Executor {
-  public void execute(Runnable runnable) {
-    new Thread(runnable).start();
-  }
-}
-
-class RunnableImpl implements Runnable {
-  public void run() {
-    System.out.println("Running something");
-  }
+    public static void main(String[] args) {
+        Executor executor = runnable -> new Thread(runnable).start();
+        executor.execute(() -> System.out.println("Running on " + Thread.currentThread().getName()));
+    }
 }

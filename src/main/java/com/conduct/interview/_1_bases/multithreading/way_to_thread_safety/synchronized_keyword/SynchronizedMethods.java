@@ -3,29 +3,34 @@ package com.conduct.interview._1_bases.multithreading.way_to_thread_safety.synch
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.IntStream;
-import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
+/**
+ * synchronized on an instance method locks on "this" - only one thread can be inside
+ * calculate() for a given SynchronizedMethods instance at a time.
+ */
 public class SynchronizedMethods {
 
-  private int sum = 0;
+    private int sum = 0;
 
-  public synchronized void calculate() {
-    setSum(getSum() + 1);
-  }
+    public synchronized void calculate() {
+        sum++;
+    }
 
-  // standard setters and getters
+    public int getSum() {
+        return sum;
+    }
 
-  public static void main(String[] args) throws InterruptedException {
-    ExecutorService service = Executors.newFixedThreadPool(3);
-    SynchronizedMethods summation = new SynchronizedMethods();
+    public static void main(String[] args) throws InterruptedException {
+        ExecutorService executor = Executors.newFixedThreadPool(3);
+        SynchronizedMethods summation = new SynchronizedMethods();
 
-    IntStream.range(0, 1000).forEach(count -> service.submit(summation::calculate));
-    service.awaitTermination(1000, TimeUnit.MILLISECONDS);
-    service.shutdown();
-    System.out.println(summation.getSum());
-  }
+        for (int i = 0; i < 1000; i++) {
+            executor.submit(summation::calculate);
+        }
+        executor.shutdown();
+        executor.awaitTermination(1, TimeUnit.SECONDS);
+
+        System.out.println("Expected: 1000");
+        System.out.println("Actual:   " + summation.getSum());
+    }
 }

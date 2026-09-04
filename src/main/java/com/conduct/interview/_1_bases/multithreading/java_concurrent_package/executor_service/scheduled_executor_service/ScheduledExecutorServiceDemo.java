@@ -1,69 +1,21 @@
 package com.conduct.interview._1_bases.multithreading.java_concurrent_package.executor_service.scheduled_executor_service;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * scheduleAtFixedRate runs the task every N seconds, measured from the start of each run -
+ * if a run takes longer than the period, the next one starts right after it, no overlap.
+ */
 public class ScheduledExecutorServiceDemo {
 
-  private Task runnableTask;
-  private CallableTask callableTask;
+    public static void main(String[] args) {
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
 
-  private void tryFuture() throws InterruptedException {
-    CallableTask callableTask = new CallableTask();
-    ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-    Future<String> resultFuture = executorService.schedule(callableTask, 1, TimeUnit.SECONDS);
-    try {
-      String result = resultFuture.get();
-      System.out.println("Result - " + result);
-    } catch (InterruptedException | ExecutionException ex) {
+        Runnable task = () -> System.out.println("Tick at " + System.currentTimeMillis());
 
+        // run once after a 1s initial delay, then every 2s
+        executor.scheduleAtFixedRate(task, 1, 2, TimeUnit.SECONDS);
     }
-    executorService.shutdownNow();
-  }
-
-  private void executeWithFixedRate() throws InterruptedException {
-    Task runnableTask = new Task();
-    ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-    executorService.scheduleAtFixedRate(runnableTask, 2, 3, TimeUnit.SECONDS);
-  }
-
-  private void executeWithFixedDelay() throws InterruptedException {
-    Task runnableTask = new Task();
-    ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
-    executorService.scheduleWithFixedDelay(runnableTask, 2, 3, TimeUnit.SECONDS);
-  }
-
-  private void executeMultipleThreads() throws InterruptedException {
-    Task runnableTask = new Task();
-    ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
-    // executorService.scheduleWithFixedDelay( runnableTask, 2, 3, TimeUnit.SECONDS);
-  }
-
-  public static void main(String... args) throws InterruptedException {
-    ScheduledExecutorServiceDemo demo = new ScheduledExecutorServiceDemo();
-    // demo.tryFuture();
-    // demo.executeWithFixedRate();
-    demo.executeWithFixedDelay();
-    // demo.executeWithMultiThread();
-  }
-}
-
-class CallableTask implements Callable<String> {
-  @Override
-  public String call() throws Exception {
-    return "Returning for future";
-  }
-}
-
-class Task implements Runnable {
-
-  @Override
-  public void run() {
-    System.out.println("Doing something in runnable");
-    // task details
-  }
 }

@@ -2,15 +2,18 @@ package com.conduct.interview._1_bases.multithreading.types_of_thread_executions
 
 import java.util.function.Consumer;
 
+/**
+ * Pre-Future way of doing async: pass a callback instead of returning a value.
+ * Works, but chaining several of these gets messy fast ("callback hell") - that's
+ * what Future/CompletableFuture were built to replace.
+ */
 public class AsyncWithOldCallbackStyle {
 
     public static void main(String[] args) throws InterruptedException {
-        asyncOperation(result -> {
-            System.out.println("Callback result received: " + result);
-        });
+        asyncOperation(result -> System.out.println("Callback result received: " + result));
 
         System.out.println("Main thread continues...");
-        Thread.sleep(2000); // щоб побачити результат
+        Thread.sleep(2000); // just so the program doesn't exit before the callback fires
     }
 
     static void asyncOperation(Consumer<String> callback) {

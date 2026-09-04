@@ -4,33 +4,41 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.stream.IntStream;
-import lombok.Getter;
-import lombok.Setter;
 
-@Getter
-@Setter
+/**
+ * Explicit Lock instead of synchronized - same mutual-exclusion effect, but lock()/unlock()
+ * are separate calls, so the critical section can be more precise (and must always unlock in
+ * a finally block, or a thrown exception leaves the lock held forever).
+ */
 public class ReentrantLockCounter {
-  private int counter;
-  private ReentrantLock lock = new ReentrantLock(true);
 
-  public void incrementCounter() {
-    lock.lock();
-    try {
-      counter++;
-    } finally {
-      lock.unlock();
+    private int counter;
+    private final ReentrantLock lock = new ReentrantLock();
+
+    public void increment() {
+        lock.lock();
+        try {
+            counter++;
+        } finally {
+            lock.unlock();
+        }
     }
-  }
 
-  public static void main(String[] args) throws InterruptedException {
-    ExecutorService service = Executors.newFixedThreadPool(3);
-    ReentrantLockCounter reentrantLockCounter = new ReentrantLockCounter();
+    public int getCounter() {
+        return counter;
+    }
 
-    IntStream.range(0, 1000)
-        .forEach(count -> service.submit(reentrantLockCounter::incrementCounter));
-    service.awaitTermination(1000, TimeUnit.MILLISECONDS);
-    service.shutdown();
-    System.out.println(reentrantLockCounter.getCounter());
-  }
+    public static void main(String[] args) throws InterruptedException {
+        ExecutorService executor = Executors.newFixedThreadPool(3);
+        ReentrantLockCounter counter = new ReentrantLockCounter();
+
+        for (int i = 0; i < 1000; i++) {
+            executor.submit(counter::increment);
+        }
+        executor.shutdown();
+        executor.awaitTermination(1, TimeUnit.SECONDS);
+
+        System.out.println("Expected: 1000");
+        System.out.println("Actual:   " + counter.getCounter());
+    }
 }

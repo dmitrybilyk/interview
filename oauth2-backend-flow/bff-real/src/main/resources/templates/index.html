@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>BFF Real</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 700px; margin: 4rem auto; padding: 0 1rem; color: #1a1a1a; }
+        .btn { display: inline-block; background: #2563eb; color: #fff; text-decoration: none;
+               padding: 0.6rem 1.2rem; border-radius: 6px; border: none; cursor: pointer; font-size: 1rem; }
+    </style>
+</head>
+<body>
+<h2>BFF Real — Spring Security oauth2Login()</h2>
+
+<div th:if="${!loggedIn}">
+    <a class="btn" href="/oauth2/authorization/keycloak">Увійти через Keycloak</a>
+</div>
+<div th:if="${loggedIn}">
+    <a class="btn" href="/secured">Перейти до даних →</a>
+</div>
+</body>
+</html>

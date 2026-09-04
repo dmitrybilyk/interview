@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <title>API Result</title>
+    <style>
+        body { font-family: system-ui, sans-serif; max-width: 860px; margin: 2rem auto; padding: 0 1rem; }
+        .card { border: 1px solid #ddd; border-radius: 8px; padding: 1rem 1.25rem; margin: 1rem 0; background: #fafafa; }
+        .btn { display: inline-block; background: #2563eb; color: #fff; text-decoration: none;
+               padding: 0.5rem 1rem; border-radius: 6px; font-size: 0.95rem; }
+        pre { background: #0f172a; color: #d1e7ff; padding: 0.75rem; border-radius: 6px;
+              font-size: 0.8rem; white-space: pre-wrap; word-break: break-all; }
+        code { background: #f1f5f9; padding: 0.1rem 0.3rem; border-radius: 3px; }
+    </style>
+</head>
+<body>
+<div class="card">
+    <p><strong>BFF надіслав (back-channel, браузер не бачив):</strong></p>
+    <pre>GET <span th:text="${sentTo}"></span>
+Authorization: Bearer <span th:text="${bearerMasked}"></span></pre>
+</div>
+<div class="card">
+    <p>✅ Resource Server відповів:</p>
+    <pre th:text="${response}"></pre>
+</div>
+<a class="btn" href="/secured">← Назад</a>
+</body>
+</html>

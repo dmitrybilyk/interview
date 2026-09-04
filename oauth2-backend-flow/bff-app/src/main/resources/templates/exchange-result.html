@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Крок 3: Токени отримано</title>
+    <th:block th:replace="~{fragments/common :: style}"></th:block>
+</head>
+<body>
+<h1>Крок 3 з 3: Keycloak повернув токени</h1>
+<div class="card">
+    <p class="ok">✅ Backend обміняв code на токени. Ось сира відповідь Keycloak (лежить тепер у
+        HttpSession backend'у, браузер її ніколи не бачив і не побачить):</p>
+    <pre th:text="${rawResponse}"></pre>
+    <a class="btn" href="/">На головну — спробувати виклики API →</a>
+</div>
+<div th:replace="~{fragments/common :: trace(${trace})}"></div>
+</body>
+</html>

@@ -1,0 +1,15 @@
+server:
+  port: 8192
+
+spring:
+  application:
+    name: bff-real-resource-server
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8191/realms/bff-real-realm
+
+logging:
+  level:
+    org.springframework.security: DEBUG

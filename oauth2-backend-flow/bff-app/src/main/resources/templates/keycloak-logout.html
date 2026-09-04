@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>OIDC Logout</title>
+    <th:block th:replace="~{fragments/common :: style}"></th:block>
+</head>
+<body>
+<h1>Front-channel OIDC Logout</h1>
+<div class="card">
+    <p>Локальна сесія backend'у вже очищена окремою кнопкою "Вийти (локально)". Це — окремий крок:
+        завершити SSO-сесію самого Keycloak, щоб він не залогінив тебе автоматично вдруге.</p>
+    <pre th:text="${logoutUrl}"></pre>
+    <a class="btn" th:href="${logoutUrl}">Перейти на Keycloak logout →</a>
+</div>
+<div th:replace="~{fragments/common :: trace(${trace})}"></div>
+</body>
+</html>

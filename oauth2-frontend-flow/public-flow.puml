@@ -1,0 +1,90 @@
+@startuml
+title Real Public Client Flow — SPA + PKCE — without any artificial steps
+autonumber
+skinparam Style strictuml
+skinparam SequenceMessageAlignment center
+skinparam sequenceArrowThickness 2
+skinparam ParticipantPadding 20
+
+actor       "Браузер\n(User Agent, JS)"        as B
+participant "SPA App :8288\n(лише статика)"    as SPA
+participant "Keycloak :8281\n(Auth Server)"    as KC
+participant "Resource Server :8289"            as RS
+
+== 0. Завантаження застосунку (сервер бере участь лише тут) ==
+
+B   ->  SPA : GET /index.html
+SPA --> B   : 200 OK (HTML + config.js + pkce.js + start.js)
+note right of SPA
+  Це ЄДИНИЙ момент, коли сервер бере участь.
+  Далі весь OAuth-флоу керується JS у браузері —
+  spa-app про нього нічого не знає.
+end note
+
+== 1. Браузер (JS) сам готує PKCE-пару і йде до Keycloak ==
+
+B   ->  B   : crypto.getRandomValues() → code_verifier\nSHA-256(code_verifier) → code_challenge\nrandom → state
+B   ->  B   : sessionStorage.setItem(code_verifier, state)
+note right of B
+  code_verifier ЗАЛИШАЄТЬСЯ лише в браузері.
+  Немає client_secret — public client не може
+  зберегти секрет, тому замість нього PKCE.
+end note
+
+B   ->  KC  : GET /realms/frontend-flow-realm/protocol/openid-connect/auth\n?client_id=spa-client\n&redirect_uri=http://localhost:8288/callback.html\n&response_type=code\n&scope=openid profile email\n&state=<state>\n&code_challenge=<challenge>\n&code_challenge_method=S256
+KC  --> B   : 200 OK (HTML форма логіну)
+
+== 2. Юзер вводить credentials ==
+
+B   ->  KC  : POST (username=alice, password=alice123)
+KC  ->  KC  : Автентифікує юзера\nЗберігає code_challenge, прив'язаний до **code**\nГенерує одноразовий authorization code
+KC  --> B   : 302 Redirect → http://localhost:8288/callback.html?code=<code>&state=<state>
+
+== 3. Браузер відкриває callback.html (знову статика, без бекенд-логіки) ==
+
+B   ->  SPA : GET /callback.html
+SPA --> B   : 200 OK (HTML + callback.js)
+B   ->  B   : onCallbackLoaded(): читає ?code&state з URL\nзвіряє state із sessionStorage
+
+== 4. Браузер (fetch, JS) САМ обмінює code на токени — без сервера-посередника ==
+
+B   ->  KC  : POST /realms/frontend-flow-realm/protocol/openid-connect/token\ngrant_type=authorization_code\n&client_id=spa-client\n&code=<code>\n&redirect_uri=http://localhost:8288/callback.html\n&code_verifier=<verifier>  ← замість client_secret!
+note over B, KC
+  Це НЕ back-channel: це звичайний fetch() із браузера,
+  видно в DevTools → Network. Немає client_secret —
+  Keycloak перевіряє SHA-256(code_verifier) == code_challenge.
+end note
+KC  ->  KC  : Перевіряє PKCE, звіряє code_verifier
+KC  --> B   : 200 OK JSON { access_token, id_token, refresh_token }
+
+B   ->  B   : Зберігає токени в JS-пам'яті (lastTokens)\nНЕ localStorage, НЕ cookie
+note right of B
+  Токени тепер У БРАУЗЕРІ. На відміну від BFF,
+  де вони ніколи не покидають сервер.
+  Ризик XSS вищий — це ціна public client.
+end note
+
+== 5. Браузер напряму викликає Resource Server (cross-origin) ==
+
+B   ->  RS  : GET /api/protected-data\nAuthorization: Bearer <access_token>\nOrigin: http://localhost:8288
+note right of RS
+  Перевіряє підпис JWT за JWKS від Keycloak.
+  Не знає нічого про client_secret, code_verifier, password.
+  ОБОВ'ЯЗКОВИЙ CORS: Access-Control-Allow-Origin: http://localhost:8288
+  (у BFF-флоу цього немає — там сервер-сервер виклик)
+end note
+RS  --> B   : 200 OK (protected data) + Access-Control-Allow-Origin
+
+== 6. Logout ==
+
+B   ->  B   : lastTokens = null (просто забути в JS)
+note right of B
+  Немає серверної сесії, яку можна invalidate() —
+  spa-app взагалі не бере участі в logout.
+end note
+
+B   ->  KC  : GET /realms/frontend-flow-realm/protocol/openid-connect/logout\n?client_id=spa-client\n&post_logout_redirect_uri=http://localhost:8288/
+KC  ->  KC  : Знищує KC-сесію (SSO), інвалідує refresh_token
+KC  --> B   : 302 Redirect → http://localhost:8288/
+
+@enduml

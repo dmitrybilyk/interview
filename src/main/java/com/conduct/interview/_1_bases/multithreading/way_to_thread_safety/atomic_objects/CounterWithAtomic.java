@@ -2,40 +2,38 @@ package com.conduct.interview._1_bases.multithreading.way_to_thread_safety.atomi
 
 import java.util.concurrent.atomic.AtomicInteger;
 
+/**
+ * FIX: AtomicInteger.incrementAndGet() is a single atomic operation, so nothing gets lost -
+ * same test as the unsafe Counter, always gives the correct result.
+ */
 public class CounterWithAtomic {
 
-  private AtomicInteger counter = new AtomicInteger();
+    private final AtomicInteger counter = new AtomicInteger();
 
-  public void incrementCounter() {
-    counter.incrementAndGet();
-  }
-
-  public int getCounter() {
-    return counter.get();
-  }
-
-  public static void main(String[] args) throws InterruptedException {
-    CounterWithAtomic counter1 = new CounterWithAtomic();
-    Thread thread =
-        new Thread(
-            () -> {
-              extracted(counter1);
-            });
-    Thread thread2 =
-        new Thread(
-            () -> {
-              extracted(counter1);
-            });
-    thread.start();
-    thread2.start();
-    thread.join();
-    thread2.join();
-    System.out.println(counter1.getCounter());
-  }
-
-  private static void extracted(CounterWithAtomic counter1) {
-    for (int i = 0; i < 5000; i++) {
-      counter1.incrementCounter();
+    public void increment() {
+        counter.incrementAndGet();
     }
-  }
+
+    public int getCounter() {
+        return counter.get();
+    }
+
+    public static void main(String[] args) throws InterruptedException {
+        CounterWithAtomic counter = new CounterWithAtomic();
+        Runnable task = () -> {
+            for (int i = 0; i < 5000; i++) {
+                counter.increment();
+            }
+        };
+
+        Thread t1 = new Thread(task);
+        Thread t2 = new Thread(task);
+        t1.start();
+        t2.start();
+        t1.join();
+        t2.join();
+
+        System.out.println("Expected: 10000");
+        System.out.println("Actual:   " + counter.getCounter());
+    }
 }

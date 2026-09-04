@@ -1,0 +1,15 @@
+server:
+  port: 8289
+
+spring:
+  application:
+    name: spa-flow-resource-server
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          issuer-uri: http://localhost:8281/realms/frontend-flow-realm
+
+app:
+  cors:
+    allowed-origin: http://localhost:8288

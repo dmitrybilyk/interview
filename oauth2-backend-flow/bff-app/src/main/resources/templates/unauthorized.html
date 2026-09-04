@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Крок 0: 401 Unauthorized</title>
+    <th:block th:replace="~{fragments/common :: style}"></th:block>
+</head>
+<body>
+<h1>Крок 0: GET /api/data → 401 Unauthorized</h1>
+<div class="card">
+    <p class="bad">❌ HTTP 401 Unauthorized</p>
+    <p>Backend отримав запит на захищений ресурс, але сесія не містить токенів
+        (cookie відсутній або сесія прострочена) → повернув <strong>401</strong>.</p>
+    <p>Саме це і є точка старту OAuth2-флоу: клієнт отримує 401 і знає, що треба автентифікуватись.</p>
+    <a class="btn" href="/login">Крок 1: Увійти через Keycloak →</a>
+</div>
+<div th:replace="~{fragments/common :: trace(${trace})}"></div>
+</body>
+</html>

@@ -1,15 +1,6 @@
-Unlike their synchronized counterparts, concurrent collections achieve thread-safety 
-by dividing their data into segments. 
-ConcurrentHashMap.
-CopyOnWriteArrayList.
-BlockingQueue.
+Thread-safe collections built for concurrent use, without wrapping every call in your own lock:
 
-🧩 What does "segmented" mean?
-Segmented means:
-
-🔓 Instead of locking the entire collection, only a small part (segment) of the data is locked or copied when accessed or modified.
-
-🎯 Goal:
-Avoid blocking the whole structure
-
-Allow multiple threads to work in parallel on different parts
+- `ConcurrentHashMap` - locks only a small segment on write, not the whole map (see
+  `common_issues/_10_concurrency_bugs_data_structures/map`)
+- `CopyOnWriteArrayList` - copies the whole array on write, readers never block (see demo here)
+- `BlockingQueue` - built-in waiting for producer/consumer (see `java_concurrent_package/blocking_queue`)
