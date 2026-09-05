@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       https://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context
+       https://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!-- registers, among others, the CommonAnnotationBeanPostProcessor that makes
+         @PostConstruct/@PreDestroy (and @Resource) work at all in a plain XML context -->
+    <context:annotation-config/>
+
+    <bean id="anotherSomeBean"
+          class="com.conduct.interview._3_spring._2_bean_lifecycle.AnotherSomeBean"/>
+
+    <!-- init-method/destroy-method are XML's equivalent of
+         @Bean(initMethod = "...", destroyMethod = "...") -->
+    <bean id="someBean"
+          class="com.conduct.interview._3_spring._2_bean_lifecycle.SomeBean"
+          init-method="customInitMethod"
+          destroy-method="customDestroyMethod">
+        <constructor-arg value="Some String"/>
+        <property name="anotherSomeBean" ref="anotherSomeBean"/>
+    </bean>
+
+    <bean id="managedResource"
+          class="com.conduct.interview._3_spring._2_bean_lifecycle.ManagedResource"/>
+
+</beans>

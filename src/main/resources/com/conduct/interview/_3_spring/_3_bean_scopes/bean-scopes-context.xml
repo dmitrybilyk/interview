@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       https://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/aop
+       https://www.springframework.org/schema/aop/spring-aop.xsd
+       http://www.springframework.org/schema/context
+       https://www.springframework.org/schema/context/spring-context.xsd">
+
+    <!-- makes @Lookup (used by SingletonBeanWithLookup) get processed -->
+    <context:annotation-config/>
+
+    <!-- ===== the bug ===== -->
+    <bean id="prototypeBeanPlain" class="com.conduct.interview._3_spring._3_bean_scopes.PrototypeBean"
+          scope="prototype"/>
+    <bean id="singletonBeanNotFixed"
+          class="com.conduct.interview._3_spring._3_bean_scopes.SingletonBeanNotFixed">
+        <constructor-arg ref="prototypeBeanPlain"/>
+    </bean>
+
+    <!-- ===== fix 1: ObjectFactory<PrototypeBean> ===== -->
+    <!-- ObjectFactoryCreatingFactoryBean: the explicit, pre-annotation XML idiom for handing
+         out an ObjectFactory that resolves a named bean fresh on every getObject() call -->
+    <bean id="prototypeBeanObjectFactory"
+          class="org.springframework.beans.factory.config.ObjectFactoryCreatingFactoryBean">
+        <property name="targetBeanName" value="prototypeBeanPlain"/>
+    </bean>
+    <bean id="singletonBeanWithObjectFactory"
+          class="com.conduct.interview._3_spring._3_bean_scopes.SingletonBeanWithObjectFactory">
+        <constructor-arg ref="prototypeBeanObjectFactory"/>
+    </bean>
+
+    <!-- ===== fix 2: @Lookup ===== -->
+    <!-- autowire-candidate="false": consumed only by explicit name (@Lookup("prototypeBean")),
+         kept out of by-type autowiring so it doesn't clash with the other PrototypeBean defs below -->
+    <bean id="prototypeBean" class="com.conduct.interview._3_spring._3_bean_scopes.PrototypeBean"
+          scope="prototype" autowire-candidate="false"/>
+    <bean id="singletonBeanWithLookup"
+          class="com.conduct.interview._3_spring._3_bean_scopes.SingletonBeanWithLookup"/>
+
+    <!-- ===== fix 3: scoped proxy ===== -->
+    <bean id="prototypeBeanScoped" class="com.conduct.interview._3_spring._3_bean_scopes.PrototypeBean"
+          scope="prototype" autowire-candidate="false">
+        <aop:scoped-proxy proxy-target-class="true"/>
+    </bean>
+    <bean id="singletonBeanWithScopedProxy"
+          class="com.conduct.interview._3_spring._3_bean_scopes.SingletonBeanWithScopedProxy">
+        <constructor-arg ref="prototypeBeanScoped"/>
+    </bean>
+
+</beans>

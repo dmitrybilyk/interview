@@ -135,7 +135,7 @@ dependencies {
         implementation("org.springframework.boot:spring-boot-starter-aop")
 //        implementation("org.springframework.boot:spring-boot-starter-data-redis")
         implementation("org.apache.cxf:cxf-spring-boot-starter-jaxws:4.0.0")
-//        implementation("org.springframework.boot:spring-boot-starter-security")
+        implementation("org.springframework.boot:spring-boot-starter-security")
 //        implementation("org.springframework.boot:spring-boot-starter-oauth2-resource-server")
 //        implementation("org.springframework.boot:spring-boot-starter-oauth2-client")
 //        implementation("org.springframework.boot:spring-boot-starter-thymeleaf")
@@ -156,6 +156,7 @@ dependencies {
 //    if (project.hasProperty("postgres")) {
         implementation("org.springframework.boot:spring-boot-starter-data-jpa")
 //    }
+    runtimeOnly("com.h2database:h2") // in-memory DB for standalone _3_spring demos (no docker/postgres needed)
     compileOnly("org.projectlombok:lombok")
     annotationProcessor("org.projectlombok:lombok")
     testImplementation("org.junit.jupiter:junit-jupiter")

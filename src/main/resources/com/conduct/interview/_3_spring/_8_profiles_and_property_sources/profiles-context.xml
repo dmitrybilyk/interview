@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+       https://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <beans profile="dev">
+        <bean id="dataSourceConfig"
+              class="com.conduct.interview._3_spring._8_profiles_and_property_sources.DataSourceConfig">
+            <constructor-arg value="jdbc:h2:mem:dev"/>
+        </bean>
+    </beans>
+
+    <beans profile="prod">
+        <bean id="dataSourceConfig"
+              class="com.conduct.interview._3_spring._8_profiles_and_property_sources.DataSourceConfig">
+            <constructor-arg value="jdbc:postgresql://prod-host:5432/app"/>
+        </bean>
+    </beans>
+
+</beans>
