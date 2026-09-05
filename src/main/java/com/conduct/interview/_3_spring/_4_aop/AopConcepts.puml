@@ -1,0 +1,28 @@
+@startuml AopConcepts
+!theme plain
+skinparam defaultTextAlignment left
+skinparam componentStyle rectangle
+skinparam nodesep 60
+skinparam ranksep 50
+
+package "ASPECT  (LoggingAspect class)\nThe cross-cutting module" #dce8ff {
+
+  [**POINTCUT**\n────────────────────\nexecution(* service.*.*(..))\n\nExpression that answers:\nWHICH methods to intercept?] as pc #fffbcc
+
+  [**ADVICE**\n────────────────────\n@Before          — runs before the call\n@After           — always after (finally)\n@AfterReturning  — only on success\n@AfterThrowing   — only on exception\n@Around          — wraps the whole call;\n                   the only kind that can\n                   change args / return value\n                   or skip the call entirely] as adv #d4f7d4
+}
+
+package "Target bean  (e.g. ServiceImpl)" #fff0ee {
+  [**JOIN POINT**\n────────────────────\nA point in execution where\nan aspect CAN hook in.\nIn Spring AOP = always\na method invocation.] as jp #ffd6d6
+}
+
+pc -right-> jp : selects ▶
+adv -right-> jp : fires at ▶
+
+note bottom
+  **WEAVING** = physically wiring the aspect into the target
+  ──────────────────────────────────────────────────────────
+  Spring AOP  → runtime proxy created by BeanPostProcessor at startup
+  Full AspectJ → compile-time or class-load-time, rewrites bytecode directly, no proxy
+end note
+@enduml

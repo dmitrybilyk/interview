@@ -22,6 +22,9 @@ call at the start of every method.
   AspectJ, which can weave at compile-time or class-load-time by
   rewriting bytecode directly, no proxy involved.
 
+![AopConcepts](AopConcepts.puml) — vocabulary map: what contains what, what selects what  
+![AopProxyFlow](AopProxyFlow.puml) — runtime call flow: Caller → Proxy → Advice → RealBean → Advice → back
+
 ## Under the hood: it's the Proxy design pattern
 
 Spring AOP does not modify your class's bytecode. It puts a **proxy** in

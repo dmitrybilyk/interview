@@ -1,0 +1,63 @@
+@startuml AopProxyFlow
+!theme plain
+skinparam sequenceArrowThickness 2
+skinparam ParticipantPadding 20
+skinparam BoxPadding 14
+skinparam NoteBackgroundColor #fffff0
+skinparam NoteBorderColor #aaaaaa
+
+actor Caller
+
+box "Spring container" #e8f4ff
+  participant "**Proxy**\n(JDK dynamic proxy\nor CGLIB subclass)" as proxy #c8dfff
+  participant "**@Before**\n**@Around** (pre)" as before #fffbcc
+  participant "**RealBean**\n.someMethod()" as bean #d4f7d4
+  participant "**@After**\n**@AfterReturning**\n**@AfterThrowing**\n**@Around** (post)" as after #ffd6d6
+end box
+
+Caller -> proxy : someMethod(args)
+note right of proxy
+  Container hands out the Proxy,
+  never the real bean directly.
+  Weaving = this swap happens at
+  startup (BeanPostProcessor).
+end note
+
+proxy -> before : fire pre-advice
+activate before
+before --> proxy : (continue)
+deactivate before
+
+proxy -> bean : proceed() / forward call
+activate bean
+bean --> proxy : return value  OR  exception
+deactivate bean
+
+alt normal return
+  proxy -> after : fire @AfterReturning + @After
+else exception thrown
+  proxy -> after : fire @AfterThrowing + @After
+end
+
+after --> proxy
+proxy --> Caller : return value / rethrow exception
+
+note over before, after
+  **@Around** owns BOTH sides — it calls proceed() itself.
+  It is the only advice that can:
+    • modify method arguments before the call
+    • modify / replace the return value
+    • swallow an exception or throw a different one
+    • skip the real method entirely (don't call proceed())
+
+  All other advice types cannot stop or alter the call —
+  they can only throw an exception to abort.
+end note
+
+note over proxy
+  **Self-invocation pitfall**
+  If RealBean calls this.otherMethod() internally,
+  that call goes directly to the real object, NOT through
+  the proxy → no advice fires for that internal call.
+end note
+@enduml
