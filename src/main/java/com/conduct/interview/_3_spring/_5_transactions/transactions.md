@@ -5,9 +5,64 @@ unit: either every operation succeeds and gets committed, or any failure
 rolls back everything already done in that unit - the database never
 ends up in a state where only half the work happened.
 
-**ACID**: Atomicity (all or nothing), Consistency (constraints always
-hold), Isolation (concurrent transactions don't see each other's
-half-finished work), Durability (once committed, survives a crash).
+---
+
+## ACID
+
+The four properties every transaction must guarantee:
+
+### Atomicity — "all or nothing"
+Every operation in the transaction either all succeed or all roll back.
+There is no partial commit.
+
+```
+Transfer $100 from A to B:
+  1. Debit  A by $100
+  2. Credit B by $100
+
+If step 2 fails → step 1 is rolled back. A is not debited. DB stays consistent.
+```
+
+### Consistency — "constraints always hold"
+A transaction brings the DB from one valid state to another valid state.
+All defined rules (constraints, cascades, triggers) hold before and after.
+
+```
+Rule: account balance >= 0
+Transfer that would make A go negative → transaction rejected.
+The constraint is enforced atomically — no in-between state visible to others.
+```
+
+### Isolation — "concurrent transactions don't interfere"
+Concurrent transactions behave as if they ran serially.
+One transaction's in-progress changes are invisible to others (to a configurable degree).
+
+**Isolation levels** (weakest → strongest):
+
+| Level | Dirty Read | Non-Repeatable Read | Phantom Read |
+|---|---|---|---|
+| READ UNCOMMITTED | ✓ possible | ✓ possible | ✓ possible |
+| READ COMMITTED | ✗ prevented | ✓ possible | ✓ possible |
+| REPEATABLE READ | ✗ prevented | ✗ prevented | ✓ possible |
+| SERIALIZABLE | ✗ prevented | ✗ prevented | ✗ prevented |
+
+**Dirty read** — reading another transaction's uncommitted (potentially rolled-back) data.
+**Non-repeatable read** — re-reading the same row returns different values (another tx committed between reads).
+**Phantom read** — re-running the same range query returns different rows (another tx inserted/deleted).
+
+Most databases default to **READ COMMITTED** (PostgreSQL, Oracle) or **REPEATABLE READ** (MySQL InnoDB).
+Higher isolation = more locks = lower throughput. Choose the lowest level that your use case tolerates.
+
+### Durability — "committed data survives crashes"
+Once a transaction commits, its changes are permanent — even if the server crashes immediately after.
+Achieved via write-ahead log (WAL): changes are written to disk log before the commit returns.
+
+```
+COMMIT → WAL flushed to disk → response "OK"
+→ power cut here → on restart, WAL is replayed → data is not lost
+```
+
+---
 
 ## `@Transactional` is another AOP proxy
 
@@ -37,6 +92,8 @@ Two consequences that trip people up in interviews:
   exception commits unless you say
   `@Transactional(rollbackFor = Exception.class)`.
 
+---
+
 ## Propagation and isolation
 
 - **Propagation** - how a `@Transactional` method behaves when called
@@ -48,6 +105,17 @@ Two consequences that trip people up in interviews:
   in-flight changes: `READ_UNCOMMITTED` (dirty reads allowed) <
   `READ_COMMITTED` < `REPEATABLE_READ` < `SERIALIZABLE` (strictest,
   slowest). `DEFAULT` just uses whatever the underlying database defaults to.
+
+```java
+@Transactional(
+    propagation = Propagation.REQUIRES_NEW,  // always new tx, suspend current
+    isolation   = Isolation.REPEATABLE_READ, // no non-repeatable reads
+    rollbackFor = Exception.class            // rollback on checked exceptions too
+)
+public void transfer(long from, long to, BigDecimal amount) { ... }
+```
+
+---
 
 ## Run it
 
@@ -64,3 +132,16 @@ Two consequences that trip people up in interviews:
    method, leave the source account debited with nothing credited back -
    a real, persisted inconsistency - demonstrating exactly what
    `@Transactional` was preventing in step 2.
+
+---
+
+## Interview Points
+
+- ACID is a property of the DB + transaction together, not just the DB.
+- Atomicity is enforced by the transaction manager (undo log / rollback segments).
+- Durability is enforced by WAL — commit only returns after log is flushed to disk.
+- Isolation level is a trade-off: higher isolation = more locks = lower throughput.
+- `READ COMMITTED` is the pragmatic default for most web apps (good enough, fast).
+- `SERIALIZABLE` is rarely used in practice — optimistic locking is usually preferred.
+- `@Transactional` on a `private` method does nothing — proxy can't intercept it.
+- `@Transactional` on a class applies to all public methods (use with care).
