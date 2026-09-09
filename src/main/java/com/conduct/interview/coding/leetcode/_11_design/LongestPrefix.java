@@ -12,7 +12,9 @@ public class LongestPrefix {
     }
 
     private static String findLongestPrefix(String[] input) {
-        if (input == null || input.length == 0) return "";
+        if (input == null || input.length == 0) {
+            return "";
+        }
         // немає рядків -> спільного префікса теж немає
 
         String prefix = input[0];

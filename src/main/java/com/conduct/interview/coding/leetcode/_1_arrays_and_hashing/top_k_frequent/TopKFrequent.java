@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.leetcode._1_arrays_and_hashing;
+package com.conduct.interview.coding.leetcode._1_arrays_and_hashing.top_k_frequent;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -19,7 +19,9 @@ public class TopKFrequent {
     @SuppressWarnings("unchecked")
     public static int[] topKFrequent(int[] nums, int k) {
         Map<Integer, Integer> freq = new HashMap<>();
-        for (int n : nums) freq.merge(n, 1, Integer::sum);
+        for (int n : nums) {
+            freq.merge(n, 1, Integer::sum);
+        }
         // рахуємо, скільки разів зустрічається кожне число
 
         List<Integer>[] bucket = new List[nums.length + 1]; // index = frequency
@@ -27,24 +29,33 @@ public class TopKFrequent {
 
         for (Map.Entry<Integer, Integer> e : freq.entrySet()) {
             int f = e.getValue();
-            if (bucket[f] == null) bucket[f] = new ArrayList<>();
+            if (bucket[f] == null) {
+                bucket[f] = new ArrayList<>();
+            }
             bucket[f].add(e.getKey());
             // кладемо число у відро, що відповідає його частоті
         }
 
         int[] result = new int[k];
         int idx = 0;
-        for (int f = bucket.length - 1; f >= 0 && idx < k; f--)
+        for (int f = bucket.length - 1; f >= 0 && idx < k; f--) {
             // йдемо від найвищої частоти до найнижчої
-
-            if (bucket[f] != null)
-                for (int n : bucket[f]) { result[idx++] = n; if (idx == k) break; }
+            if (bucket[f] != null) {
+                for (int n : bucket[f]) {
+                    result[idx++] = n;
+                    if (idx == k) {
+                        break;
+                        // набрали рівно k елементів — виходимо
+                    }
+                }
                 // забираємо числа з поточного відра, поки не набрали k штук
+            }
+        }
 
         return result;
     }
 
     public static void main(String[] args) {
-        System.out.println(Arrays.toString(topKFrequent(new int[]{1,1,1,2,2,3}, 2))); // [1,2]
+        System.out.println(Arrays.toString(topKFrequent(new int[]{5,3,3,4,4,4,5,5,4}, 2))); // [1,2]
     }
 }

@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.leetcode._1_arrays_and_hashing;
+package com.conduct.interview.coding.leetcode._1_arrays_and_hashing.product_except_self;
 
 import java.util.Arrays;
 

@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.leetcode._1_arrays_and_hashing;
+package com.conduct.interview.coding.leetcode._1_arrays_and_hashing.contains_duplicate;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -16,8 +16,12 @@ public class ContainsDuplicate {
         Set<Integer> seen = new HashSet<>();
         // множина унікальних чисел, які вже зустрічались
 
-        for (int n : nums) if (!seen.add(n)) return true;
-        // add() повернув false -> число вже було в множині -> знайдено дублікат
+        for (int n : nums) {
+            if (!seen.add(n)) {
+                return true;
+                // add() повернув false -> число вже було в множині -> знайдено дублікат
+            }
+        }
 
         return false;
         // пройшли весь масив і жодного повтору не знайшли

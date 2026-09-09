@@ -13,24 +13,33 @@ public class NumberOfIslands {
 
     public static int numIslands(char[][] grid) {
         int count = 0;
-        for (int r = 0; r < grid.length; r++)
-            for (int c = 0; c < grid[0].length; c++)
-                if (grid[r][c] == '1') { dfs(grid, r, c); count++; }
-                // знайшли ще не затоплену клітинку суші -> це початок нового острова:
-                // затоплюємо весь острів через dfs і збільшуємо лічильник
+        for (int r = 0; r < grid.length; r++) {
+            for (int c = 0; c < grid[0].length; c++) {
+                if (grid[r][c] == '1') {
+                    dfs(grid, r, c);
+                    count++;
+                    // знайшли ще не затоплену клітинку суші -> це початок нового острова:
+                    // затоплюємо весь острів через dfs і збільшуємо лічильник
+                }
+            }
+        }
 
         return count;
     }
 
     private static void dfs(char[][] grid, int r, int c) {
-        if (r < 0 || r >= grid.length || c < 0 || c >= grid[0].length || grid[r][c] != '1') return;
-        // вихід за межі сітки АБО клітинка вже вода/затоплена -> тут зупиняємось
+        if (r < 0 || r >= grid.length || c < 0 || c >= grid[0].length || grid[r][c] != '1') {
+            return;
+            // вихід за межі сітки АБО клітинка вже вода/затоплена -> тут зупиняємось
+        }
 
         grid[r][c] = '0'; // sink
         // позначаємо клітинку як відвідану, "затоплюючи" її
 
-        dfs(grid, r+1, c); dfs(grid, r-1, c);
-        dfs(grid, r, c+1); dfs(grid, r, c-1);
+        dfs(grid, r + 1, c);
+        dfs(grid, r - 1, c);
+        dfs(grid, r, c + 1);
+        dfs(grid, r, c - 1);
         // рекурсивно перевіряємо всі 4 сусідні клітинки (вниз, вгору, вправо, вліво)
     }
 

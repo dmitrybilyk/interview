@@ -21,11 +21,15 @@ public class CoinChange {
         dp[0] = 0;
         // суму 0 завжди можна набрати нулем монет
 
-        for (int i = 1; i <= amount; i++)
-            for (int coin : coins)
-                if (coin <= i) dp[i] = Math.min(dp[i], dp[i - coin] + 1);
-                // якщо монету coin можна відняти від i — пробуємо: взяти цю монету
-                // плюс найкращий результат для залишку (i - coin)
+        for (int i = 1; i <= amount; i++) {
+            for (int coin : coins) {
+                if (coin <= i) {
+                    dp[i] = Math.min(dp[i], dp[i - coin] + 1);
+                    // якщо монету coin можна відняти від i — пробуємо: взяти цю монету
+                    // плюс найкращий результат для залишку (i - coin)
+                }
+            }
+        }
 
         return dp[amount] > amount ? -1 : dp[amount];
         // якщо dp[amount] лишився на рівні "нескінченності" — суму набрати неможливо

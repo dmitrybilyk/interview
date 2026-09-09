@@ -43,6 +43,8 @@ public class MergeIntervals {
 
     public static void main(String[] args) {
         int[][] res = merge(new int[][]{{1,3},{2,6},{8,10},{15,18}});
-        for (int[] r : res) System.out.println(Arrays.toString(r)); // [1,6] [8,10] [15,18]
+        for (int[] r : res) {
+            System.out.println(Arrays.toString(r)); // [1,6] [8,10] [15,18]
+        }
     }
 }

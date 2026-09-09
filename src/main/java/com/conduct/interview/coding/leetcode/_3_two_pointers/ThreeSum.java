@@ -20,8 +20,10 @@ public class ThreeSum {
 
         List<List<Integer>> result = new ArrayList<>();
         for (int i = 0; i < nums.length - 2; i++) {
-            if (i > 0 && nums[i] == nums[i - 1]) continue; // skip duplicate pivots
-            // якщо це те саме число, що й попереднє i — трійки з ним уже перебрали, пропускаємо
+            if (i > 0 && nums[i] == nums[i - 1]) {
+                continue; // skip duplicate pivots
+                // якщо це те саме число, що й попереднє i — трійки з ним уже перебрали, пропускаємо
+            }
 
             int lo = i + 1, hi = nums.length - 1;
             // шукаємо пару (lo, hi) серед елементів, що йдуть після i
@@ -32,18 +34,25 @@ public class ThreeSum {
                     result.add(Arrays.asList(nums[i], nums[lo], nums[hi]));
                     // знайшли трійку з сумою 0 — зберігаємо
 
-                    while (lo < hi && nums[lo] == nums[lo + 1]) lo++;
-                    while (lo < hi && nums[hi] == nums[hi - 1]) hi--;
+                    while (lo < hi && nums[lo] == nums[lo + 1]) {
+                        lo++;
+                    }
+                    while (lo < hi && nums[hi] == nums[hi - 1]) {
+                        hi--;
+                    }
                     // пропускаємо дублікати зліва і справа, щоб не додати ту саму трійку двічі
 
-                    lo++; hi--;
+                    lo++;
+                    hi--;
                     // звужуємо вікно й шукаємо далі
 
-                } else if (sum < 0) lo++;
-                // сума замала (масив відсортований) -> збільшуємо, рухаючи lo вправо
-
-                else hi--;
-                // сума завелика -> зменшуємо, рухаючи hi вліво
+                } else if (sum < 0) {
+                    lo++;
+                    // сума замала (масив відсортований) -> збільшуємо, рухаючи lo вправо
+                } else {
+                    hi--;
+                    // сума завелика -> зменшуємо, рухаючи hi вліво
+                }
             }
         }
         return result;

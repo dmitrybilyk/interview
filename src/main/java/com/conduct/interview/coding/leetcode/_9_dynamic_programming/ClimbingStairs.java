@@ -11,8 +11,10 @@ package com.conduct.interview.coding.leetcode._9_dynamic_programming;
 public class ClimbingStairs {
 
     public static int climbStairs(int n) {
-        if (n <= 2) return n;
-        // для 1 сходинки — 1 спосіб, для 2 сходинок — 2 способи (базові випадки)
+        if (n <= 2) {
+            return n;
+            // для 1 сходинки — 1 спосіб, для 2 сходинок — 2 способи (базові випадки)
+        }
 
         int a = 1, b = 2;
         // a = ways(n-2), b = ways(n-1) на поточному кроці; тримаємо тільки останні два значення

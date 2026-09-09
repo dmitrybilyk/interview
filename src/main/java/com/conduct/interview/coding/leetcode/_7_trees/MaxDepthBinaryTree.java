@@ -11,8 +11,10 @@ public class MaxDepthBinaryTree {
     static class TreeNode { int val; TreeNode left, right; TreeNode(int v) { val = v; } }
 
     public static int maxDepth(TreeNode root) {
-        if (root == null) return 0;
-        // порожнє дерево -> глибина 0 (базовий випадок рекурсії)
+        if (root == null) {
+            return 0;
+            // порожнє дерево -> глибина 0 (базовий випадок рекурсії)
+        }
 
         return 1 + Math.max(maxDepth(root.left), maxDepth(root.right));
         // беремо глибшу з двох гілок і додаємо 1 за поточний рівень (сам root)

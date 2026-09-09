@@ -21,8 +21,10 @@ public class LinkedListCycle {
 
             slow = slow.next;
             fast = fast.next.next;
-            if (slow == fast) return true;
-            // вказівники зустрілись у тій самій ноді -> це можливо тільки всередині циклу
+            if (slow == fast) {
+                return true;
+                // вказівники зустрілись у тій самій ноді -> це можливо тільки всередині циклу
+            }
         }
         return false;
         // fast дійшов до кінця (null) -> циклу немає
