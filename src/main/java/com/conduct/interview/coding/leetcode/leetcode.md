@@ -1,6 +1,6 @@
-# LeetCode Top 26 — Java Interview
+# LeetCode Top 27 — Java Interview
 
-**Why 26?** Based on Blind 75 / LeetCode frequency data, these problems cover ~80% of what
+**Why 27?** Based on Blind 75 / LeetCode frequency data, these problems cover ~80% of what
 companies actually ask. They're grouped by pattern — because interviewers don't care which
 specific problem you solved; they care whether you recognise the pattern.
 
@@ -73,6 +73,7 @@ specific problem you solved; they care whether you recognise the pattern.
 | LC 226 | Invert Binary Tree | Easy | `_7_trees/InvertBinaryTree.java` | Post-order DFS: swap children after recursing |
 | LC 104 | Maximum Depth of Binary Tree | Easy | `_7_trees/MaxDepthBinaryTree.java` | `1 + max(left, right)` — one liner |
 | LC 100 | Same Tree | Easy | `_7_trees/TreeNode.java` | Recursive: both null → true; one null → false; vals equal and recurse both sides |
+| LC 102 | Binary Tree Level Order Traversal | Medium | `_7_trees/LevelOrderTraversal.java` | BFS with Queue; snapshot `queue.size()` before processing each level |
 
 ---
 
@@ -92,6 +93,14 @@ specific problem you solved; they care whether you recognise the pattern.
 | LC 53 | Maximum Subarray | Medium | `_9_dynamic_programming/MaxSubarray.java` | Kadane's: reset running sum to 0 when negative |
 | LC 322 | Coin Change | Medium | `_9_dynamic_programming/CoinChange.java` | dp[i] = min coins for amount i; fill from 0 up |
 | LC 509 | Fibonacci Number | Easy | `_9_dynamic_programming/Fibonachi.java` | Java Streams: `Stream.iterate` with pair — functional style |
+
+---
+
+## Heap (`_12_heap/`)
+
+| # | Problem | Difficulty | File | Key insight |
+|---|---------|-----------|------|-------------|
+| LC 215 | Kth Largest Element in an Array | Medium | `_12_heap/KthLargest.java` | Min-heap of size k; root = kth largest; evict smallest when size > k |
 
 ---
 
@@ -124,7 +133,7 @@ specific problem you solved; they care whether you recognise the pattern.
 | **DFS/BFS** | Graphs, trees, flood-fill, connected components |
 | **DP (1D)** | "Number of ways", "min cost", overlapping subproblems |
 | **Prefix product/sum** | Array where division is banned or range queries needed |
-| **Heap** | Top-K, streaming median, scheduling |
+| **Heap** | Top-K, kth largest, scheduling — PriorityQueue, min-heap of size k |
 | **Bucket sort** | Top-K when values are bounded (beats heap asymptotically) |
 
 ---

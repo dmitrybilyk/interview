@@ -32,6 +32,9 @@ out/
 /nbdist/
 /.nb-gradle/
 
+### Kotlin ###
+.kotlin/
+
 ### VS Code ###
 .vscode/
 src/main/java/com/conduct/interview/ai/claude/key.txt
