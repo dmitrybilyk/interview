@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.leetcode._2_sliding_window;
+package com.conduct.interview.coding.leetcode._2_sliding_window.longest_substring_no_repeat;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -13,31 +13,37 @@ import java.util.Map;
 public class LongestSubstringNoRepeat {
 
     public static int lengthOfLongestSubstring(String s) {
-        Map<Character, Integer> lastIndex = new HashMap<>();
-        // символ -> індекс, де він востаннє зустрічався
+        return longestSubstringNoRepeat(s).length();
+    }
 
-        int max = 0, left = 0;
-        // left — лівий край поточного вікна без повторів
+    public static String longestSubstringNoRepeat(String s) {
+        Map<Character, Integer> lastIndex = new HashMap<>();
+        int left = 0;
+        int bestLeft = 0, bestLen = 0;
 
         for (int right = 0; right < s.length(); right++) {
             char c = s.charAt(right);
             if (lastIndex.containsKey(c) && lastIndex.get(c) >= left) {
-                left = lastIndex.get(c) + 1; // jump left past the duplicate
-                // символ вже є всередині поточного вікна -> стискаємо вікно,
-                // пересуваючи left одразу за місце попереднього входження
+                left = lastIndex.get(c) + 1;
             }
             lastIndex.put(c, right);
-            // запам'ятовуємо (або оновлюємо) останню позицію цього символу
 
-            max = Math.max(max, right - left + 1);
-            // довжина поточного вікна = right - left + 1, оновлюємо максимум
+            int len = right - left + 1;
+            if (len > bestLen) {
+                bestLen = len;
+                bestLeft = left;
+            }
         }
-        return max;
+        return s.substring(bestLeft, bestLeft + bestLen);
     }
 
     public static void main(String[] args) {
         System.out.println(lengthOfLongestSubstring("abcabcbb")); // 3
         System.out.println(lengthOfLongestSubstring("bbbbb"));    // 1
         System.out.println(lengthOfLongestSubstring("pwwkew"));   // 3
+
+        System.out.println(longestSubstringNoRepeat("abcabcbb")); // "abc"
+        System.out.println(longestSubstringNoRepeat("bbbbb"));    // "b"
+        System.out.println(longestSubstringNoRepeat("pwwkew"));   // "wke"
     }
 }
