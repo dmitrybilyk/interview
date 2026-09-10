@@ -1,10 +1,14 @@
-package com.conduct.interview.coding.leetcode._2_sliding_window;
+package com.conduct.interview.coding.leetcode._2_sliding_window.max_profit;
 
 // LC 121 — Best Time to Buy and Sell Stock
 // Задача: знайти максимальний прибуток від однієї купівлі + одного продажу акції.
 // Ідея: йдемо по цінах зліва направо, весь час пам'ятаємо мінімальну ціну,
 // яку бачили ДО поточного дня — саме в цей день найвигідніше було б купити.
 // Час O(n), Пам'ять O(1)
+
+// Важливо: maxProfit ініціалізуємо саме як 0, а не Integer.MIN_VALUE.
+// Це гарантує правильний результат (0) для порожніх масивів або коли ціни лише падають.
+// Використання if (price < minPrice) замість Math.min запобігає зайвим обчисленням прибутку в день купівлі.
 public class MaxProfit {
     public static int maxProfit(int[] prices) {
         Integer maxProfit = 0;

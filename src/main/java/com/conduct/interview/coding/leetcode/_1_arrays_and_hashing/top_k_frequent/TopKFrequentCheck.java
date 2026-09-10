@@ -11,28 +11,35 @@ public class TopKFrequentCheck {
     }
 
     private static int[] topKFrequentCheck(int[] integers, int k) {
-
         Map<Integer, Integer> map = new HashMap<>();
+
         for (int integer : integers) {
             map.merge(integer, 1, Integer::sum);
         }
 
         List<Integer>[] bucket = new List[integers.length];
 
-        for (int i = 0; i < integers.length; i++) {
-            if (map.containsKey(i)) {
-                List<Integer> list = bucket[i];
-                if (list == null) {
-                    List<Integer> newList = new ArrayList<>();
-                    newList.add(i);
-                    bucket[map.get(i)] = newList;
-                } else {
-                    list.add(i);
+        for (Map.Entry<Integer, Integer> integerIntegerEntry : map.entrySet()) {
+            if (bucket[integerIntegerEntry.getValue()] == null) {
+                bucket[integerIntegerEntry.getValue()] = new ArrayList<>();
+            }
+            bucket[integerIntegerEntry.getValue()].add(integerIntegerEntry.getKey());
+        }
+
+        int idx = 0;
+        int[] result = new int[k];
+        for (int i = bucket.length - 1; i >= 0 && idx < k; i--) {
+            if (bucket[i] != null) {
+                for (Integer integerResult : bucket[i]) {
+                    result[idx++] = integerResult;
+                    if (idx == k) {
+                        break;
+                    }
+
                 }
             }
         }
 
-        int[] result = new int[integers.length];
-        return result;
+        return new int[]{};
     }
 }
