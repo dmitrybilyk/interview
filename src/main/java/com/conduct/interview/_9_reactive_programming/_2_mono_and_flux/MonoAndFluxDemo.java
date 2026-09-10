@@ -19,7 +19,7 @@ public class MonoAndFluxDemo {
 
         // An empty Mono/Flux still completes - it just skips onNext entirely
         Mono.empty().subscribe(
-                v -> System.out.println("never called"),
+                v -> System.out.println("never called" + v),
                 e -> System.out.println("never called either"),
                 () -> System.out.println("Mono.empty() -> onComplete with no value")
         );
