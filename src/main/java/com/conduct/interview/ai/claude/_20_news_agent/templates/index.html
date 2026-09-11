@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Стрічка новин</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 40px auto; padding: 0 16px; color: #222; }
+    h1 { font-size: 1.4rem; }
+    .moods { display: flex; flex-wrap: wrap; gap: 12px; margin: 20px 0; }
+    .moods a {
+      flex: 1 1 auto; min-width: 120px; text-align: center; padding: 12px; border-radius: 8px;
+      text-decoration: none; font-weight: 600; border: 2px solid transparent;
+    }
+    .moods a.positive { background: #e6f7ec; color: #1a7f3c; }
+    .moods a.negative { background: #fdecea; color: #b3261e; }
+    .moods a.all { background: #f0edfa; color: #4b3aa8; }
+    .moods a.active { border-color: currentColor; }
+    article { padding: 14px 0; border-bottom: 1px solid #eee; }
+    article a { color: #1a1a1a; text-decoration: none; font-weight: 600; }
+    article a:hover { text-decoration: underline; }
+    article p { margin: 6px 0 0; color: #555; font-size: 0.92rem; }
+    time { color: #999; font-size: 0.8rem; }
+    .empty, .error, .loading { color: #777; margin-top: 20px; }
+    .error { color: #b3261e; }
+    .subscribe {
+      margin: 24px 0; padding: 14px 16px; border-radius: 8px;
+      background: #eef6ff; font-size: 0.92rem;
+    }
+    .subscribe a { color: #0a5fd1; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>Новини — відфільтровані за настроєм</h1>
+  <p>Завантажує стрічку Цензор.НЕТ і просить Claude залишити лише ті новини, що відповідають обраному настрою.</p>
+
+  <div class="moods">
+    <a class="positive {{ 'active' if mood == 'positive' }}" href="?mood=positive">🙂 Здебільшого позитивні</a>
+    <a class="negative {{ 'active' if mood == 'negative' }}" href="?mood=negative">😟 Здебільшого негативні</a>
+    <a class="all {{ 'active' if mood == 'all' }}" href="?mood=all">📰 Усі новини</a>
+  </div>
+
+  {% if bot_username %}
+    <p class="subscribe">
+      📬 Хочеш отримувати ці новини в Telegram, щойно вони з'являються?
+      Напиши <a href="https://t.me/{{ bot_username }}" target="_blank" rel="noopener">@{{ bot_username }}</a>
+      і натисни /start.
+    </p>
+  {% endif %}
+
+  {% if error %}
+    <p class="error">Щось пішло не так: {{ error }}</p>
+  {% elif news is none %}
+    <p class="empty">Оберіть настрій вище, щоб завантажити й відфільтрувати сьогоднішні новини.</p>
+  {% elif news|length == 0 %}
+    <p class="empty">Зараз немає новин під цей настрій — спробуйте інший або перевірте пізніше.</p>
+  {% else %}
+    {% for item in news %}
+      <article>
+        <a href="{{ item.link }}" target="_blank" rel="noopener">{{ item.title }}</a>
+        <p>{{ item.description }}</p>
+        <time>{{ item.pubDate }}</time>
+      </article>
+    {% endfor %}
+  {% endif %}
+</body>
+</html>

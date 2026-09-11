@@ -39,3 +39,9 @@ out/
 .vscode/
 src/main/java/com/conduct/interview/ai/claude/key.txt
 src/main/java/com/conduct/interview/ai/claude/venv/
+src/main/java/com/conduct/interview/ai/claude/_20_news_agent/venv/
+src/main/java/com/conduct/interview/ai/claude/_20_news_agent/telegram_token.txt
+src/main/java/com/conduct/interview/ai/claude/_20_news_agent/subscribers.json
+src/main/java/com/conduct/interview/ai/claude/_20_news_agent/groq_key.txt
+src/main/java/com/conduct/interview/ai/claude/_20_news_agent/sent_state.json
+src/main/java/com/conduct/interview/ai/claude/_20_news_agent/classification_cache.json
