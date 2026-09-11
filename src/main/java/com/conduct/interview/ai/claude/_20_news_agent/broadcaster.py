@@ -87,10 +87,11 @@ def main():
 
 
 def _send_due_donate_reminders(subscribers: dict) -> None:
-    """Nudge each subscriber about the donate card once a week — independent
-    of mood or news content, so it runs even for a quiet "all" subscriber
-    with nothing new to send. `last_donate_reminder` (epoch seconds) is
-    stored per subscriber in subscribers.json, right next to their mood."""
+    """Nudge each subscriber about the donate card periodically (see
+    telegram_bot.DONATE_REMINDER_INTERVAL_SECONDS) — independent of mood or
+    news content, so it runs even for a quiet "all" subscriber with nothing
+    new to send. `last_donate_reminder` (epoch seconds) is stored per
+    subscriber in subscribers.json, right next to their mood."""
     now = time.time()
     changed = False
 
@@ -101,7 +102,7 @@ def _send_due_donate_reminders(subscribers: dict) -> None:
         send_message(chat_id, telegram_bot.DONATE_LINE)
         sub["last_donate_reminder"] = now
         changed = True
-        log.info("Sent weekly donate reminder to chat_id=%s", chat_id)
+        log.info("Sent donate reminder to chat_id=%s", chat_id)
 
     if changed:
         save_subscribers(subscribers)

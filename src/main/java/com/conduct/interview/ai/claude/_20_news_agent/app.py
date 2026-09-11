@@ -19,6 +19,7 @@ the foreground for local dev.
 import logging
 import os
 import time
+from urllib.parse import quote
 
 from flask import Flask, render_template, request
 
@@ -36,14 +37,30 @@ app = Flask(__name__)
 
 MOODS = ("positive", "negative", "all")
 
-MOOD_KEYBOARD = {
-    "inline_keyboard": [
+def build_start_keyboard() -> dict:
+    """Same mood buttons every time, plus a "share" button whose target URL
+    needs the bot's own @username — built fresh per call (cheap: the
+    username itself is cached in telegram_bot.get_bot_username(), so this
+    is no extra network call after the first) rather than baked into a
+    module-level constant, since we don't know the username at import time.
+    """
+    rows = [
         [{"text": "🙂 Позитивні", "callback_data": "mood:positive"}],
         [{"text": "😟 Негативні", "callback_data": "mood:negative"}],
         [{"text": "📰 Усі новини", "callback_data": "mood:all"}],
-        [{"text": "🛑 Відписатися", "callback_data": "mood:stop"}],
     ]
-}
+
+    bot_username = telegram_bot.get_bot_username()
+    if bot_username:
+        # "url" (not "callback_data") opens Telegram's native share sheet
+        # client-side — no webhook handling needed for this button at all.
+        bot_link = f"https://t.me/{bot_username}"
+        share_text = "Підбірка новин України, відфільтрована за настроєм 🇺🇦"
+        share_url = f"https://t.me/share/url?url={quote(bot_link)}&text={quote(share_text)}"
+        rows.append([{"text": "📤 Поділитися ботом", "url": share_url}])
+
+    rows.append([{"text": "🛑 Відписатися", "callback_data": "mood:stop"}])
+    return {"inline_keyboard": rows}
 
 # "Positive"/"negative" are from a Ukrainian reader's point of view, not a
 # generic mood — spell that out so it's never ambiguous what someone is
@@ -92,7 +109,7 @@ def telegram_webhook():
     if message and message.get("text", "").startswith("/start"):
         chat_id = message["chat"]["id"]
         log.info("Telegram /start from chat_id=%s", chat_id)
-        telegram_bot.send_message(chat_id, START_TEXT, reply_markup=MOOD_KEYBOARD)
+        telegram_bot.send_message(chat_id, START_TEXT, reply_markup=build_start_keyboard())
         return "ok"
 
     if message and message.get("text", "").startswith("/donate"):
@@ -120,7 +137,7 @@ def telegram_webhook():
             # Preserve any existing donate-reminder timestamp (see
             # broadcaster.py) instead of wiping it out on a mood change —
             # but a brand new subscriber just saw the donate line in
-            # START_TEXT, so start their weekly clock now instead of
+            # START_TEXT, so start their reminder clock now instead of
             # having broadcaster.py nag them again within the hour.
             existing = subscribers.get(str(chat_id), {"last_donate_reminder": time.time()})
             existing["mood"] = mood
