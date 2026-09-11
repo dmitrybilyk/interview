@@ -34,7 +34,11 @@ def _load_key(env_var: str, candidates: list, human_name: str) -> str:
         return os.environ[env_var]
     for key_file in candidates:
         if key_file.exists():
-            return key_file.read_text().strip()
+            raw = key_file.read_text().strip()
+            # handle "export VAR=value" shell format as well as a bare value
+            if "=" in raw:
+                raw = raw.split("=", 1)[1].strip()
+            return raw
     raise RuntimeError(
         f"No {human_name} key found. Set {env_var} or create one of: "
         + ", ".join(str(c) for c in candidates)
