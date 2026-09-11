@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.leetcode._3_two_pointers;
+package com.conduct.interview.coding.leetcode._3_two_pointers.palindrome;
 
 // LC 125 — Valid Palindrome (спрощена версія без фільтрації символів)
 // Задача: перевірити, чи рядок читається однаково зліва направо і справа наліво.
