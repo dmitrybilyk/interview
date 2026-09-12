@@ -25,7 +25,8 @@ from urllib.parse import quote
 from flask import Flask, render_template, request
 
 import telegram_bot
-from agent import CATEGORY_LABELS, get_filtered_news, history
+from agent import CATEGORY_LABELS, feedback, get_filtered_news, history
+from agent.classify import _load_classification_cache, _save_classification_cache
 
 logging.basicConfig(
     level=logging.INFO,
@@ -204,6 +205,21 @@ def telegram_webhook():
         data = callback_query.get("data", "")
         log.info("Telegram button press from chat_id=%s: %s", chat_id, data)
         subscribers = telegram_bot.load_subscribers()
+
+        if data.startswith("rep:"):
+            h = data.split(":", 1)[1]
+            sent = feedback.load_sent_items()
+            item = sent.get(h)
+            if not item:
+                telegram_bot.answer_callback_query(callback_query["id"], "Не знайдено — можливо, застаріло.")
+                return "ok"
+            rule = feedback.add_feedback(item["link"], item["title"], item["description"])
+            cache = _load_classification_cache()
+            cache.pop(item["link"], None)
+            _save_classification_cache(cache)
+            telegram_bot.answer_callback_query(callback_query["id"], "Дякую! Враховано.")
+            log.info("Feedback: rule=%r link=%s", rule, item["link"])
+            return "ok"
 
         if data.startswith("digest:"):
             hours = float(data.split(":", 1)[1])

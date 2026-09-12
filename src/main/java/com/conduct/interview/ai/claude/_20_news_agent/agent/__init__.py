@@ -17,7 +17,7 @@ Everything below is just re-exporting the small public surface so callers
 without knowing which internal file it lives in.
 """
 
-from . import history
+from . import feedback, history
 from .classify import get_categories, get_filtered_news, pick_by_mood
 from .fetch import fetch_items
 from .moods import CATEGORY_LABELS, MOOD_RULES
@@ -32,4 +32,5 @@ __all__ = [
     "CATEGORY_LABELS",
     "call_llm",
     "history",
+    "feedback",
 ]

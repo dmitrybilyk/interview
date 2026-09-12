@@ -23,7 +23,7 @@ from pathlib import Path
 
 import telegram_bot
 from telegram_bot import is_configured, load_subscribers, save_subscribers, send_message
-from agent import CATEGORY_LABELS, get_filtered_news, history
+from agent import CATEGORY_LABELS, feedback, get_filtered_news, history
 
 logging.basicConfig(
     level=logging.INFO,
@@ -76,8 +76,12 @@ def main():
                 label = CATEGORY_LABELS.get(item.get("category"))
                 prefix = f"{label}\n" if label else ""
                 text = f"{prefix}<b>{item['title']}</b>\n{item['description']}\n{item['link']}"
+                keyboard = None
+                if mood != "all":
+                    h = feedback.record_sent_item(item["link"], item["title"], item["description"])
+                    keyboard = {"inline_keyboard": [[{"text": "🚩 Не позитивна", "callback_data": f"rep:{h}"}]]}
                 for chat_id in chat_ids:
-                    send_message(chat_id, text)
+                    send_message(chat_id, text, reply_markup=keyboard)
         elif is_first_run_for_mood:
             log.info("mood=%s: first run — seeding baseline of %d item(s), nothing sent", mood, len(items))
         else:

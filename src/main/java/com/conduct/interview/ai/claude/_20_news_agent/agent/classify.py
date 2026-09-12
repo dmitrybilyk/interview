@@ -30,6 +30,7 @@ import re
 
 from .config import CLASSIFICATION_CACHE_FILE, CLASSIFY_BATCH_SIZE
 from .fetch import fetch_items
+from .feedback import load_feedback_rules
 from .moods import CATEGORY_RULES, MOOD_RULES
 from .providers import call_llm
 
@@ -108,11 +109,20 @@ def _classify_batch(batch: list[dict], mood: str) -> set[int]:
     numbered = "\n".join(
         f"{i}. {it['title']} — {it['description']}" for i, it in enumerate(batch)
     )
+    extra_rules = load_feedback_rules()
+    extra_section = ""
+    if extra_rules:
+        lines = "\n".join(f"- {r}" for r in extra_rules)
+        extra_section = (
+            f"\nUser-reported additional REJECT patterns (treat as extra Step 1 rules):\n"
+            f"{lines}\n"
+        )
+
     prompt = f"""Here is a numbered list of Ukrainian news items (title — description):
 
 {numbered}
 
-Task: {MOOD_RULES[mood]}
+Task: {MOOD_RULES[mood]}{extra_section}
 
 Respond with ONLY a JSON array of the integer indices to KEEP, e.g. [0,3,7].
 No prose, no explanation, no markdown fences."""
