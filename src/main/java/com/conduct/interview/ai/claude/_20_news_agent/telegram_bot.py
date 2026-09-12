@@ -25,7 +25,7 @@ TELEGRAM_TOKEN_FILE = HERE / "telegram_token.txt"
 # Shared by both delivery surfaces (app.py's /start + /donate, and
 # broadcaster.py's periodic reminder) — defined once here so they can't drift.
 DONATE_CARD = "4441 1110 3446 3160"  # Monobank
-DONATE_LINE = f"☕ Постав розробнику каву, якщо подобається бот (Monobank): {DONATE_CARD}"
+DONATE_LINE = f"☕ Розробнику на каву, якщо бот подобається (Monobank): {DONATE_CARD}"
 DONATE_REMINDER_INTERVAL_SECONDS = 30 * 24 * 60 * 60  # once a month, see broadcaster.py
 
 

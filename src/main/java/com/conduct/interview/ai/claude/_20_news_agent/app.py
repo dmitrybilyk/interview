@@ -35,7 +35,7 @@ log = logging.getLogger("news_agent.app")
 
 app = Flask(__name__)
 
-MOODS = ("positive", "negative", "all")
+MOODS = ("positive", "mostly_positive", "all")
 
 def build_start_keyboard() -> dict:
     """Same mood buttons every time, plus a "share" button whose target URL
@@ -45,8 +45,8 @@ def build_start_keyboard() -> dict:
     module-level constant, since we don't know the username at import time.
     """
     rows = [
-        [{"text": "🙂 Позитивні", "callback_data": "mood:positive"}],
-        [{"text": "😟 Негативні", "callback_data": "mood:negative"}],
+        [{"text": "✅ Позитивні", "callback_data": "mood:positive"}],
+        [{"text": "🌤 Здебільшого позитивні", "callback_data": "mood:mostly_positive"}],
         [{"text": "📰 Усі новини", "callback_data": "mood:all"}],
     ]
 
@@ -67,15 +67,19 @@ def build_start_keyboard() -> dict:
 # subscribing to (see agent/moods.py for the exact rules behind each).
 START_TEXT = (
     "Привіт! Обери, які новини України надсилати:\n\n"
-    "🙂 Позитивні — гарні новини ДЛЯ УКРАЇНИ (тобто погані для Росії: втрати "
-    "окупантів, удари по території РФ, проблеми в економіці РФ). Відбираються AI.\n"
-    "😟 Негативні — важкі новини для України. Теж відбираються AI.\n"
-    "📰 Усі — без фільтрації, взагалі без участі AI"
-)
+    "✅ Позитивні — лише хороші новини ДЛЯ УКРАЇНИ: втрати окупантів, удари по "
+    "території РФ, проблеми в економіці Росії. Відбираються ШІ.\n"
+    "🌤 Здебільшого позитивні — позитивні + нейтральні новини. Без явно поганих "
+    "(без українських втрат і просування ворога). Теж ШІ.\n"
+    "📰 Усі — без фільтрації, без AI.\n\n"
+    "🔄 Змінити вибір можна будь-коли командою /mood.\n\n"
+) + telegram_bot.DONATE_LINE
+
+SWITCH_TEXT = "Обери новий настрій — зміна набуде чинності одразу:"
 
 MOOD_CONFIRM_TEXT = {
-    "positive": "Готово! Надсилатиму українські позитивні новини (погані для Росії), відібрані для тебе AI, щойно з'являться нові.",
-    "negative": "Готово! Надсилатиму українські негативні новини, відібрані для тебе AI, щойно з'являться нові.",
+    "positive": "Готово! Надсилатиму лише позитивні новини для України (втрати ворога, удари по РФ, проблеми Росії), відібрані ШІ.",
+    "mostly_positive": "Готово! Надсилатиму позитивні та нейтральні новини — без українських втрат і просування ворога. Відбираються ШІ.",
     "all": "Готово! Надсилатиму усі новини без фільтрації, щойно з'являться нові.",
 }
 
@@ -106,16 +110,23 @@ def telegram_webhook():
     update = request.get_json(silent=True) or {}
 
     message = update.get("message")
-    if message and message.get("text", "").startswith("/start"):
+    if message:
+        text = message.get("text", "")
         chat_id = message["chat"]["id"]
-        log.info("Telegram /start from chat_id=%s", chat_id)
-        telegram_bot.send_message(chat_id, START_TEXT, reply_markup=build_start_keyboard())
-        return "ok"
 
-    if message and message.get("text", "").startswith("/donate"):
-        chat_id = message["chat"]["id"]
-        telegram_bot.send_message(chat_id, telegram_bot.DONATE_LINE)
-        return "ok"
+        if text.startswith("/start"):
+            log.info("Telegram /start from chat_id=%s", chat_id)
+            telegram_bot.send_message(chat_id, START_TEXT, reply_markup=build_start_keyboard())
+            return "ok"
+
+        if text.startswith("/mood"):
+            log.info("Telegram /mood from chat_id=%s", chat_id)
+            telegram_bot.send_message(chat_id, SWITCH_TEXT, reply_markup=build_start_keyboard())
+            return "ok"
+
+        if text.startswith("/donate"):
+            telegram_bot.send_message(chat_id, telegram_bot.DONATE_LINE)
+            return "ok"
 
     callback_query = update.get("callback_query")
     if callback_query:
@@ -144,7 +155,8 @@ def telegram_webhook():
             subscribers[str(chat_id)] = existing
             telegram_bot.save_subscribers(subscribers)
             telegram_bot.answer_callback_query(callback_query["id"], "Підписано!")
-            telegram_bot.send_message(chat_id, MOOD_CONFIRM_TEXT[mood])
+            confirm = MOOD_CONFIRM_TEXT[mood] + "\n\n🔄 /mood — змінити будь-коли"
+            telegram_bot.send_message(chat_id, confirm)
             log.info("chat_id=%s subscribed to mood=%s", chat_id, mood)
         return "ok"
 

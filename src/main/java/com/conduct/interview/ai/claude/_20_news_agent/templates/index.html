@@ -13,7 +13,7 @@
       text-decoration: none; font-weight: 600; border: 2px solid transparent;
     }
     .moods a.positive { background: #e6f7ec; color: #1a7f3c; }
-    .moods a.negative { background: #fdecea; color: #b3261e; }
+    .moods a.mostly_positive { background: #fff8e1; color: #a16207; }
     .moods a.all { background: #f0edfa; color: #4b3aa8; }
     .moods a.active { border-color: currentColor; }
     article { padding: 14px 0; border-bottom: 1px solid #eee; }
@@ -35,8 +35,8 @@
   <p>Завантажує стрічку Цензор.НЕТ і просить Claude залишити лише ті новини, що відповідають обраному настрою.</p>
 
   <div class="moods">
-    <a class="positive {{ 'active' if mood == 'positive' }}" href="?mood=positive">🙂 Здебільшого позитивні</a>
-    <a class="negative {{ 'active' if mood == 'negative' }}" href="?mood=negative">😟 Здебільшого негативні</a>
+    <a class="positive {{ 'active' if mood == 'positive' }}" href="?mood=positive">✅ Позитивні</a>
+    <a class="mostly_positive {{ 'active' if mood == 'mostly_positive' }}" href="?mood=mostly_positive">🌤 Здебільшого позитивні</a>
     <a class="all {{ 'active' if mood == 'all' }}" href="?mood=all">📰 Усі новини</a>
   </div>
 
