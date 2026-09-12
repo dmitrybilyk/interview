@@ -18,6 +18,8 @@ agent/                 ← "the agent" itself, nothing else
   providers.py            reasoning: call_llm(prompt) -> str (Claude or Groq)
   classify.py             orchestration: fetch + providers + moods -> result,
                            with the cache that avoids re-classifying old items
+  history.py              a rolling log of past classified items, so /digest
+                           can answer "what happened in the last N hours/days"
   __init__.py             re-exports the small public API the files above need
 
 cli.py                 ← run the agent from a terminal, no web/Telegram
@@ -41,17 +43,34 @@ decision is independent, so a loop would add ceremony, not capability.
 Compare with `_12_agent_loop/` for a case where multiple *dependent*
 decisions (search, then check stock, then maybe order) actually need one.
 
-### The two caches, and why each exists
+### The three state files, and why each exists
 
 | File | Lives in | Remembers | Why |
 |---|---|---|---|
-| `classification_cache.json` | `agent/classify.py` | LLM verdict per (article link, mood) | never ask the LLM about the same item twice — this is the main cost control |
+| `classification_cache.json` | `agent/classify.py` | LLM verdict + headline category per (article link, mood) | never ask the LLM about the same item twice — this is the main cost control |
 | `sent_state.json` | `broadcaster.py` | which links were already pushed, per mood | never send a subscriber the same Telegram message twice |
+| `history.json` | `agent/history.py` | title/link/category per item, keyed by first-seen time | lets `/digest` answer "what happened in the last 24h/7d" even though the live feed only ever shows the current ~80-item window |
 
-Both are plain JSON files (not a database — small enough not to need one),
-pruned to whatever's still in the current feed so neither grows forever,
-and both live **only on the server** — `deploy.sh` never deletes or
-overwrites them (see its "no `--delete`" comment).
+The first two are pruned to whatever's still in the current feed;
+`history.json` is pruned by age instead (`MAX_HISTORY_AGE_SECONDS` in
+`config.py`, currently just over a week). All three are plain JSON files
+(not a database — small enough not to need one), and all live **only on
+the server** — `deploy.sh` never deletes or overwrites them (see its "no
+`--delete`" comment).
+
+### Headline categories (strike / losses / economy)
+
+Alongside the keep-or-drop mood decision, `classify.py`'s `get_categories`
+tags every kept "positive"/"mostly_positive" item with one of `strike`
+(a Ukrainian/allied strike hitting a target *inside Russia*), `losses`
+(confirmed Russian military losses), `economy` (Russian economic trouble),
+or `other`. The rules live in `moods.CATEGORY_RULES`, right next to
+`MOOD_RULES` — it's the same "one LLM call, cached per link" shape as mood
+filtering, just answering a different question ("which of these three
+story types, if any" instead of "keep or drop"). The category drives both
+the colored badge on the web page (`templates/index.html`) and the emoji
+prefix on Telegram pushes (`broadcaster.py`); it's skipped entirely for
+mood="all" so that view keeps its zero-LLM-calls guarantee.
 
 ## LLM provider: Claude or Groq
 
@@ -160,7 +179,12 @@ token it gives you into `telegram_token.txt`. Once deployed:
   with subscribers, it re-filters the feed and pushes only the items it
   hasn't sent before (tracked in `sent_state.json`) to those chat ids.
   The first run for a mood just records a baseline — new subscribers get
-  news that appears *after* they subscribe, not the whole backlog.
+  news that appears *after* they subscribe, not the whole backlog. Each
+  run also appends whatever it just classified to `history.json`.
+- A subscriber sends `/digest` any time → picks "24 години" or "7 днів" via
+  inline buttons → the bot reads `history.json` for their subscribed mood
+  within that window and replies with counts per category plus a few
+  example headlines each for strikes/losses/economy.
 
 ## Deploy
 

@@ -23,7 +23,7 @@ from pathlib import Path
 
 import telegram_bot
 from telegram_bot import is_configured, load_subscribers, save_subscribers, send_message
-from agent import get_filtered_news
+from agent import CATEGORY_LABELS, get_filtered_news, history
 
 logging.basicConfig(
     level=logging.INFO,
@@ -63,6 +63,8 @@ def main():
 
     for mood in moods_needed:
         items = get_filtered_news(mood)
+        history.record(mood, items)  # for /digest — independent of who's due a push below
+
         already_seen = set(state.get(mood, []))
         is_first_run_for_mood = not already_seen
         new_items = [it for it in items if it["link"] not in already_seen]
@@ -71,7 +73,9 @@ def main():
             chat_ids = [cid for cid, sub in subscribers.items() if sub["mood"] == mood]
             log.info("mood=%s: pushing %d new item(s) to %d subscriber(s)", mood, len(new_items), len(chat_ids))
             for item in new_items:
-                text = f"<b>{item['title']}</b>\n{item['description']}\n{item['link']}"
+                label = CATEGORY_LABELS.get(item.get("category"))
+                prefix = f"{label}\n" if label else ""
+                text = f"{prefix}<b>{item['title']}</b>\n{item['description']}\n{item['link']}"
                 for chat_id in chat_ids:
                     send_message(chat_id, text)
         elif is_first_run_for_mood:

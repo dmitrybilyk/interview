@@ -30,8 +30,13 @@ import re
 
 from .config import CLASSIFICATION_CACHE_FILE, CLASSIFY_BATCH_SIZE
 from .fetch import fetch_items
-from .moods import MOOD_RULES
+from .moods import CATEGORY_RULES, MOOD_RULES
 from .providers import call_llm
+
+_CATEGORY_SCHEMA = {
+    "type": "array",
+    "items": {"type": "string", "enum": ["strike", "losses", "economy", "other"]},
+}
 
 log = logging.getLogger("news_agent.classify")
 
@@ -43,6 +48,57 @@ def _extract_json_array(text: str) -> list[int]:
     if not match:
         raise ValueError(f"No JSON array found in model output: {text[:200]}")
     return json.loads(match.group(0))
+
+
+def _extract_category_array(text: str) -> list[str]:
+    """Same idea as _extract_json_array, but the categorize call returns an
+    array of strings (one per item), not integers, so it needs its own,
+    more permissive regex."""
+    match = re.search(r"\[.*\]", text, re.S)
+    if not match:
+        raise ValueError(f"No JSON array found in model output: {text[:200]}")
+    return json.loads(match.group(0))
+
+
+def _categorize_batch(batch: list[dict]) -> list[str]:
+    """One LLM call tagging every item in `batch` with a headline category
+    (see moods.CATEGORY_RULES) — independent of, and in addition to, the
+    keep/drop decision in _classify_batch."""
+    numbered = "\n".join(
+        f"{i}. {it['title']} — {it['description']}" for i, it in enumerate(batch)
+    )
+    prompt = f"""Here is a numbered list of Ukrainian news items (title — description):
+
+{numbered}
+
+Task: {CATEGORY_RULES}"""
+
+    text = call_llm(prompt, schema=_CATEGORY_SCHEMA)
+    categories = _extract_category_array(text)
+    if len(categories) != len(batch):
+        raise ValueError(
+            f"Expected {len(batch)} categories, got {len(categories)}: {text[:200]}"
+        )
+    return categories
+
+
+def get_categories(items: list[dict]) -> dict[str, str]:
+    """Tag each item with a headline category, used only to highlight/label
+    items (see moods.CATEGORY_LABELS) — cached the same way as mood
+    verdicts, under a "_category" key that can't collide with a mood name."""
+    cache = _load_classification_cache()
+    unknown = [it for it in items if "_category" not in cache.get(it["link"], {})]
+
+    if unknown:
+        log.info("%d/%d item(s) need a category tag", len(unknown), len(items))
+        for start in range(0, len(unknown), CLASSIFY_BATCH_SIZE):
+            batch = unknown[start:start + CLASSIFY_BATCH_SIZE]
+            categories = _categorize_batch(batch)
+            for it, category in zip(batch, categories):
+                cache.setdefault(it["link"], {})["_category"] = category
+        _save_classification_cache(cache)
+
+    return {it["link"]: cache.get(it["link"], {}).get("_category", "other") for it in items}
 
 
 def _classify_batch(batch: list[dict], mood: str) -> set[int]:
@@ -138,4 +194,15 @@ def get_filtered_news(mood: str) -> list[dict]:
     if mood == "all":
         log.info("mood=all — no filtering, no LLM call, returning all %d fetched item(s)", len(items))
         return items
-    return pick_by_mood(items, mood)
+
+    result = pick_by_mood(items, mood)
+
+    # Category tags are only meaningful for a filtered feed (they highlight
+    # *why* something is positive) — computing them for mood="all" would
+    # silently break its "zero LLM calls" guarantee for no benefit, since
+    # nothing in that view is filtered on them anyway.
+    categories = get_categories(result)
+    for it in result:
+        it["category"] = categories.get(it["link"], "other")
+
+    return result

@@ -16,11 +16,21 @@
     .moods a.mostly_positive { background: #fff8e1; color: #a16207; }
     .moods a.all { background: #f0edfa; color: #4b3aa8; }
     .moods a.active { border-color: currentColor; }
-    article { padding: 14px 0; border-bottom: 1px solid #eee; }
+    article { padding: 14px 10px; border-bottom: 1px solid #eee; border-left: 4px solid transparent; }
     article a { color: #1a1a1a; text-decoration: none; font-weight: 600; }
     article a:hover { text-decoration: underline; }
     article p { margin: 6px 0 0; color: #555; font-size: 0.92rem; }
     time { color: #999; font-size: 0.8rem; }
+    article.category-strike { border-left-color: #e8590c; background: #fff4ec; }
+    article.category-losses { border-left-color: #b3261e; background: #fdecea; }
+    article.category-economy { border-left-color: #6a4fb3; background: #f2eefc; }
+    .badge {
+      display: inline-block; font-size: 0.78rem; font-weight: 600; margin-bottom: 4px;
+      padding: 2px 8px; border-radius: 999px;
+    }
+    .category-strike .badge { background: #ffe1cc; color: #b6410e; }
+    .category-losses .badge { background: #fbdada; color: #8f1c14; }
+    .category-economy .badge { background: #e5dcfa; color: #4b3aa8; }
     .empty, .error, .loading { color: #777; margin-top: 20px; }
     .error { color: #b3261e; }
     .subscribe {
@@ -55,8 +65,10 @@
   {% elif news|length == 0 %}
     <p class="empty">Зараз немає новин під цей настрій — спробуйте інший або перевірте пізніше.</p>
   {% else %}
+    {% set badges = {'strike': '🔥 Удар по РФ', 'losses': '💀 Втрати ворога', 'economy': '📉 Економіка РФ'} %}
     {% for item in news %}
-      <article>
+      <article class="{{ 'category-' + item.category if item.category in badges else '' }}">
+        {% if item.category in badges %}<div class="badge">{{ badges[item.category] }}</div>{% endif %}
         <a href="{{ item.link }}" target="_blank" rel="noopener">{{ item.title }}</a>
         <p>{{ item.description }}</p>
         <time>{{ item.pubDate }}</time>

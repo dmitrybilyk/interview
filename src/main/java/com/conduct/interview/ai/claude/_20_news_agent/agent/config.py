@@ -77,3 +77,9 @@ GROQ_KEY_FILE_CANDIDATES = [APP_DIR / "groq_key.txt", CLAUDE_LESSONS_DIR / "groq
 # Persistent state (NOT secrets, NOT code — see README's note on why
 # deploy.sh is careful never to delete these on the server):
 CLASSIFICATION_CACHE_FILE = APP_DIR / "classification_cache.json"
+
+# Rolling window of past classified items, so /digest can answer "what
+# happened in the last N hours/days" even though fetch.py's live feed only
+# ever exposes the site's current ~80-item RSS window. See agent/history.py.
+HISTORY_FILE = APP_DIR / "history.json"
+MAX_HISTORY_AGE_SECONDS = 8 * 24 * 60 * 60  # keep a little over a week, for the "7 days" digest

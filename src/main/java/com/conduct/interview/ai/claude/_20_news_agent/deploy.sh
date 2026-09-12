@@ -54,8 +54,8 @@ WEBHOOK_URL="https://cozy-planner.duckdns.org${URL_PATH}telegram-webhook"
 echo "📦 Syncing app files..."
 ssh "$REMOTE" "sudo mkdir -p '$REMOTE_DIR' && sudo chown \$(whoami) '$REMOTE_DIR'"
 
-# No --delete here: subscribers.json / sent_state.json / classification_cache.json
-# live only on the server (runtime state, not code) and must survive redeploys.
+# No --delete here: subscribers.json / sent_state.json / classification_cache.json /
+# history.json live only on the server (runtime state, not code) and must survive redeploys.
 rsync -avz \
   --exclude 'venv' --exclude '__pycache__' --exclude '*.pyc' \
   "$PROJECT_DIR/app.py" "$PROJECT_DIR/telegram_bot.py" "$PROJECT_DIR/broadcaster.py" \

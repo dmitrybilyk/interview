@@ -19,12 +19,13 @@ the foreground for local dev.
 import logging
 import os
 import time
+from collections import Counter
 from urllib.parse import quote
 
 from flask import Flask, render_template, request
 
 import telegram_bot
-from agent import get_filtered_news
+from agent import CATEGORY_LABELS, get_filtered_news, history
 
 logging.basicConfig(
     level=logging.INFO,
@@ -62,6 +63,67 @@ def build_start_keyboard() -> dict:
     rows.append([{"text": "🛑 Відписатися", "callback_data": "mood:stop"}])
     return {"inline_keyboard": rows}
 
+
+# hours -> (callback suffix, button label, text shown in the digest header)
+DIGEST_WINDOWS = {
+    24: "за останні 24 години",
+    24 * 7: "за останні 7 днів",
+}
+
+
+def build_digest_keyboard() -> dict:
+    return {
+        "inline_keyboard": [
+            [{"text": "🕐 За 24 години", "callback_data": "digest:24"}],
+            [{"text": "🗓 За 7 днів", "callback_data": "digest:168"}],
+        ]
+    }
+
+
+def _format_digest(mood: str, hours: float, entries: list[dict]) -> str:
+    period = DIGEST_WINDOWS.get(int(hours), f"за останні {hours:.0f} год")
+
+    if not entries:
+        return (
+            f"{period.capitalize()} новин під твій настрій ще не назбиралось.\n\n"
+            "Дайджест будується поступово, з кожної перевірки стрічки (раз на "
+            "15 хв) — якщо бот увімкнув цю функцію нещодавно, зачекай трохи."
+        )
+
+    lines = [f"📊 Дайджест {period} ({len(entries)} новин):"]
+
+    if mood == "all":
+        # No categories for mood="all" (see classify.get_filtered_news) — a
+        # breakdown would be meaningless, so just list the most recent ones.
+        lines.append("")
+        for e in entries[:10]:
+            lines.append(f"• {e['title']}\n  {e['link']}")
+        if len(entries) > 10:
+            lines.append(f"\n…і ще {len(entries) - 10}. Повна стрічка: /mood")
+        return "\n".join(lines)
+
+    counts = Counter(e.get("category") or "other" for e in entries)
+    lines.append("")
+    for cat in ("strike", "losses", "economy", "other"):
+        if counts.get(cat):
+            label = CATEGORY_LABELS.get(cat, "🔹 Інше")
+            lines.append(f"{label}: {counts[cat]}")
+
+    for cat in ("strike", "losses", "economy"):
+        cat_entries = [e for e in entries if e.get("category") == cat][:5]
+        if not cat_entries:
+            continue
+        lines.append(f"\n{CATEGORY_LABELS[cat]}:")
+        for e in cat_entries:
+            lines.append(f"• {e['title']}\n  {e['link']}")
+
+    text = "\n".join(lines)
+    # Telegram's hard cap is 4096 chars — stay well under it rather than
+    # let a big backlog produce a send that Telegram just rejects outright.
+    if len(text) > 3800:
+        text = text[:3800].rsplit("\n", 1)[0] + "\n\n…(обрізано, забагато новин)"
+    return text
+
 # "Positive"/"negative" are from a Ukrainian reader's point of view, not a
 # generic mood — spell that out so it's never ambiguous what someone is
 # subscribing to (see agent/moods.py for the exact rules behind each).
@@ -72,7 +134,8 @@ START_TEXT = (
     "🌤 Здебільшого позитивні — позитивні + нейтральні новини. Без явно поганих "
     "(без українських втрат і просування ворога). Теж ШІ.\n"
     "📰 Усі — без фільтрації, без AI.\n\n"
-    "🔄 Змінити вибір можна будь-коли командою /mood.\n\n"
+    "🔄 Змінити вибір можна будь-коли командою /mood.\n"
+    "📊 /digest — дайджест новин за 24 год або 7 днів.\n\n"
 ) + telegram_bot.DONATE_LINE
 
 SWITCH_TEXT = "Обери новий настрій — зміна набуде чинності одразу:"
@@ -128,12 +191,32 @@ def telegram_webhook():
             telegram_bot.send_message(chat_id, telegram_bot.DONATE_LINE)
             return "ok"
 
+        if text.startswith("/digest"):
+            log.info("Telegram /digest from chat_id=%s", chat_id)
+            telegram_bot.send_message(
+                chat_id, "За який період дайджест?", reply_markup=build_digest_keyboard()
+            )
+            return "ok"
+
     callback_query = update.get("callback_query")
     if callback_query:
         chat_id = callback_query["message"]["chat"]["id"]
         data = callback_query.get("data", "")
         log.info("Telegram button press from chat_id=%s: %s", chat_id, data)
         subscribers = telegram_bot.load_subscribers()
+
+        if data.startswith("digest:"):
+            hours = float(data.split(":", 1)[1])
+            sub = subscribers.get(str(chat_id))
+            if not sub:
+                telegram_bot.answer_callback_query(callback_query["id"])
+                telegram_bot.send_message(chat_id, "Спочатку обери настрій через /start.")
+                return "ok"
+            log.info("chat_id=%s requested digest: mood=%s hours=%s", chat_id, sub["mood"], hours)
+            entries = history.query(sub["mood"], hours)
+            telegram_bot.answer_callback_query(callback_query["id"])
+            telegram_bot.send_message(chat_id, _format_digest(sub["mood"], hours, entries))
+            return "ok"
 
         if data == "mood:stop":
             subscribers.pop(str(chat_id), None)

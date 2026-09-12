@@ -65,7 +65,10 @@ def _client_lazy() -> Anthropic:
     return _client
 
 
-def _call_claude(prompt: str) -> str:
+_KEEP_INDICES_SCHEMA = {"type": "array", "items": {"type": "integer"}}
+
+
+def _call_claude(prompt: str, schema: dict | None = None) -> str:
     log.info("Calling Claude (%s)...", CLAUDE_MODEL)
     response = _client_lazy().messages.create(
         model=CLAUDE_MODEL,
@@ -77,10 +80,12 @@ def _call_claude(prompt: str) -> str:
         # guaranteed to be a plain JSON array, never prose wrapped around
         # one. That was the actual cause of a wrong cached verdict once (see
         # classify.py's cache) — not just an occasional format slip.
+        # Callers pass their own schema when the answer isn't a plain array
+        # of keep-indices (see classify.py's category tagging).
         output_config={
             "format": {
                 "type": "json_schema",
-                "schema": {"type": "array", "items": {"type": "integer"}},
+                "schema": schema or _KEEP_INDICES_SCHEMA,
             }
         },
         messages=[{"role": "user", "content": prompt}],
@@ -144,11 +149,16 @@ def _call_groq(prompt: str) -> str:
     return text
 
 
-def call_llm(prompt: str) -> str:
+def call_llm(prompt: str, schema: dict | None = None) -> str:
     """The single entry point every caller uses — swapping PROVIDER in
     config.py (or LLM_PROVIDER env var) is the only thing that changes
-    which branch runs."""
+    which branch runs.
+
+    `schema` only constrains Claude's output shape (see _call_claude); Groq's
+    endpoint here has no equivalent, so callers relying on schema-enforced
+    JSON should keep tolerating prose-wrapped output either way (see
+    classify.py's regex extraction)."""
     log.debug("PROVIDER=%s", PROVIDER)
     if PROVIDER == "groq":
         return _call_groq(prompt)
-    return _call_claude(prompt)
+    return _call_claude(prompt, schema)

@@ -102,3 +102,36 @@ MOOD_RULES = {
         "harmful, not neutral)."
     ),
 }
+
+# CATEGORY_RULES — a second, independent tag applied on top of MOOD_RULES,
+# used only to highlight/label items in the UI and Telegram messages (see
+# classify.py's get_categories). Kept separate from MOOD_RULES because it
+# answers a different question: not "keep or drop" but "which of these
+# three headline-grabbing story types is this, if any". "other" covers
+# everything else that still passed the "positive" mood filter (e.g. oil
+# price drops, USA vs Iran) — nothing to highlight, but still shown.
+CATEGORY_RULES = (
+    "For a Ukrainian reader following the war. Classify EACH numbered item into "
+    "EXACTLY ONE of these categories:\n"
+    "\"strike\" — a Ukrainian/allied drone (БпЛА/безпілотник) or missile strike "
+    "hitting a target INSIDE RUSSIA: a refinery (НПЗ), factory, chemical plant "
+    "(хімзавод), depot, airfield, or other military/industrial site on Russian "
+    "territory. Only strikes ON Russian soil count — never a Russian strike on "
+    "Ukraine, and never an accident/fire at a facility outside Russia (e.g. in an "
+    "allied country).\n"
+    "\"losses\" — confirmed Russian military losses: personnel killed/wounded, "
+    "named equipment or vehicles destroyed, or a running war-losses tally.\n"
+    "\"economy\" — Russian economic problems: sanctions impact, fuel/refinery "
+    "shortages, budget or currency trouble, falling oil revenue, oil price drops "
+    "that hurt Russia.\n"
+    "\"other\" — anything that doesn't fit the three categories above.\n"
+    "Respond with ONLY a JSON array of category strings, one per item, in the same "
+    "order as the numbered list, e.g. [\"strike\",\"other\",\"losses\"]. No prose, "
+    "no explanation, no markdown fences."
+)
+
+CATEGORY_LABELS = {
+    "strike": "🔥 Удар по РФ",
+    "losses": "💀 Втрати ворога",
+    "economy": "📉 Економіка РФ",
+}
