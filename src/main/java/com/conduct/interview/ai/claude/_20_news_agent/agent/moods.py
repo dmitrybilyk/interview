@@ -11,6 +11,32 @@ list change.
 
 MOOD_RULES = {
     "positive": (
+        "You are filtering news for a Ukrainian reader. This filter is EXTREMELY STRICT.\n"
+        "Keep ONLY items that clearly match ONE of these three types. Reject everything else.\n\n"
+        "K1. MORNING LOSSES REPORT — the official daily General Staff / МО Ukraine briefing "
+        "that states the total number of Russian soldiers killed or eliminated in the past "
+        "24 hours. Typical signals: 'Генштаб', 'ЗСУ ліквідували X ворогів', 'втрати ворога "
+        "за добу', 'загальні втрати', 'знищено X окупантів', specific death-toll number + "
+        "'за минулу добу' or 'з початку доби'. "
+        "DO NOT keep: general front-line battle reports, equipment-only counts, any item "
+        "without a specific daily Russian death toll figure.\n"
+        "K2. RUSSIAN ECONOMY GETTING WORSE — news about deterioration of the Russian economy: "
+        "ruble falling/weakening, budget deficit growing, inflation rising, companies leaving "
+        "Russia, sanctions biting harder, oil/gas revenue dropping, industrial output "
+        "shrinking, banking problems, consumer prices rising inside Russia. "
+        "DO NOT keep: Russian economy surviving, evading sanctions, or growing.\n"
+        "K3. UKRAINIAN STRIKE ON RUSSIAN TERRITORY — drones (БпЛА/безпілотники) or missiles "
+        "launched BY UKRAINE hitting any target INSIDE RUSSIA: oil refineries (НПЗ), fuel "
+        "depots, oil storage, warehouses (склади), military bases, airfields, factories, "
+        "ammunition depots, infrastructure — on Russian soil (Белгород, Курськ, Брянськ, "
+        "Воронеж, Ростов, Краснодар, Самара, Тольятті, Саратов, Енгельс, Липецьк, "
+        "Новоросійськ, Москва, etc.). Fire or explosion at a Russian-territory military or "
+        "industrial site is enough — explicit mention of Ukrainian drones not required. "
+        "DO NOT keep: strikes on Ukraine, strikes inside occupied Ukrainian territory, "
+        "air-defense shootdowns over Ukraine.\n\n"
+        "If the item does not clearly fit K1, K2, or K3 → REJECT. When in doubt → REJECT."
+    ),
+    "mostly_positive": (
         "You are filtering news for a Ukrainian reader. Check each item in TWO STEPS.\n\n"
         "STEP 1 — REJECT first. If ANY of the following is true, the item is REJECTED "
         "(do not keep it, no matter what else it says):\n"
@@ -72,28 +98,6 @@ MOOD_RULES = {
         "K4. Global oil price FALLING/DECREASING.\n"
         "K5. USA winning or succeeding against Iran.\n\n"
         "If in doubt → REJECT. Default answer is to drop, not keep."
-    ),
-    "mostly_positive": (
-        "This is for a Ukrainian reader. Keep items that are either clearly "
-        "positive for Ukraine OR neutral/contextual — but drop anything that is "
-        "directly and clearly bad for Ukraine. "
-        "KEEP: everything from the positive mood (Russian military losses, strikes "
-        "on Russian territory, Russian economic problems, oil price falling, USA "
-        "winning against Iran); "
-        "ALSO KEEP: diplomatic and geopolitical developments even if uncomfortable "
-        "(e.g. Russia being invited to international forums like G20, UN meetings, "
-        "or energy summits — these reflect global context, not a Ukrainian defeat); "
-        "international support and aid for Ukraine; general war situation analysis "
-        "without confirmed Russian gains; reconstruction news; cultural/sport news. "
-        "DROP ONLY items that are directly and clearly harmful: confirmed Ukrainian "
-        "military or civilian casualties and deaths, INCLUDING rescuers/emergency "
-        "responders/firefighters hurt while responding to a Russian attack; confirmed "
-        "Russian territorial advances or gains (e.g. 'Russians advanced near X'); "
-        "Russian strikes on Ukrainian cities causing deaths or serious damage; "
-        "Ukrainian economic collapse or major corruption scandals; any fire, "
-        "explosion, or accident at a weapons/ammunition producer or storage site in a "
-        "country that supplies arms to Ukraine (this hurts Ukraine's supply, so it is "
-        "harmful, not neutral)."
     ),
 }
 
