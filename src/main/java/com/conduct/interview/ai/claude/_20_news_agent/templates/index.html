@@ -65,7 +65,7 @@
   {% elif news|length == 0 %}
     <p class="empty">Зараз немає новин під цей настрій — спробуйте інший або перевірте пізніше.</p>
   {% else %}
-    {% set badges = {'strike': '🔥 Удар по РФ', 'losses': '💀 Втрати ворога', 'economy': '📉 Економіка РФ'} %}
+    {% set badges = {'strike': '🔥 Удар по рф', 'losses': '💀 Втрати ворога', 'economy': '📉 Економіка рф'} %}
     {% for item in news %}
       <article class="{{ 'category-' + item.category if item.category in badges else '' }}">
         {% if item.category in badges %}<div class="badge">{{ badges[item.category] }}</div>{% endif %}

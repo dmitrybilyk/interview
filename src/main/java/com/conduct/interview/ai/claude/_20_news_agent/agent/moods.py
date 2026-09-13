@@ -11,8 +11,20 @@ list change.
 
 MOOD_RULES = {
     "positive": (
-        "You are filtering news for a Ukrainian reader. This filter is EXTREMELY STRICT.\n"
-        "Keep ONLY items that clearly match ONE of these three types. Reject everything else.\n\n"
+        "You are filtering news for a Ukrainian reader. This filter is EXTREMELY STRICT.\n\n"
+        "STEP 1 — REJECT IMMEDIATELY if any of these is true (no exceptions):\n"
+        "X1. Russia / enemy / occupants (росія/рф/ворог/окупанти/загарбники/російський) "
+        "attacked, struck, hit, shelled, bombed, or damaged ANYTHING in Ukraine or near "
+        "the Ukrainian border — by drone, missile, artillery, or any weapon. This includes "
+        "attacks on trains, infrastructure, cities, border crossings. → REJECT.\n"
+        "X2. Any Ukrainian people, soldiers, civilians, workers, rescuers killed, wounded, "
+        "or injured. → REJECT.\n"
+        "X3. Ukraine's air defense shot down drones/missiles (= Russia was attacking Ukraine). "
+        "→ REJECT.\n"
+        "X4. Russian/enemy forces advanced, captured territory, or occupied anything. → REJECT.\n"
+        "X5. The news is about a Russian drone or missile targeting anything in Ukraine or on "
+        "Ukraine's side of the border — even if the attack failed or was repelled. → REJECT.\n\n"
+        "STEP 2 — KEEP only if NOT rejected above AND clearly matches ONE of these:\n"
         "K1. MORNING LOSSES REPORT — the official daily General Staff / МО Ukraine briefing "
         "that states the total number of Russian soldiers killed or eliminated in the past "
         "24 hours. Typical signals: 'Генштаб', 'ЗСУ ліквідували X ворогів', 'втрати ворога "
@@ -20,21 +32,19 @@ MOOD_RULES = {
         "'за минулу добу' or 'з початку доби'. "
         "DO NOT keep: general front-line battle reports, equipment-only counts, any item "
         "without a specific daily Russian death toll figure.\n"
-        "K2. RUSSIAN ECONOMY GETTING WORSE — news about deterioration of the Russian economy: "
-        "ruble falling/weakening, budget deficit growing, inflation rising, companies leaving "
-        "Russia, sanctions biting harder, oil/gas revenue dropping, industrial output "
-        "shrinking, banking problems, consumer prices rising inside Russia. "
+        "K2. RUSSIAN ECONOMY GETTING WORSE — ruble falling, budget deficit growing, inflation "
+        "rising, companies leaving Russia, sanctions biting harder, oil/gas revenue dropping, "
+        "industrial output shrinking, banking problems, consumer prices rising inside Russia. "
         "DO NOT keep: Russian economy surviving, evading sanctions, or growing.\n"
-        "K3. UKRAINIAN STRIKE ON RUSSIAN TERRITORY — drones (БпЛА/безпілотники) or missiles "
-        "launched BY UKRAINE hitting any target INSIDE RUSSIA: oil refineries (НПЗ), fuel "
-        "depots, oil storage, warehouses (склади), military bases, airfields, factories, "
-        "ammunition depots, infrastructure — on Russian soil (Белгород, Курськ, Брянськ, "
-        "Воронеж, Ростов, Краснодар, Самара, Тольятті, Саратов, Енгельс, Липецьк, "
-        "Новоросійськ, Москва, etc.). Fire or explosion at a Russian-territory military or "
-        "industrial site is enough — explicit mention of Ukrainian drones not required. "
-        "DO NOT keep: strikes on Ukraine, strikes inside occupied Ukrainian territory, "
-        "air-defense shootdowns over Ukraine.\n\n"
-        "If the item does not clearly fit K1, K2, or K3 → REJECT. When in doubt → REJECT."
+        "K3. UKRAINIAN STRIKE ON RUSSIAN TERRITORY — Ukrainian drones or missiles hitting a "
+        "target INSIDE RUSSIA (not Ukraine, not occupied territory — Russia proper): "
+        "refineries (НПЗ), fuel depots, warehouses (склади), military bases, airfields, "
+        "factories, infrastructure on Russian soil (Белгород, Курськ, Брянськ, Воронеж, "
+        "Ростов, Краснодар, Самара, Тольятті, Саратов, Енгельс, Липецьк, Новоросійськ, "
+        "Москва, etc.). Fire or explosion at a Russian-territory site is enough. "
+        "DO NOT keep: Russian strikes on Ukraine, shootdowns over Ukraine, anything where "
+        "Russia is the attacker.\n\n"
+        "If in doubt → REJECT."
     ),
     "mostly_positive": (
         "You are filtering news for a Ukrainian reader. Check each item in TWO STEPS.\n\n"
@@ -133,7 +143,7 @@ CATEGORY_RULES = (
 )
 
 CATEGORY_LABELS = {
-    "strike": "🔥 Удар по РФ",
+    "strike": "🔥 Удар по рф",
     "losses": "💀 Втрати ворога",
-    "economy": "📉 Економіка РФ",
+    "economy": "📉 Економіка рф",
 }

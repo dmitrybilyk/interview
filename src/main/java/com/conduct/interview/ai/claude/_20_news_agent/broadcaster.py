@@ -76,10 +76,7 @@ def main():
                 label = CATEGORY_LABELS.get(item.get("category"))
                 prefix = f"{label}\n" if label else ""
                 text = f"{prefix}<b>{item['title']}</b>\n{item['description']}\n{item['link']}"
-                keyboard = None
-                if mood != "all":
-                    h = feedback.record_sent_item(item["link"], item["title"], item["description"])
-                    keyboard = {"inline_keyboard": [[{"text": "🚩 Не позитивна", "callback_data": f"rep:{h}"}]]}
+                keyboard = {"inline_keyboard": [[{"text": "📊 Дайджест", "callback_data": "digest:24"}]]}
                 for chat_id in chat_ids:
                     send_message(chat_id, text, reply_markup=keyboard)
         elif is_first_run_for_mood:
