@@ -1,16 +1,7 @@
-"""
-FEEDBACK — user-reported misclassifications that teach the classifier.
+"""Фідбек від користувача → нові правила відхилення для classify.py.
 
-When a Telegram subscriber taps "🚩 Не позитивна" under a news item, this
-module:
-  1. Generates a short rejection rule (via LLM) that generalises the pattern
-  2. Persists it in feedback_rules.json
-  3. Exposes load_feedback_rules() so classify.py can inject these rules into
-     future prompts — no moods.py edits needed
-
-Sent-item registry (sent_items.json): the broadcaster saves each item's
-title/description/link keyed by a short hash so app.py can look up the full
-item from a compact callback_data string.
+sent_items.json — реєстр надісланих items (hash → дані), щоб app.py міг знайти item за коротким хешем.
+feedback_rules.json — правила згенеровані LLM з фідбеку, вставляються в промпт класифікації.
 """
 
 import json
@@ -54,7 +45,7 @@ def _save_sent_items(items: dict) -> None:
 
 
 def record_sent_item(link: str, title: str, description: str) -> str:
-    """Save item metadata keyed by its short hash. Returns the hash."""
+    """Зберігає item за хешем, повертає хеш."""
     h = item_hash(link)
     items = load_sent_items()
     items[h] = {"title": title, "description": description, "link": link}
@@ -66,8 +57,7 @@ def record_sent_item(link: str, title: str, description: str) -> str:
 
 
 def add_feedback(link: str, title: str, description: str) -> str:
-    """Generate a rejection rule from this reported item, persist it, and
-    return the rule string."""
+    """Генерує правило відхилення через LLM, зберігає в feedback_rules.json."""
     prompt = (
         "A Ukrainian news reader reported this item as incorrectly included in the "
         "'positive news for Ukraine' feed.\n\n"

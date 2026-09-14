@@ -1,19 +1,7 @@
-"""
-Run periodically (a systemd timer on the server — see deploy.sh) to push
-newly-appeared matching items to Telegram subscribers. This is the other
-"delivery" surface alongside app.py — same agent.get_filtered_news(mood)
-call, different destination (a Telegram push instead of a web page).
+"""Запускається кожні 15 хв (systemd timer). Пушить нові новини підписникам у Telegram.
 
-State: sent_state.json remembers which links were already pushed per mood,
-so subscribers only get NEW items on each run, not the whole feed again.
-The first time a mood is ever checked, its current items are recorded as
-"already seen" without sending anything — new subscribers only get news
-that appears *after* they subscribe, not the whole backlog.
-
-(This is a different cache from agent/classify.py's classification_cache.json:
-that one remembers the LLM's verdict per item so it's never asked twice;
-this one remembers which items were already PUSHED to Telegram, so
-subscribers never get the same item twice. Same idea, different job.)
+sent_state.json — які посилання вже надіслані per mood (щоб не слати двічі).
+Перший запуск для mood тільки записує baseline — нові підписники не отримують бекло.
 """
 
 import json
@@ -92,11 +80,7 @@ def main():
 
 
 def _send_due_donate_reminders(subscribers: dict) -> None:
-    """Nudge each subscriber about the donate card periodically (see
-    telegram_bot.DONATE_REMINDER_INTERVAL_SECONDS) — independent of mood or
-    news content, so it runs even for a quiet "all" subscriber with nothing
-    new to send. `last_donate_reminder` (epoch seconds) is stored per
-    subscriber in subscribers.json, right next to their mood."""
+    """Надсилає нагадування про донат раз на місяць кожному підписнику."""
     now = time.time()
     changed = False
 

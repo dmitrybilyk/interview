@@ -1,15 +1,7 @@
-"""
-HISTORY — a rolling window of past classified items, so /digest can answer
-"what happened in the last N hours/days" even though fetch.py's live feed
-only ever exposes the site's current ~80-item RSS window (a handful of
-hours' worth at this site's post volume — never a full week). There is no
-external archive to query instead, so this module builds one: every
-broadcaster.py tick (see its systemd timer in deploy.sh) records whatever
-it just classified, and /digest reads the accumulated file instead of the
-live feed.
+"""Лог класифікованих новин за тиждень для /digest.
 
-Same "plain JSON file, not a database" reasoning as classify.py's cache:
-small, and shared between processes by just reading the same file.
+RSS показує лише ~80 останніх новин (кілька годин). Щоб /digest міг відповісти
+"що було за 7 днів" — broadcaster записує кожен запуск сюди.
 """
 
 import json
@@ -32,10 +24,7 @@ def _save(history: dict) -> None:
 
 
 def record(mood: str, items: list[dict]) -> None:
-    """Remember that `items` were seen under `mood` right now. An item
-    already in history keeps its original first_seen, so its age is
-    measured from when it first appeared on the feed, not from every later
-    tick it's still sitting there."""
+    """Записує items у лог. Вже існуючий item зберігає свій first_seen."""
     history = _load()
     now = time.time()
 
@@ -63,7 +52,7 @@ def record(mood: str, items: list[dict]) -> None:
 
 
 def query(mood: str, hours: float) -> list[dict]:
-    """Entries seen under `mood` within the last `hours`, newest first."""
+    """Повертає записи за mood за останні hours годин, найновіші першими."""
     history = _load()
     cutoff = time.time() - hours * 3600
     matches = [

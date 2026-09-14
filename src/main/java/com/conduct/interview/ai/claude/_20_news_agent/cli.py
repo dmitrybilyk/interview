@@ -1,16 +1,9 @@
-"""
-Run the agent from the terminal — no Flask, no browser, no Telegram.
-The fastest way to test a change to moods.py or try the other provider.
+"""Запуск агента з терміналу без Flask і Telegram.
 
-Usage:
+Використання:
     venv/bin/python cli.py positive
-    venv/bin/python cli.py negative
-    venv/bin/python cli.py positive --verbose     # see every fetch/cache/LLM step
-
-Switch provider for one run without touching config.py:
+    venv/bin/python cli.py positive --verbose
     LLM_PROVIDER=groq venv/bin/python cli.py positive
-
-Or permanently for all local runs: edit DEFAULT_PROVIDER in agent/config.py.
 """
 
 import argparse

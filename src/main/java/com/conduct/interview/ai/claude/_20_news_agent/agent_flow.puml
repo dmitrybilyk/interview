@@ -1,0 +1,65 @@
+@startuml News Agent — послідовність дій
+
+skinparam backgroundColor #FEFEFE
+skinparam defaultFontName Arial
+skinparam sequenceArrowThickness 1.5
+skinparam sequenceParticipantBorderColor #555
+skinparam sequenceLifeLineBorderColor #aaa
+
+actor "Користувач" as User
+participant "broadcaster.py\n(кожні 15 хв)" as BC
+participant "app.py\n(Flask + webhook)" as App
+participant "classify.py" as CL
+participant "fetch.py" as FT
+database "classification_cache\n.json" as Cache
+participant "providers.py\n(LLM)" as LLM
+database "history.json" as Hist
+database "sent_state.json" as Sent
+
+== Автоматичний push (broadcaster, кожні 15 хв) ==
+
+BC -> FT : 1. fetch_items()
+FT -> BC : ~80 новин
+
+BC -> CL : 2. pick_by_mood(items, mood)
+CL -> Cache : читати кеш
+Cache --> CL : вже класифіковані
+
+CL -> LLM : 3. нові items → LLM\n(batches по 20)
+LLM --> CL : [0, 3, 7, ...] — keep indices
+CL -> Cache : зберегти вердикти
+CL --> BC : відфільтровані items
+
+CL -> LLM : 4. get_categories(items)
+LLM --> CL : ["strike","losses",...]
+CL --> BC : items + category
+
+BC -> Hist : 5. record(mood, items)
+BC -> Sent : перевірити надіслані
+Sent --> BC : вже надіслані links
+
+BC -> User : 6. Telegram push\n(тільки нові items)
+
+== Telegram команди (app.py webhook) ==
+
+User -> App : /start або /mood
+App --> User : кнопки вибору mood
+
+User -> App : натискає mood
+App -> App : зберегти {chat_id: mood}
+App --> User : підтвердження
+
+User -> App : 📊 Дайджест (або /digest)
+App -> Hist : query(mood, 24h)
+Hist --> App : items за 24 год
+App --> User : дайджест з підрахунком
+
+== Веб-сторінка ==
+
+User -> App : GET /?mood=positive
+App -> CL : get_filtered_news(mood)
+note right : ті самі кроки 1–4
+CL --> App : відфільтровані items
+App --> User : HTML сторінка
+
+@enduml

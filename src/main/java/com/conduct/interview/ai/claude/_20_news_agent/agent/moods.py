@@ -1,12 +1,6 @@
-"""
-MOODS — the agent's "policy": what counts as a match, written in plain
-language for the LLM to apply.
+"""Правила фільтрації новин (plain text для LLM) і мітки категорій.
 
-This is the ONLY file you'd touch to change what the agent looks for. It
-doesn't know or care which provider answers it (providers.py) or how the
-answer gets cached (classify.py) — it's pure task definition, which makes
-it the easiest place to experiment: edit a rule, rerun cli.py, see the
-list change.
+Щоб змінити що агент вважає "позитивним" — редагуй тільки цей файл.
 """
 
 MOOD_RULES = {
@@ -27,7 +21,15 @@ MOOD_RULES = {
         "→ REJECT.\n"
         "X4. Russian/enemy forces advanced, captured territory, or occupied anything. → REJECT.\n"
         "X5. The news is about a Russian drone or missile targeting anything in Ukraine or on "
-        "Ukraine's side of the border — even if the attack failed or was repelled. → REJECT.\n\n"
+        "Ukraine's side of the border — even if the attack failed or was repelled. → REJECT.\n"
+        "X6. Global oil or gas prices RISING / INCREASING / surging — that benefits Russia's "
+        "budget and is bad for Ukraine. Signals: 'ціни на нафту зросли', 'нафта подорожчала', "
+        "'нафта росте', 'зростання ціни на нафту', 'нафта по $X', oil price up/rises/jumps. "
+        "→ REJECT.\n"
+        "X7. Ukrainian domestic affairs — courts, politics, corruption, officials, laws, "
+        "taxes, budget, anti-corruption bodies (НАБУ, САП, НАЗК), prosecutors, ministers, "
+        "parliament (Рада), economy inside Ukraine, social policy. "
+        "These are NOT military victories and do not belong here. → REJECT.\n\n"
         "STEP 2 — KEEP only if NOT rejected above AND clearly matches ONE of these:\n"
         "K1. MORNING LOSSES REPORT — the official daily General Staff / МО Ukraine briefing "
         "that states the total number of Russian soldiers killed or eliminated in the past "

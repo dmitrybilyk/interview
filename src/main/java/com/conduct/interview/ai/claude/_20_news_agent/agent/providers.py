@@ -1,15 +1,4 @@
-"""
-PROVIDERS — the agent's "reasoning" step: send a prompt, get text back.
-
-This is the piece a provider-agnostic agent needs: one function,
-call_llm(prompt) -> str, that the rest of the code calls without caring
-whether Claude or Groq answers. This same shape — a thin wrapper over
-"send a prompt, get text back" — is what every agent framework builds on,
-so it's worth seeing it with nothing else around it.
-
-Switch providers by setting LLM_PROVIDER=groq (env var) or editing
-DEFAULT_PROVIDER in config.py (easiest for local dev — see cli.py).
-"""
+"""Єдина точка виклику LLM: call_llm(prompt) → str. Claude або Groq — залежно від PROVIDER."""
 
 import logging
 import os
@@ -57,8 +46,7 @@ _client = None
 
 
 def _client_lazy() -> Anthropic:
-    """Created on first use, not at import time — so importing this module
-    never fails just because a key file is missing (e.g. Groq-only setups)."""
+    """Lazy init — не падає при імпорті, якщо ключ відсутній."""
     global _client
     if _client is None:
         _client = Anthropic(api_key=_load_api_key())
@@ -73,15 +61,7 @@ def _call_claude(prompt: str, schema: dict | None = None) -> str:
     response = _client_lazy().messages.create(
         model=CLAUDE_MODEL,
         max_tokens=1024,
-        # This SDK's Claude generation has no `temperature` parameter (older
-        # SDKs used temperature=0 for deterministic, "pick the right answer"
-        # tasks like this one — see _1_basic_call's notes). Instead, we force
-        # the *shape* of the answer with a JSON schema: the response is
-        # guaranteed to be a plain JSON array, never prose wrapped around
-        # one. That was the actual cause of a wrong cached verdict once (see
-        # classify.py's cache) — not just an occasional format slip.
-        # Callers pass their own schema when the answer isn't a plain array
-        # of keep-indices (see classify.py's category tagging).
+        # JSON schema гарантує формат відповіді — без нього LLM іноді обгортає масив у прозу.
         output_config={
             "format": {
                 "type": "json_schema",
@@ -102,19 +82,14 @@ GROQ_MAX_RETRIES = 3
 
 
 def _call_groq(prompt: str) -> str:
-    # Groq exposes an OpenAI-compatible chat/completions endpoint, so a plain
-    # HTTP call is enough — no extra SDK dependency needed.
+
     payload = {
         "model": GROQ_MODEL,
         "messages": [{"role": "user", "content": prompt}],
         "max_tokens": 1024,
-        # Same reasoning as Claude's temperature=0 below: this is a
-        # deterministic classification task, not a creative one.
+
         "temperature": 0,
-        # gpt-oss models spend tokens "thinking" before answering; without
-        # this the reasoning alone can eat the whole max_tokens budget and
-        # leave an empty final answer. Ask for a fast, low-effort answer
-        # since this is a simple classification task, not hard reasoning.
+        # reasoning_effort=low: gpt-oss думає перед відповіддю — без обмеження з'їдає весь бюджет токенів.
         "reasoning_effort": "low",
     }
     headers = {"Authorization": f"Bearer {_load_groq_key()}"}
@@ -126,12 +101,7 @@ def _call_groq(prompt: str) -> str:
             headers=headers, json=payload, timeout=30,
         )
         if resp.status_code == 429 and attempt < GROQ_MAX_RETRIES:
-            # Free-tier Groq keys have a small per-minute token budget
-            # (e.g. 8000 TPM at time of writing). Classifying a big
-            # cold-start backlog in quick chunks (see classify.py) can
-            # burn through that in a few seconds — Groq tells us exactly
-            # how long to wait via this header, so just wait that long
-            # and try again instead of failing the whole request.
+            # Rate limit — чекаємо стільки, скільки каже retry-after.
             wait_seconds = float(resp.headers.get("retry-after", 10))
             log.warning("Groq rate-limited us — waiting %.0fs before retrying", wait_seconds)
             time.sleep(wait_seconds)
@@ -150,14 +120,7 @@ def _call_groq(prompt: str) -> str:
 
 
 def call_llm(prompt: str, schema: dict | None = None) -> str:
-    """The single entry point every caller uses — swapping PROVIDER in
-    config.py (or LLM_PROVIDER env var) is the only thing that changes
-    which branch runs.
-
-    `schema` only constrains Claude's output shape (see _call_claude); Groq's
-    endpoint here has no equivalent, so callers relying on schema-enforced
-    JSON should keep tolerating prose-wrapped output either way (see
-    classify.py's regex extraction)."""
+    """Викликає Claude або Groq залежно від PROVIDER."""
     log.debug("PROVIDER=%s", PROVIDER)
     if PROVIDER == "groq":
         return _call_groq(prompt)

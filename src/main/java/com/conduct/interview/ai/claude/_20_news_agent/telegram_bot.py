@@ -1,10 +1,4 @@
-"""
-Thin wrapper around the Telegram Bot API (plain HTTP — no extra dependency)
-plus the subscriber list, stored as a flat JSON file: {chat_id: {"mood": ...}}.
-
-Not a bot framework — just the handful of calls this app needs:
-sending a message, answering a button press, and reading/writing subscribers.
-"""
+"""HTTP-обгортка Telegram Bot API + зберігання підписників у JSON-файлі."""
 
 import json
 import logging
@@ -17,13 +11,8 @@ log = logging.getLogger("news_agent.telegram")
 
 HERE = Path(__file__).resolve().parent
 SUBSCRIBERS_FILE = HERE / "subscribers.json"
-# Unlike key.txt / groq_key.txt, this token is specific to this one project
-# (not shared with the other claude/ lessons), so it only ever lives here,
-# next to app.py — same path locally and once deployed.
 TELEGRAM_TOKEN_FILE = HERE / "telegram_token.txt"
 
-# Shared by both delivery surfaces (app.py's /start + /donate, and
-# broadcaster.py's periodic reminder) — defined once here so they can't drift.
 DONATE_CARD = "4441 1110 3446 3160"  # Monobank
 DONATE_LINE = f"☕ Розробнику на каву, якщо бот подобається (Monobank): {DONATE_CARD}"
 DONATE_REMINDER_INTERVAL_SECONDS = 30 * 24 * 60 * 60  # once a month, see broadcaster.py
@@ -42,8 +31,7 @@ API = f"https://api.telegram.org/bot{TOKEN}" if TOKEN else None
 
 
 def is_configured() -> bool:
-    """False when no token is set up — callers use this to hide the
-    subscribe button / skip the broadcaster entirely, instead of crashing."""
+    """True якщо токен бота налаштований."""
     return TOKEN is not None
 
 
@@ -51,8 +39,7 @@ _bot_username: str | None = None
 
 
 def get_bot_username() -> str | None:
-    """Cached lookup of the bot's @username, used to build the t.me link
-    shown on the page. Only hits the network once per process lifetime."""
+    """@username бота (кешується на час процесу)."""
     global _bot_username
     if not is_configured():
         return None

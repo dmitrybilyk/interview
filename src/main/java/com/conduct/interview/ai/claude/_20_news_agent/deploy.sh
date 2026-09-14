@@ -1,37 +1,14 @@
 #!/bin/bash
-# Deploys the news agent to the Oracle Cloud VM as a systemd service,
-# reachable through the existing nginx/443 setup at:
-#   https://cozy-planner.duckdns.org/news-agent/
+# Деплой news-agent на Oracle Cloud VM.
+# nginx проксіює /news-agent/ → localhost:8600 (порт 8600 не відкритий назовні).
+# Telegram-бот: webhook у web.py, розсилка через broadcaster.py+systemd timer.
 #
-# We do NOT open a new port. This box's cloud security list only allows
-# 22/80/443 in — nothing else gets through no matter what ufw says
-# locally, so a bare "http://IP:8600" approach can't work here without a
-# console change on the cloud provider's side. Instead we bind the app to
-# localhost only and let nginx (which already terminates TLS on 443 for
-# the planner app and /remindly) proxy an extra path to it.
+# Потребує: key.txt (Anthropic), telegram_token.txt (BotFather). Без них — не запуститься.
+# Groq замість Claude: LLM_PROVIDER=groq ./deploy.sh  (потрібен groq_key.txt).
 #
-# Also sets up the Telegram side: a broadcaster.py run on a timer, and the
-# webhook that lets people /start the bot to subscribe (see telegram_bot.py).
-# Needs a bot token — create one with @BotFather on Telegram, then save it
-# locally as ../key.txt's sibling: telegram_token.txt (gitignored, same
-# pattern as key.txt). If it's missing, Telegram features are simply skipped.
-#
-# LLM provider is switchable: LLM_PROVIDER=groq ./deploy.sh deploys with Groq
-# active instead of Claude (needs groq_key.txt, same pattern as key.txt).
-# Default is anthropic. See agent/config.py (PROVIDER) and agent/providers.py
-# (call_llm) — this env var is what config.py's PROVIDER reads.
-#
-# Fetch source is switchable too: FETCH_SOURCE=html ./deploy.sh. Default here
-# is "rss", NOT agent/config.py's local-dev default of "html" — this VM's
-# outbound requests to censor.net's homepage get a 403 (its anti-scraping
-# protection, presumably blocking the whole datacenter IP range; the RSS
-# feed on assets.censor.net has never had this problem). "html" works fine
-# from most home/office connections for local dev — it just can't be this
-# server's default until/unless that changes.
-#
-# Usage: ./deploy.sh
-#        LLM_PROVIDER=groq ./deploy.sh
-#        FETCH_SOURCE=html ./deploy.sh   # currently broken on THIS server, see above
+# Використання:
+#   ./deploy.sh
+#   LLM_PROVIDER=groq ./deploy.sh
 set -e
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -39,7 +16,6 @@ KEY_FILE="$PROJECT_DIR/../key.txt"
 TELEGRAM_TOKEN_FILE="$PROJECT_DIR/telegram_token.txt"
 GROQ_KEY_FILE="$PROJECT_DIR/groq_key.txt"
 LLM_PROVIDER="${LLM_PROVIDER:-anthropic}"
-FETCH_SOURCE="${FETCH_SOURCE:-rss}"
 
 REMOTE="ubuntu@92.5.42.35"
 REMOTE_DIR="/opt/news-agent"
@@ -54,20 +30,17 @@ WEBHOOK_URL="https://cozy-planner.duckdns.org${URL_PATH}telegram-webhook"
 echo "📦 Syncing app files..."
 ssh "$REMOTE" "sudo mkdir -p '$REMOTE_DIR' && sudo chown \$(whoami) '$REMOTE_DIR'"
 
-# No --delete here: subscribers.json / sent_state.json / classification_cache.json /
-# history.json live only on the server (runtime state, not code) and must survive redeploys.
+# Не використовуємо --delete: subscribers.json / sent_state.json / history.json — стан сервера, не код.
+# classification_cache.json очищається нижче, бо prompts могли змінитися.
 rsync -avz \
   --exclude 'venv' --exclude '__pycache__' --exclude '*.pyc' \
-  "$PROJECT_DIR/app.py" "$PROJECT_DIR/telegram_bot.py" "$PROJECT_DIR/broadcaster.py" \
+  "$PROJECT_DIR/web.py" "$PROJECT_DIR/tg.py" "$PROJECT_DIR/telegram_bot.py" "$PROJECT_DIR/broadcaster.py" \
   "$PROJECT_DIR/cli.py" "$PROJECT_DIR/agent" \
   "$PROJECT_DIR/requirements.txt" "$PROJECT_DIR/templates" \
   "$REMOTE:$REMOTE_DIR/"
 
-# news_agent.py was replaced by the agent/ package (this project used to be
-# one flat file; see README's "What each file teaches"). Remove the stale
-# copy + its bytecode cache so nothing on the server accidentally still
-# imports the old dead file.
-ssh "$REMOTE" "rm -f '$REMOTE_DIR/news_agent.py' && find '$REMOTE_DIR' -name '__pycache__' -exec rm -rf {} + 2>/dev/null; true"
+# Видаляємо застарілі файли і кеш класифікації (prompts змінилися → стара класифікація хибна).
+ssh "$REMOTE" "rm -f '$REMOTE_DIR/news_agent.py' '$REMOTE_DIR/app.py' '$REMOTE_DIR/classification_cache.json' && find '$REMOTE_DIR' -name '__pycache__' -exec rm -rf {} + 2>/dev/null; true"
 
 if [ -f "$KEY_FILE" ]; then
   rsync -avz "$KEY_FILE" "$REMOTE:$REMOTE_DIR/key.txt"
@@ -115,8 +88,7 @@ WorkingDirectory=$REMOTE_DIR
 Environment=HOST=127.0.0.1
 Environment=PORT=$PORT
 Environment=LLM_PROVIDER=$LLM_PROVIDER
-Environment=FETCH_SOURCE=$FETCH_SOURCE
-ExecStart=$REMOTE_DIR/venv/bin/python $REMOTE_DIR/app.py
+ExecStart=$REMOTE_DIR/venv/bin/python $REMOTE_DIR/web.py
 Restart=on-failure
 
 [Install]
@@ -136,7 +108,6 @@ Type=oneshot
 User=ubuntu
 WorkingDirectory=$REMOTE_DIR
 Environment=LLM_PROVIDER=$LLM_PROVIDER
-Environment=FETCH_SOURCE=$FETCH_SOURCE
 ExecStart=$REMOTE_DIR/venv/bin/python $REMOTE_DIR/broadcaster.py
 EOF
 
@@ -200,4 +171,4 @@ if [ -f "$TELEGRAM_TOKEN_FILE" ]; then
 fi
 
 echo ""
-echo "✅ Done! (LLM_PROVIDER=$LLM_PROVIDER, FETCH_SOURCE=$FETCH_SOURCE) https://cozy-planner.duckdns.org$URL_PATH"
+echo "✅ Готово! (LLM_PROVIDER=$LLM_PROVIDER) https://cozy-planner.duckdns.org$URL_PATH"
