@@ -8,10 +8,9 @@ import json
 import logging
 import time
 from pathlib import Path
-
 import telegram_bot
 from telegram_bot import is_configured, load_subscribers, save_subscribers, send_message
-from agent import CATEGORY_LABELS, feedback, get_filtered_news, history
+from agent import CATEGORY_LABELS, get_filtered_news, history
 
 logging.basicConfig(
     level=logging.INFO,
@@ -64,7 +63,10 @@ def main():
                 label = CATEGORY_LABELS.get(item.get("category"))
                 prefix = f"{label}\n" if label else ""
                 text = f"{prefix}<b>{item['title']}</b>\n{item['description']}\n{item['link']}"
-                keyboard = {"inline_keyboard": [[{"text": "📊 Дайджест", "callback_data": "digest:24"}]]}
+                keyboard = {"inline_keyboard": [
+                    [{"text": "📊 Дайджест за 24 години", "callback_data": "digest:24"}],
+                    [{"text": "📊 Дайджест за 7 днів",    "callback_data": "digest:168"}],
+                ]}
                 for chat_id in chat_ids:
                     send_message(chat_id, text, reply_markup=keyboard)
         elif is_first_run_for_mood:
@@ -91,7 +93,7 @@ def _send_due_donate_reminders(subscribers: dict) -> None:
         send_message(chat_id, telegram_bot.DONATE_LINE)
         sub["last_donate_reminder"] = now
         changed = True
-        log.info("Sent donate reminder to chat_id=%s", chat_id)
+        log.info("Нагадування про донат надіслано chat_id=%s", chat_id)
 
     if changed:
         save_subscribers(subscribers)

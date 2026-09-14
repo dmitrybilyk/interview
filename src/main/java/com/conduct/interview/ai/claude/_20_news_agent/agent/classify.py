@@ -170,4 +170,13 @@ def get_filtered_news(mood: str) -> list[dict]:
     for it in result:
         it["category"] = categories.get(it["link"], "other")
 
+    # Для positive — лише strike/losses/economy. "other" означає, що класифікатор
+    # не знайшов відповідності K1/K2/K3, тому прибираємо.
+    if mood == "positive":
+        before = len(result)
+        result = [it for it in result if it.get("category") != "other"]
+        dropped = before - len(result)
+        if dropped:
+            log.info("mood=positive: відкинуто %d 'other' item(s) без категорії", dropped)
+
     return result
