@@ -26,10 +26,12 @@ MOOD_RULES = {
         "budget and is bad for Ukraine. Signals: 'ціни на нафту зросли', 'нафта подорожчала', "
         "'нафта росте', 'зростання ціни на нафту', 'нафта по $X', oil price up/rises/jumps. "
         "→ REJECT.\n"
-        "X7. Ukrainian domestic affairs — courts, politics, corruption, officials, laws, "
-        "taxes, budget, anti-corruption bodies (НАБУ, САП, НАЗК), prosecutors, ministers, "
-        "parliament (Рада), economy inside Ukraine, social policy. "
-        "These are NOT military victories and do not belong here. → REJECT.\n\n"
+        "X7. Ukrainian domestic affairs OR Ukrainian economy — courts, politics, corruption, "
+        "officials, laws, taxes, budget, anti-corruption bodies (НАБУ, САП, НАЗК), prosecutors, "
+        "ministers, parliament (Рада), social policy. Also: any news about Ukraine's banking or "
+        "financial system — НБУ, Національний банк, платіжні сервіси, валютні операції, "
+        "гривня курс, ставка НБУ, банківські рахунки, фінансові послуги в Україні. "
+        "These are NOT military victories. → REJECT.\n\n"
         "STEP 2 — KEEP only if NOT rejected above AND clearly matches ONE of these:\n"
         "K1. MORNING LOSSES REPORT — the official daily General Staff / МО Ukraine briefing "
         "that states the total number of Russian soldiers killed or eliminated in the past "
@@ -37,7 +39,9 @@ MOOD_RULES = {
         "за добу', 'загальні втрати', 'знищено X окупантів', specific death-toll number + "
         "'за минулу добу' or 'з початку доби'. "
         "DO NOT keep: general front-line battle reports, equipment-only counts, any item "
-        "without a specific daily Russian death toll figure.\n"
+        "without a specific daily Russian death toll figure. "
+        "DO NOT keep: individual soldier kills, drone attack videos, local combat episodes — "
+        "even if a Russian is killed or wounded. Only the official aggregated daily count qualifies.\n"
         "K2. RUSSIAN ECONOMY GETTING WORSE — ruble falling, budget deficit growing, inflation "
         "rising, companies leaving Russia, sanctions biting harder, oil/gas revenue dropping, "
         "industrial output shrinking, banking problems, consumer prices rising inside Russia. "
@@ -151,5 +155,5 @@ CATEGORY_RULES = (
 CATEGORY_LABELS = {
     "strike": "🔥 Удар по рф",
     "losses": "💀 Втрати ворога",
-    "economy": "📉 Економіка рф",
+    "economy": "📉 Економіка",
 }
