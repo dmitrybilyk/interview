@@ -14,7 +14,10 @@ SUBSCRIBERS_FILE = HERE / "subscribers.json"
 TELEGRAM_TOKEN_FILE = HERE / "telegram_token.txt"
 
 DONATE_CARD = "4441 1110 3446 3160"  # Monobank
-DONATE_LINE = f"☕ Розробнику на каву, якщо бот подобається (Monobank):\n<code>{DONATE_CARD}</code>  👆 натисни щоб скопіювати"
+DONATE_LINE = f"☕ Розробнику на каву, якщо бот подобається (Monobank):\n<code>{DONATE_CARD}</code>"
+DONATE_KEYBOARD = {"inline_keyboard": [[
+    {"text": "📋 Скопіювати номер", "callback_data": "copy_card"},
+]]}
 DONATE_REMINDER_INTERVAL_SECONDS = 30 * 24 * 60 * 60  # once a month, see broadcaster.py
 
 

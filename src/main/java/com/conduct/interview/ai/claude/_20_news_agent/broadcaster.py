@@ -90,7 +90,7 @@ def _send_due_donate_reminders(subscribers: dict) -> None:
         last = sub.get("last_donate_reminder", 0)
         if now - last < telegram_bot.DONATE_REMINDER_INTERVAL_SECONDS:
             continue
-        send_message(chat_id, telegram_bot.DONATE_LINE)
+        send_message(chat_id, telegram_bot.DONATE_LINE, reply_markup=telegram_bot.DONATE_KEYBOARD)
         sub["last_donate_reminder"] = now
         changed = True
         log.info("Нагадування про донат надіслано chat_id=%s", chat_id)

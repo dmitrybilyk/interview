@@ -23,8 +23,8 @@ START_TEXT = (
     "🌤 Здебільшого позитивні — позитивні + нейтральні. Без явно поганих. Теж ШІ.\n"
     "📰 Усі — без фільтрації, без AI.\n\n"
     "🔄 Змінити вибір: /mood\n"
-    "📊 Дайджест: /digest\n\n"
-) + telegram_bot.DONATE_LINE
+    "📊 Дайджест: /digest"
+)
 
 SWITCH_TEXT = "Обери новий настрій — зміна набуде чинності одразу:"
 
@@ -105,11 +105,12 @@ def handle(update: dict) -> str:
         if text.startswith("/start"):
             log.info("/start from chat_id=%s", chat_id)
             telegram_bot.send_message(chat_id, START_TEXT, reply_markup=build_start_keyboard())
+            telegram_bot.send_message(chat_id, telegram_bot.DONATE_LINE, reply_markup=telegram_bot.DONATE_KEYBOARD)
         elif text.startswith("/mood"):
             log.info("/mood from chat_id=%s", chat_id)
             telegram_bot.send_message(chat_id, SWITCH_TEXT, reply_markup=build_start_keyboard())
         elif text.startswith("/donate"):
-            telegram_bot.send_message(chat_id, telegram_bot.DONATE_LINE)
+            telegram_bot.send_message(chat_id, telegram_bot.DONATE_LINE, reply_markup=telegram_bot.DONATE_KEYBOARD)
         elif text.startswith("/digest"):
             log.info("/digest from chat_id=%s", chat_id)
             telegram_bot.send_message(chat_id, "За який період дайджест?", reply_markup=build_digest_keyboard())
@@ -122,7 +123,10 @@ def handle(update: dict) -> str:
         log.info("button chat_id=%s data=%s", chat_id, data)
         subscribers = telegram_bot.load_subscribers()
 
-        if data.startswith("rep:"):
+        if data == "copy_card":
+            telegram_bot.answer_callback_query(cq["id"], "✅ Скопійовано!")
+
+        elif data.startswith("rep:"):
             h    = data.split(":", 1)[1]
             item = feedback.load_sent_items().get(h)
             if not item:
