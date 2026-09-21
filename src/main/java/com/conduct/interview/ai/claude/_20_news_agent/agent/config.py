@@ -5,7 +5,7 @@ from pathlib import Path
 
 # LLM провайдер. На сервері deploy.sh передає LLM_PROVIDER через systemd Environment=
 # і він перекриває DEFAULT_PROVIDER — зміна цього рядка не впливає на продакшн.
-DEFAULT_PROVIDER = "anthropic"  # або "groq"
+DEFAULT_PROVIDER = "groq"
 PROVIDER = os.environ.get("LLM_PROVIDER", DEFAULT_PROVIDER).lower()
 
 CLAUDE_MODEL = "claude-haiku-4-5-20251001"

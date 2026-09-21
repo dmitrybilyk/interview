@@ -15,7 +15,7 @@ PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 KEY_FILE="$PROJECT_DIR/../key.txt"
 TELEGRAM_TOKEN_FILE="$PROJECT_DIR/telegram_token.txt"
 GROQ_KEY_FILE="$PROJECT_DIR/groq_key.txt"
-LLM_PROVIDER="${LLM_PROVIDER:-anthropic}"
+LLM_PROVIDER="${LLM_PROVIDER:-groq}"
 
 REMOTE="ubuntu@92.5.42.35"
 REMOTE_DIR="/opt/news-agent"
