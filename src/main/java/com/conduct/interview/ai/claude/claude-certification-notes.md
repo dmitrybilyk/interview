@@ -3,8 +3,10 @@
 ## MFO Foundations
 
 - **Tokens** — unit of input, output and cost.
-- **Context window** — total number of tokens the model can take in for a single request (prompt, conversation, attached docs, tool results, model output).
-- **Sampling** is the process an AI model uses to choose the next token from all possible tokens. Temperature affects the sampling — the lower, the more probability-dependent.
+- **Context window** — total number of tokens the model can take in for a single request 
+- (prompt, conversation, attached docs, tool results, model output).
+- **Sampling** is the process an AI model uses to choose the next token from all possible tokens. 
+- Temperature affects the sampling — the lower, the more probability-dependent.
 - AI is non-deterministic — even temperature 0 doesn't guarantee the same response.
 
 **Models**
@@ -13,6 +15,37 @@
 - Sonnet — the most balanced
 - Haiku — fastest, less quality
 - Also reasoning per request matters — usually we can select level of reasoning.
+# Claude Reasoning & Effort Reference
+
+## Thinking Types
+* **Adaptive** — Model auto-selects reasoning depth per request (`"type": "adaptive"`).
+* **Enabled** — Fixed token budget forced per request (`"type": "enabled", "budget_tokens": N`).
+* **Disabled** — Raw standard generation without thinking blocks (`"type": "disabled"`).
+
+---
+
+## Thinking vs. Effort
+
+| Feature | Thinking | Effort |
+| :--- | :--- | :--- |
+| **What it is** | Mechanism (raw reasoning tokens/chain-of-thought) | Guidance knob / intensity scale |
+| **Control Unit** | Explicit token limit (e.g., `2048`) | Discrete tiers (`low`, `medium`, `high`, `max`) |
+| **Flexibility** | Dynamic token allocation up to hard limit | Scales budget dynamically based on prompt complexity |
+
+---
+
+## Claude Code CLI
+* `/effort low | medium | high | max` — Set workspace effort persistent across turns.
+* `think ...` / `ultrathink ...` — Prompt triggers for quick inline reasoning overrides.
+* `Shift+Tab` or `/plan` — Force extended architectural planning mode before tool use.
+
+---
+
+## Claude Agents & API
+* **Adaptive Effort:** `"thinking": { "type": "adaptive" }`, `"effort": "high"`
+* **Token Budget:** `"thinking": { "type": "enabled", "budget_tokens": 2048 }`
+* **Agent Loop Control:** Combine `effort` with `task_budget` to limit total loop cost.
+
 
 **Prompting modes**
 - Zero-shot — no example is provided in prompt
