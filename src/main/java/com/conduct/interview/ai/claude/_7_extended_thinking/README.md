@@ -1,8 +1,10 @@
 # _7 — Extended Thinking
 
-Claude thinks internally before answering — spends tokens on a private scratchpad, then gives the visible answer. Costs more, worth it for hard logic/math/planning.
+Claude thinks internally before answering — spends tokens on a private scratchpad, then gives the visible answer. 
+Costs more, worth it for hard logic/math/planning.
 
-**Tool loop rule:** if Claude emits a `thinking` block alongside a `tool_use` block, send the entire `response.content` back unchanged in the next request. The API verifies a signature on it. Strip it → broken chain.  
+**Tool loop rule:** if Claude emits a `thinking` block alongside a `tool_use` block, send the entire `response.content` 
+back unchanged in the next request. The API verifies a signature on it. Strip it → broken chain.  
 **Regular turns:** don't pass thinking blocks back — they're ephemeral, not conversation history.
 
 **Old API (Sonnet 4.6 only):**
@@ -16,9 +18,11 @@ thinking={"type": "adaptive"},        # Claude decides how much to think
 output_config={"effort": "high"},     # low | medium | high | xhigh | max
 ```
 
-On Sonnet 5 with `adaptive`, `block.thinking` may be empty — thinking still ran (check `usage.output_tokens_details.thinking_tokens`). The block carries encrypted state; pass the object back, not the text.
+On Sonnet 5 with `adaptive`, `block.thinking` may be empty — thinking still ran (check `usage.output_tokens_details.thinking_tokens`).
+The block carries encrypted state; pass the object back, not the text.
 
-**Pitfall:** on Opus 5, `thinking={"type": "disabled"}` with tools can cause tool calls to appear as plain text (silently never executes). Use `adaptive` + `effort: low` instead.
+**Pitfall:** on Opus 5, `thinking={"type": "disabled"}` with tools can cause tool calls to 
+appear as plain text (silently never executes). Use `adaptive` + `effort: low` instead.
 
 ## Scripts
 | File | Demonstrates |
