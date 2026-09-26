@@ -9,6 +9,10 @@ import requests
 
 log = logging.getLogger("news_agent.telegram")
 
+
+class BotBlockedError(Exception):
+    """Юзер заблокував бота — треба відписати."""
+
 HERE = Path(__file__).resolve().parent
 SUBSCRIBERS_FILE = HERE / "subscribers.json"
 TELEGRAM_TOKEN_FILE = HERE / "telegram_token.txt"
@@ -71,6 +75,9 @@ def send_message(chat_id, text: str, reply_markup: dict | None = None) -> None:
         payload["reply_markup"] = reply_markup
     resp = requests.post(f"{API}/sendMessage", json=payload, timeout=10)
     if not resp.ok:
+        if resp.status_code == 403:
+            log.info("chat_id=%s blocked the bot — will unsubscribe", chat_id)
+            raise BotBlockedError(chat_id)
         log.warning("sendMessage to chat_id=%s failed: %s", chat_id, resp.text[:300])
 
 
