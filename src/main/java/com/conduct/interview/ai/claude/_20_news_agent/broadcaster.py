@@ -9,7 +9,7 @@ import logging
 import time
 from pathlib import Path
 import telegram_bot
-from telegram_bot import is_configured, load_subscribers, save_subscribers, send_message
+from telegram_bot import BotBlockedError, is_configured, load_subscribers, save_subscribers, send_message
 from agent import CATEGORY_LABELS, get_filtered_news, history
 
 logging.basicConfig(
@@ -47,6 +47,7 @@ def main():
     log.info("%d subscriber(s) across mood(s): %s", len(subscribers), sorted(moods_needed))
 
     state = _load_state()
+    blocked_ids: set[str] = set()
 
     for mood in moods_needed:
         items = get_filtered_news(mood)
@@ -68,7 +69,12 @@ def main():
                     [{"text": "📊 Дайджест за 7 днів",    "callback_data": "digest:168"}],
                 ]}
                 for chat_id in chat_ids:
-                    send_message(chat_id, text, reply_markup=keyboard)
+                    if chat_id in blocked_ids:
+                        continue
+                    try:
+                        send_message(chat_id, text, reply_markup=keyboard)
+                    except BotBlockedError:
+                        blocked_ids.add(chat_id)
         elif is_first_run_for_mood:
             log.info("mood=%s: first run — seeding baseline of %d item(s), nothing sent", mood, len(items))
         else:
@@ -78,6 +84,13 @@ def main():
         state[mood] = all_links[-MAX_TRACKED_LINKS_PER_MOOD:]
 
     _save_state(state)
+
+    if blocked_ids:
+        for cid in blocked_ids:
+            subscribers.pop(cid, None)
+        save_subscribers(subscribers)
+        log.info("Auto-unsubscribed %d blocked user(s): %s", len(blocked_ids), blocked_ids)
+
     _send_due_donate_reminders(subscribers)
 
 
@@ -90,7 +103,13 @@ def _send_due_donate_reminders(subscribers: dict) -> None:
         last = sub.get("last_donate_reminder", 0)
         if now - last < telegram_bot.DONATE_REMINDER_INTERVAL_SECONDS:
             continue
-        send_message(chat_id, telegram_bot.DONATE_LINE, reply_markup=telegram_bot.DONATE_KEYBOARD)
+        try:
+            send_message(chat_id, telegram_bot.DONATE_LINE, reply_markup=telegram_bot.DONATE_KEYBOARD)
+        except BotBlockedError:
+            subscribers.pop(chat_id, None)
+            changed = True
+            log.info("Donate reminder: auto-unsubscribed blocked chat_id=%s", chat_id)
+            continue
         sub["last_donate_reminder"] = now
         changed = True
         log.info("Нагадування про донат надіслано chat_id=%s", chat_id)

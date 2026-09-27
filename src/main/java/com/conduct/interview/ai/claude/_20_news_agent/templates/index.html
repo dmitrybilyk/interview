@@ -38,6 +38,7 @@
       background: #eef6ff; font-size: 0.92rem;
     }
     .subscribe a { color: #0a5fd1; font-weight: 600; }
+    .sub-stats { margin: -16px 0 24px; color: #555; font-size: 0.88rem; }
   </style>
 </head>
 <body>
@@ -56,6 +57,14 @@
       Напиши <a href="https://t.me/{{ bot_username }}" target="_blank" rel="noopener">@{{ bot_username }}</a>
       і натисни /start.
     </p>
+    {% if total_subs %}
+    <p class="sub-stats">
+      👥 Підписників у Telegram: <strong>{{ total_subs }}</strong>
+      &nbsp;·&nbsp; ✅ {{ sub_counts.positive }}
+      &nbsp;·&nbsp; 🌤 {{ sub_counts.mostly_positive }}
+      &nbsp;·&nbsp; 📰 {{ sub_counts.all }}
+    </p>
+    {% endif %}
   {% endif %}
 
   {% if error %}

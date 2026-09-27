@@ -37,7 +37,15 @@ def index():
             log.exception("get_filtered_news failed mood=%s", mood)
             error = str(exc)
     bot_username = telegram_bot.get_bot_username() if telegram_bot.is_configured() else None
-    return render_template("index.html", mood=mood, news=news, error=error, bot_username=bot_username)
+    subscribers = telegram_bot.load_subscribers()
+    sub_counts = {"positive": 0, "mostly_positive": 0, "all": 0}
+    for sub in subscribers.values():
+        m = sub.get("mood")
+        if m in sub_counts:
+            sub_counts[m] += 1
+    return render_template("index.html", mood=mood, news=news, error=error,
+                           bot_username=bot_username, sub_counts=sub_counts,
+                           total_subs=len(subscribers))
 
 
 @app.route("/telegram-webhook", methods=["POST"])
