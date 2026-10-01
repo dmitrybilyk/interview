@@ -15,6 +15,7 @@ GROQ_MODEL   = os.environ.get("GROQ_MODEL", "openai/gpt-oss-20b")
 # роздуми — великий батч може вичерпати бюджет і повернути порожній контент.
 CLASSIFY_BATCH_SIZE = 20
 
+RSS_FETCH_LIMIT = 125  # Censor.net має 125 items в RSS — беремо все щоб не втрачати ранковий звіт
 RSS_URL       = "https://assets.censor.net/rss/censor.net/rss_uk_news.xml"
 FETCH_HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; news-agent/1.0)"}
 

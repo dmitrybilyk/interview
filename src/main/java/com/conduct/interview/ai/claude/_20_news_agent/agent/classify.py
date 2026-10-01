@@ -7,6 +7,7 @@
 import json
 import logging
 import re
+import time
 
 from .config import CLASSIFICATION_CACHE_FILE, CLASSIFY_BATCH_SIZE
 from .fetch import fetch_items
@@ -139,6 +140,8 @@ def pick_by_mood(items: list[dict], mood: str) -> list[dict]:
             for i, it in enumerate(batch):
                 cache.setdefault(it["link"], {})[mood] = i in keep_in_batch
             total_kept += len(keep_in_batch)
+            if start + CLASSIFY_BATCH_SIZE < len(unknown):
+                time.sleep(3)  # пауза між батчами щоб не вичерпати Groq rate limit
 
         log.info("LLM kept %d/%d of the new item(s) for mood=%s", total_kept, len(unknown), mood)
 

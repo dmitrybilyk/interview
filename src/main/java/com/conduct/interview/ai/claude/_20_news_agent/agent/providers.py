@@ -78,7 +78,7 @@ def _call_claude(prompt: str, schema: dict | None = None) -> str:
     return text
 
 
-GROQ_MAX_RETRIES = 3
+GROQ_MAX_RETRIES = 8
 
 
 def _call_groq(prompt: str) -> str:
@@ -101,8 +101,7 @@ def _call_groq(prompt: str) -> str:
             headers=headers, json=payload, timeout=30,
         )
         if resp.status_code == 429 and attempt < GROQ_MAX_RETRIES:
-            # Rate limit — чекаємо стільки, скільки каже retry-after.
-            wait_seconds = float(resp.headers.get("retry-after", 10))
+            wait_seconds = float(resp.headers.get("retry-after", 15))
             log.warning("Groq rate-limited us — waiting %.0fs before retrying", wait_seconds)
             time.sleep(wait_seconds)
             continue

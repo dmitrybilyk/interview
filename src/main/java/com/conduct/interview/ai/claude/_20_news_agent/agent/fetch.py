@@ -5,12 +5,12 @@ import xml.etree.ElementTree as ET
 
 import requests
 
-from .config import FETCH_HEADERS, RSS_URL
+from .config import FETCH_HEADERS, RSS_FETCH_LIMIT, RSS_URL
 
 log = logging.getLogger("news_agent.fetch")
 
 
-def fetch_items(limit: int = 80) -> list[dict]:
+def fetch_items(limit: int = RSS_FETCH_LIMIT) -> list[dict]:
     """Завантажує до `limit` новин з RSS."""
     log.info("Fetching RSS (limit=%d): %s", limit, RSS_URL)
     resp = requests.get(RSS_URL, headers=FETCH_HEADERS, timeout=10)
