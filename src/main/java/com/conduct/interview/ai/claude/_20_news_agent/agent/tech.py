@@ -1,4 +1,4 @@
-"""IT-новини з DOU.ua — завантаження і AI-фільтрація.
+"""IT-новини з DOU.ua, AIN.ua, Хабр — завантаження і AI-фільтрація.
 
 Самодостатній модуль (власний fetch, кеш, правила) — легко виокремити.
 """
@@ -16,7 +16,11 @@ from .providers import call_llm
 
 log = logging.getLogger("news_agent.tech")
 
-TECH_RSS_URL    = "https://dou.ua/lenta/news/feed/"
+TECH_RSS_SOURCES = [
+    ("dou",  "https://dou.ua/lenta/news/feed/",              50),
+    ("ain",  "https://ain.ua/feed/",                          50),
+    ("habr", "https://habr.com/ru/rss/hub/ukraine/all/",      30),
+]
 TECH_FETCH_LIMIT = 50
 TECH_CACHE_FILE  = APP_DIR / "tech_cache.json"
 _HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; news-agent/1.0)"}
@@ -65,21 +69,30 @@ TECH_RULES = (
 
 
 def _fetch_tech(limit: int = TECH_FETCH_LIMIT) -> list[dict]:
-    log.info("Fetching tech RSS (limit=%d): %s", limit, TECH_RSS_URL)
-    resp = requests.get(TECH_RSS_URL, headers=_HEADERS, timeout=10)
-    resp.raise_for_status()
-    root = ET.fromstring(resp.content)
-    items = []
-    for item in root.findall("./channel/item")[:limit]:
-        items.append({
-            "title":       (item.findtext("title")       or "").strip(),
-            "link":        (item.findtext("link")        or "").strip(),
-            "description": (item.findtext("description") or "").strip(),
-            "pubDate":     (item.findtext("pubDate")     or "").strip(),
-            "source":      "dou.ua",
-        })
-    log.info("Fetched %d tech items", len(items))
-    return items
+    all_items = []
+    seen_links: set[str] = set()
+    for source_id, url, src_limit in TECH_RSS_SOURCES:
+        try:
+            log.info("Fetching tech RSS from %s (limit=%d)", source_id, src_limit)
+            resp = requests.get(url, headers=_HEADERS, timeout=10)
+            resp.raise_for_status()
+            root = ET.fromstring(resp.content)
+            for item in root.findall("./channel/item")[:src_limit]:
+                link = (item.findtext("link") or "").strip()
+                if not link or link in seen_links:
+                    continue
+                seen_links.add(link)
+                all_items.append({
+                    "title":       (item.findtext("title")       or "").strip(),
+                    "link":        link,
+                    "description": (item.findtext("description") or "").strip(),
+                    "pubDate":     (item.findtext("pubDate")     or "").strip(),
+                    "source":      source_id,
+                })
+        except Exception:
+            log.exception("Failed to fetch tech RSS from %s", source_id)
+    log.info("Fetched %d tech items total from %d sources", len(all_items), len(TECH_RSS_SOURCES))
+    return all_items
 
 
 def _load_cache() -> dict:

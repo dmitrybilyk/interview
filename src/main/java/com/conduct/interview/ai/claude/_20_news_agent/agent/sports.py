@@ -33,9 +33,11 @@ SPORTS_RULES = (
     "Also REJECT if none of the topics below apply.\n\n"
 
     "STEP 2 — KEEP only if NOT rejected above AND clearly matches ONE of:\n"
-    "K1. ШАХТАР У ЛІЗІ ЧЕМПІОНІВ — Shakhtar Donetsk (Шахтар) playing in UEFA Champions League: "
-    "match result, preview, group/knockout stage news. NOT domestic league (УПЛ), NOT other clubs.\n"
-    "Signals: 'Шахтар', 'Ліга чемпіонів', 'ЛЧ', 'Champions League', 'UCL'.\n\n"
+    "K1. ФУТБОЛ — будь-які футбольні новини: УПЛ, єврокубки (ЛЧ, ЛЄ, ЛК), збірна України, "
+    "українські клуби (Шахтар, Динамо, Металіст, Дніпро-1 тощо), трансфери, результати матчів, "
+    "прев'ю, таблиці, тренерські призначення в українських клубах.\n"
+    "Signals: будь-які назви українських клубів, 'УПЛ', 'збірна', 'Ліга чемпіонів', 'Ліга Європи', "
+    "'ЛЧ', 'ЛЄ', 'Champions League', 'Europa League', футбол, гол, матч, турнір.\n\n"
 
     "K2. ТЕНІС — Elina Svitolina (Світоліна) or Marta Kostyuk (Костюк) in any tournament: "
     "match result, draw, ranking, tournament progress. Either player qualifies.\n"
@@ -67,9 +69,8 @@ SPORTS_RULES = (
     "Signals: 'легка атлетика', 'Діамантова ліга', 'Diamond League', 'чемпіонат світу', "
     "'чемпіонат Європи', Ukrainian athlete names, 'рекорд', 'медаль'.\n\n"
 
-    "REJECT everything else: domestic football (УПЛ), boxing, wrestling, cycling, rowing, "
-    "transfers, injuries, club team news except Shakhtar-UCL, women's teams (unless covered above), "
-    "coaching appointments, stadium news, sponsorships.\n\n"
+    "REJECT: бокс, боротьба, велоспорт, веслування, жіночі команди (крім тенісу), "
+    "іноземні клуби без участі українців, спонсорські матеріали.\n\n"
 
     "If in doubt → REJECT."
 )
