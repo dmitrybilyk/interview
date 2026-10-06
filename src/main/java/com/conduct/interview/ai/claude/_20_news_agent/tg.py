@@ -34,6 +34,38 @@ MOOD_CONFIRM_TEXT = {
     "all":            "Готово! Усі новини без фільтрації.",
 }
 
+SPORTS_PROMPT_TEXT = (
+    "🏆 Хочеш також отримувати спортивні новини?\n\n"
+    "Шахтар у Лізі чемпіонів · Світоліна · Костюк · збірні з волейболу, баскетболу, "
+    "хокею, футзалу · легка атлетика (великі турніри, українці)."
+)
+
+SPORTS_KEYBOARD = {"inline_keyboard": [
+    [{"text": "✅ Так, хочу спорт",  "callback_data": "sports:on"}],
+    [{"text": "❌ Ні, дякую",        "callback_data": "sports:off"}],
+]}
+
+SPORTS_CONFIRM_TEXT = {
+    True:  "🏆 Спортивні новини увімкнено! /sports — змінити будь-коли.",
+    False: "Добре, без спорту. /sports — увімкнути пізніше.",
+}
+
+TECH_PROMPT_TEXT = (
+    "💻 Хочеш також отримувати IT-новини?\n\n"
+    "Java · Spring · AI/LLM (лише справді значущі події) · великі новини IT-індустрії · "
+    "українські IT-досягнення. Відбирає ШІ, більшість відфільтровується."
+)
+
+TECH_KEYBOARD = {"inline_keyboard": [
+    [{"text": "✅ Так, хочу IT",  "callback_data": "tech:on"}],
+    [{"text": "❌ Ні, дякую",     "callback_data": "tech:off"}],
+]}
+
+TECH_CONFIRM_TEXT = {
+    True:  "💻 IT-новини увімкнено! /tech — змінити будь-коли.",
+    False: "Добре, без IT. /tech — увімкнути пізніше.",
+}
+
 
 def build_start_keyboard() -> dict:
     rows = [
@@ -109,6 +141,32 @@ def handle(update: dict) -> str:
         elif text.startswith("/mood"):
             log.info("/mood from chat_id=%s", chat_id)
             telegram_bot.send_message(chat_id, SWITCH_TEXT, reply_markup=build_start_keyboard())
+        elif text.startswith("/tech"):
+            log.info("/tech from chat_id=%s", chat_id)
+            sub = telegram_bot.load_subscribers().get(str(chat_id))
+            if not sub:
+                telegram_bot.send_message(chat_id, "Спочатку обери настрій через /start.")
+            else:
+                current = sub.get("tech", False)
+                status = "увімкнено ✅" if current else "вимкнено ❌"
+                telegram_bot.send_message(
+                    chat_id,
+                    f"IT-новини зараз: {status}\n\n{TECH_PROMPT_TEXT}",
+                    reply_markup=TECH_KEYBOARD,
+                )
+        elif text.startswith("/sports"):
+            log.info("/sports from chat_id=%s", chat_id)
+            sub = telegram_bot.load_subscribers().get(str(chat_id))
+            if not sub:
+                telegram_bot.send_message(chat_id, "Спочатку обери настрій через /start.")
+            else:
+                current = sub.get("sports", False)
+                status = "увімкнено ✅" if current else "вимкнено ❌"
+                telegram_bot.send_message(
+                    chat_id,
+                    f"Спортивні новини зараз: {status}\n\n{SPORTS_PROMPT_TEXT}",
+                    reply_markup=SPORTS_KEYBOARD,
+                )
         elif text.startswith("/donate"):
             telegram_bot.send_message(chat_id, telegram_bot.DONATE_LINE, reply_markup=telegram_bot.DONATE_KEYBOARD)
         elif text.startswith("/digest"):
@@ -123,7 +181,27 @@ def handle(update: dict) -> str:
         log.info("button chat_id=%s data=%s", chat_id, data)
         subscribers = telegram_bot.load_subscribers()
 
-        if data == "copy_card":
+        if data.startswith("tech:"):
+            enabled = data.split(":", 1)[1] == "on"
+            existing = subscribers.get(str(chat_id), {})
+            existing["tech"] = enabled
+            subscribers[str(chat_id)] = existing
+            telegram_bot.save_subscribers(subscribers)
+            telegram_bot.answer_callback_query(cq["id"], "✅ Збережено!")
+            telegram_bot.send_message(chat_id, TECH_CONFIRM_TEXT[enabled])
+            log.info("chat_id=%s tech=%s", chat_id, enabled)
+
+        elif data.startswith("sports:"):
+            enabled = data.split(":", 1)[1] == "on"
+            existing = subscribers.get(str(chat_id), {})
+            existing["sports"] = enabled
+            subscribers[str(chat_id)] = existing
+            telegram_bot.save_subscribers(subscribers)
+            telegram_bot.answer_callback_query(cq["id"], "✅ Збережено!")
+            telegram_bot.send_message(chat_id, SPORTS_CONFIRM_TEXT[enabled])
+            log.info("chat_id=%s sports=%s", chat_id, enabled)
+
+        elif data == "copy_card":
             telegram_bot.answer_callback_query(cq["id"], "✅ Скопійовано!")
 
         elif data.startswith("rep:"):
@@ -165,6 +243,8 @@ def handle(update: dict) -> str:
             telegram_bot.save_subscribers(subscribers)
             telegram_bot.answer_callback_query(cq["id"], "Підписано!")
             telegram_bot.send_message(chat_id, MOOD_CONFIRM_TEXT[mood] + "\n\n🔄 /mood — змінити будь-коли")
+            telegram_bot.send_message(chat_id, SPORTS_PROMPT_TEXT, reply_markup=SPORTS_KEYBOARD)
+            telegram_bot.send_message(chat_id, TECH_PROMPT_TEXT, reply_markup=TECH_KEYBOARD)
             log.info("chat_id=%s mood=%s", chat_id, mood)
 
     return "ok"

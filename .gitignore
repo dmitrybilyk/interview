@@ -45,3 +45,9 @@ src/main/java/com/conduct/interview/ai/claude/_20_news_agent/subscribers.json
 src/main/java/com/conduct/interview/ai/claude/_20_news_agent/groq_key.txt
 src/main/java/com/conduct/interview/ai/claude/_20_news_agent/sent_state.json
 src/main/java/com/conduct/interview/ai/claude/_20_news_agent/classification_cache.json
+src/main/java/com/conduct/interview/ai/claude/_20_news_agent/sports_cache.json
+src/main/java/com/conduct/interview/ai/claude/_20_news_agent/tech_cache.json
+src/main/java/com/conduct/interview/ai/claude/_20_news_agent/facebook_token.txt
+src/main/java/com/conduct/interview/ai/claude/_20_news_agent/facebook_verify_token.txt
+src/main/java/com/conduct/interview/ai/claude/_20_news_agent/email_config.json
+src/main/java/com/conduct/interview/ai/claude/_20_news_agent/product_info.txt

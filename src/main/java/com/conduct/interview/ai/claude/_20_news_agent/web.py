@@ -11,6 +11,7 @@ from flask import Flask, render_template, request
 
 import telegram_bot
 import tg
+import fb_agent
 from agent import get_filtered_news
 
 logging.basicConfig(
@@ -52,6 +53,24 @@ def index():
 def telegram_webhook():
     update = request.get_json(silent=True) or {}
     return tg.handle(update)
+
+
+@app.route("/facebook-webhook", methods=["GET"])
+def facebook_webhook_verify():
+    mode      = request.args.get("hub.mode", "")
+    token     = request.args.get("hub.verify_token", "")
+    challenge = request.args.get("hub.challenge", "")
+    result = fb_agent.verify_webhook(mode, token, challenge)
+    if result:
+        return result, 200
+    return "Forbidden", 403
+
+
+@app.route("/facebook-webhook", methods=["POST"])
+def facebook_webhook_event():
+    data = request.get_json(silent=True) or {}
+    fb_agent.handle_webhook(data)
+    return "ok", 200
 
 
 if __name__ == "__main__":

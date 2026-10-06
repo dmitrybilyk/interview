@@ -35,7 +35,7 @@ ssh "$REMOTE" "sudo mkdir -p '$REMOTE_DIR' && sudo chown \$(whoami) '$REMOTE_DIR
 rsync -avz \
   --exclude 'venv' --exclude '__pycache__' --exclude '*.pyc' \
   "$PROJECT_DIR/web.py" "$PROJECT_DIR/tg.py" "$PROJECT_DIR/telegram_bot.py" "$PROJECT_DIR/broadcaster.py" \
-  "$PROJECT_DIR/cli.py" "$PROJECT_DIR/agent" \
+  "$PROJECT_DIR/cli.py" "$PROJECT_DIR/fb_agent.py" "$PROJECT_DIR/product_info.txt" "$PROJECT_DIR/agent" \
   "$PROJECT_DIR/requirements.txt" "$PROJECT_DIR/templates" \
   "$REMOTE:$REMOTE_DIR/"
 

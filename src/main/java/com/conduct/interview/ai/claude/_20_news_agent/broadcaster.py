@@ -10,7 +10,7 @@ import time
 from pathlib import Path
 import telegram_bot
 from telegram_bot import BotBlockedError, is_configured, load_subscribers, save_subscribers, send_message
-from agent import CATEGORY_LABELS, get_filtered_news, history
+from agent import CATEGORY_LABELS, get_filtered_news, get_sports_news, get_tech_news, history
 
 logging.basicConfig(
     level=logging.INFO,
@@ -82,6 +82,70 @@ def main():
 
         all_links = list(already_seen | {it["link"] for it in items})
         state[mood] = all_links[-MAX_TRACKED_LINKS_PER_MOOD:]
+
+    # ── Спортивні новини ────────────────────────────────────────────────────────
+    time.sleep(5)  # пауза після основних новин щоб не вичерпати Groq rate limit
+    sports_subs = [cid for cid, sub in subscribers.items() if sub.get("sports")]
+    if sports_subs:
+        sports_items = get_sports_news()
+        already_seen_sports = set(state.get("sports", []))
+        is_first_sports = not already_seen_sports
+        new_sports = [it for it in sports_items if it["link"] not in already_seen_sports]
+
+        if not is_first_sports and new_sports:
+            log.info("sports: pushing %d new item(s) to %d subscriber(s)", len(new_sports), len(sports_subs))
+            sports_keyboard = {"inline_keyboard": [
+                [{"text": "📊 Дайджест за 24 години", "callback_data": "digest:24"}],
+                [{"text": "📊 Дайджест за 7 днів",    "callback_data": "digest:168"}],
+            ]}
+            for item in new_sports:
+                text = f"🏆 Спорт\n<b>{item['title']}</b>\n{item['description']}\n{item['link']}"
+                for chat_id in sports_subs:
+                    if chat_id in blocked_ids:
+                        continue
+                    try:
+                        send_message(chat_id, text, reply_markup=sports_keyboard)
+                    except BotBlockedError:
+                        blocked_ids.add(chat_id)
+        elif is_first_sports:
+            log.info("sports: first run — seeding baseline of %d item(s)", len(sports_items))
+        else:
+            log.info("sports: nothing new since last run")
+
+        all_sports_links = list(already_seen_sports | {it["link"] for it in sports_items})
+        state["sports"] = all_sports_links[-MAX_TRACKED_LINKS_PER_MOOD:]
+
+    # ── IT-новини ────────────────────────────────────────────────────────────────
+    tech_subs = [cid for cid, sub in subscribers.items() if sub.get("tech")]
+    if tech_subs:
+        time.sleep(5)
+        tech_items = get_tech_news()
+        already_seen_tech = set(state.get("tech", []))
+        is_first_tech = not already_seen_tech
+        new_tech = [it for it in tech_items if it["link"] not in already_seen_tech]
+
+        if not is_first_tech and new_tech:
+            log.info("tech: pushing %d new item(s) to %d subscriber(s)", len(new_tech), len(tech_subs))
+            tech_keyboard = {"inline_keyboard": [
+                [{"text": "📊 Дайджест за 24 години", "callback_data": "digest:24"}],
+                [{"text": "📊 Дайджест за 7 днів",    "callback_data": "digest:168"}],
+            ]}
+            for item in new_tech:
+                text = f"💻 IT\n<b>{item['title']}</b>\n{item['description']}\n{item['link']}"
+                for chat_id in tech_subs:
+                    if chat_id in blocked_ids:
+                        continue
+                    try:
+                        send_message(chat_id, text, reply_markup=tech_keyboard)
+                    except BotBlockedError:
+                        blocked_ids.add(chat_id)
+        elif is_first_tech:
+            log.info("tech: first run — seeding baseline of %d item(s)", len(tech_items))
+        else:
+            log.info("tech: nothing new since last run")
+
+        all_tech_links = list(already_seen_tech | {it["link"] for it in tech_items})
+        state["tech"] = all_tech_links[-MAX_TRACKED_LINKS_PER_MOOD:]
 
     _save_state(state)
 
