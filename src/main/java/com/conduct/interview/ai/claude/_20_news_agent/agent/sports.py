@@ -17,62 +17,51 @@ from .providers import call_llm
 
 log = logging.getLogger("news_agent.sports")
 
-SPORTS_RSS_URL   = "https://sport.ua/rss/all"
+SPORTS_RSS_URL   = "https://sport.ua/uk/rss/all"
 SPORTS_FETCH_LIMIT = 100
 SPORTS_CACHE_FILE  = APP_DIR / "sports_cache.json"
 _HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; news-agent/1.0)"}
 
 SPORTS_RULES = (
-    "You are filtering Ukrainian sports news. Keep ONLY items that match one of these topics.\n\n"
+    "You are filtering Ukrainian sports news for a Telegram channel. "
+    "Apply rules strictly in order.\n\n"
 
-    "STEP 1 — REJECT immediately if ANY of these is true:\n"
-    "L0. The article is written in Russian (not Ukrainian). "
-    "Russian signals: 'Смотреть', 'который', 'они', 'нужно', 'сборной', 'матча', 'игроки', "
-    "'будет', 'можно', 'после', 'против', 'своей', 'место', 'очень', 'стал', 'был', 'это'. "
-    "→ REJECT immediately, do not check topics.\n"
-    "Also REJECT if none of the topics below apply.\n\n"
+    "STEP 1 — REJECT immediately (do not check topics) if ANY is true:\n"
+    "L1. The text contains Russian language. "
+    "Russian signals (any single word is enough): "
+    "'который', 'они', 'нужно', 'можно', 'после', 'против', 'своей', 'будет', 'стал', 'был', "
+    "'это', 'также', 'только', 'когда', 'между', 'сборной', 'матча', 'игроки', 'место', "
+    "'очень', 'смотреть', 'жена', 'муж', 'день рождения', 'поздравил'. → REJECT.\n"
+    "L2. The article is about personal life, family, relationships, birthdays, celebrations, "
+    "lifestyle, fashion, social media posts of athletes or their relatives. → REJECT.\n"
+    "L3. The article is a photo gallery, gossip, or celebrity content (дружина, чоловік, "
+    "романтика, сюрприз, особисте, сім'я гравця, іменини). → REJECT.\n\n"
 
-    "STEP 2 — KEEP only if NOT rejected above AND clearly matches ONE of:\n"
-    "K1. ФУТБОЛ — будь-які футбольні новини: УПЛ, єврокубки (ЛЧ, ЛЄ, ЛК), збірна України, "
-    "українські клуби (Шахтар, Динамо, Металіст, Дніпро-1 тощо), трансфери, результати матчів, "
-    "прев'ю, таблиці, тренерські призначення в українських клубах.\n"
-    "Signals: будь-які назви українських клубів, 'УПЛ', 'збірна', 'Ліга чемпіонів', 'Ліга Європи', "
-    "'ЛЧ', 'ЛЄ', 'Champions League', 'Europa League', футбол, гол, матч, турнір.\n\n"
+    "STEP 2 — KEEP only if passed STEP 1 AND matches ONE of:\n"
+    "K1. ФУТБОЛ — match results, standings, previews, tactics, transfers, coach/player "
+    "interviews ABOUT FOOTBALL (not personal life), official squad announcements, "
+    "injuries affecting upcoming matches. Ukrainian clubs (Шахтар, Динамо, Металіст, "
+    "Дніпро-1, Ворскла etc.) or Ukraine national team in any competition.\n\n"
 
-    "K2. ТЕНІС — Elina Svitolina (Світоліна) or Marta Kostyuk (Костюк) in any tournament: "
-    "match result, draw, ranking, tournament progress. Either player qualifies.\n"
-    "Signals: 'Світоліна', 'Svitolina', 'Костюк', 'Kostyuk'.\n\n"
+    "K2. ТЕНІС — Svitolina (Світоліна) or Kostyuk (Костюк): match results, rankings, "
+    "tournament draws, AND interviews/press conferences where they speak about tennis, "
+    "training, upcoming tournaments, their career. NOT personal/lifestyle news.\n\n"
 
-    "K3. ВОЛЕЙБОЛ — Ukraine MEN's national volleyball team in OFFICIAL competitions: "
-    "World Championship, European Championship, Olympic qualification, Nations League. "
-    "NOT club volleyball, NOT women's team.\n"
-    "Signals: 'збірна України', 'волейбол', 'чоловіча збірна', 'ЧС', 'ЧЄ'.\n\n"
+    "K3. ВОЛЕЙБОЛ / БАСКЕТБОЛ / ХОКЕЙ / ФУТЗАЛ — Ukraine national MEN's teams "
+    "in official competitions only (World/European Championships, Olympic qualifiers).\n\n"
 
-    "K4. БАСКЕТБОЛ — Ukraine MEN's national basketball team in FIBA official competitions: "
-    "EuroBasket, World Cup, Olympic qualification. NOT club basketball.\n"
-    "Signals: 'збірна України', 'баскетбол', 'FIBA', 'EuroBasket'.\n\n"
+    "K4. ЛЕГКА АТЛЕТИКА — Ukrainian athletes at Diamond League, World/European "
+    "Championships, Olympics. Results, records, medals, AND interviews with well-known "
+    "Ukrainian athletics athletes about competitions, preparation, achievements.\n\n"
 
-    "K5. ХОКЕЙ — Ukraine MEN's national ice hockey team in official competitions: "
-    "World Championship, Olympic qualification. NOT club hockey.\n"
-    "Signals: 'збірна України', 'хокей', 'ЧС'.\n\n"
+    "K5. ІНТЕРВ'Ю ВІДОМИХ УКРАЇНСЬКИХ СПОРТСМЕНІВ — interviews or significant quotes "
+    "from: Шахтар players (будь-який гравець Шахтаря), Світоліна, Костюк, відомі "
+    "українські легкоатлети — BUT ONLY when they speak about sport, competition, "
+    "training, career goals. "
+    "Signals: 'інтерв'ю', 'розповів', 'зізнався', 'прокоментував', 'заявив' + athlete name. "
+    "NOT personal life, NOT family topics.\n\n"
 
-    "K6. SOCCA — Ukraine MEN's national Socca (small-sided football) team in official competitions.\n"
-    "Signals: 'Socca', 'збірна України', 'соккер'.\n\n"
-
-    "K7. ФУТЗАЛ — Ukraine MEN's national futsal team in official competitions: "
-    "UEFA Futsal Euro, World Cup, qualification. NOT club futsal.\n"
-    "Signals: 'збірна України', 'футзал', 'міні-футбол'.\n\n"
-
-    "K8. ЛЕГКА АТЛЕТИКА — Major athletics tournaments (Diamond League, World Championships, "
-    "European Championships, Olympics, World Indoors) featuring Ukrainian athletes, "
-    "or notable records/achievements by Ukrainians.\n"
-    "Signals: 'легка атлетика', 'Діамантова ліга', 'Diamond League', 'чемпіонат світу', "
-    "'чемпіонат Європи', Ukrainian athlete names, 'рекорд', 'медаль'.\n\n"
-
-    "REJECT: бокс, боротьба, велоспорт, веслування, жіночі команди (крім тенісу), "
-    "іноземні клуби без участі українців, спонсорські матеріали.\n\n"
-
-    "If in doubt → REJECT."
+    "REJECT everything else. If in doubt → REJECT."
 )
 
 

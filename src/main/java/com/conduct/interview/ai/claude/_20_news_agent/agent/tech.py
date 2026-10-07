@@ -1,4 +1,4 @@
-"""IT-новини з DOU.ua, AIN.ua, Хабр — завантаження і AI-фільтрація.
+"""IT-новини з DOU.ua, AIN.ua, Хабр і міжнародних джерел — завантаження і AI-фільтрація.
 
 Самодостатній модуль (власний fetch, кеш, правила) — легко виокремити.
 """
@@ -17,54 +17,60 @@ from .providers import call_llm
 log = logging.getLogger("news_agent.tech")
 
 TECH_RSS_SOURCES = [
-    ("dou",  "https://dou.ua/lenta/news/feed/",              50),
-    ("ain",  "https://ain.ua/feed/",                          50),
-    ("habr", "https://habr.com/ru/rss/hub/ukraine/all/",      30),
+    ("dou",         "https://dou.ua/lenta/news/feed/",                      30),
+    ("ain",         "https://ain.ua/feed/",                                  30),
+    ("hn",          "https://hnrss.org/frontpage",                           30),
+    ("theverge",    "https://www.theverge.com/rss/index.xml",                30),
+    ("arstechnica", "https://feeds.arstechnica.com/arstechnica/index",       30),
+    ("techcrunch",  "https://techcrunch.com/feed/",                          30),
 ]
-TECH_FETCH_LIMIT = 50
+TECH_FETCH_LIMIT = 80
 TECH_CACHE_FILE  = APP_DIR / "tech_cache.json"
 _HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; news-agent/1.0)"}
 
 TECH_RULES = (
-    "You are filtering Ukrainian IT news from DOU.ua. Keep ONLY items that match one of these.\n\n"
+    "You are filtering tech news from multiple sources (Ukrainian and international). "
+    "The goal: keep only POSITIVE, inspiring, or exciting tech news. "
+    "Be strict. Most items should be REJECTED.\n\n"
 
     "STEP 1 — REJECT immediately if ANY of these is true:\n"
-    "L0. The article is written in Russian (not Ukrainian). "
+    "L0. The article is written in Russian. "
     "Russian signals: 'который', 'они', 'нужно', 'можно', 'после', 'против', 'своей', "
     "'будет', 'стал', 'был', 'это', 'также', 'только', 'когда', 'между'. → REJECT.\n"
-    "Also REJECT if none of the topics below apply.\n\n"
+    "L1. NEGATIVE content: hacks, breaches, leaks, cyberattacks, data theft, outages, "
+    "failures, layoffs, fines, lawsuits, bans, scandals, vulnerabilities, zero-days, "
+    "ransomware, phishing, fraud, monopoly abuse, privacy violations. → REJECT.\n"
+    "L2. Job ads, hiring, vacancies, career advice, salary surveys, courses, tutorials, "
+    "certifications, meetup announcements, podcasts, opinion pieces without concrete news. → REJECT.\n"
+    "L3. Startup funding rounds under $100M, minor product updates, app version bumps. → REJECT.\n"
+    "L4. Generic business news, market reports, company profiles, acquisitions for cost-cutting. → REJECT.\n\n"
 
-    "STEP 2 — KEEP only if the item clearly matches ONE of:\n"
+    "STEP 2 — KEEP only if passed STEP 1 AND clearly matches ONE of:\n"
 
-    "K1. JAVA — significant news about Java ecosystem: new Java/JDK version release, "
-    "major Spring Framework / Spring Boot / Quarkus / Micronaut release or announcement, "
-    "important Jakarta EE / JVM news, notable Java performance findings, "
-    "major Java conferences (JavaOne, Devoxx) announcements or key talks.\n"
-    "DO NOT keep: minor library updates, job posts, Java tutorials, Java basics articles.\n\n"
+    "K1. JAVA / JVM ECOSYSTEM — positive releases: new Java/JDK major version, "
+    "major Spring / Quarkus / Micronaut release, important JVM performance improvements, "
+    "major JavaOne / Devoxx announcements.\n\n"
 
-    "K2. AI / LLM — truly notable AI news: major new model releases (GPT-5, Claude 4, Gemini 2, "
-    "Llama 4, etc.), significant AI breakthroughs or research results, major AI product launches "
-    "(new GPT features, Copilot major updates, etc.), AI regulation or policy news with wide impact, "
-    "genuinely remarkable AI demos or capabilities. "
-    "DO NOT keep: minor AI tool updates, AI productivity tips, listicles, 'AI for beginners' posts, "
-    "every new chatbot release, vague 'AI is changing everything' opinion pieces.\n\n"
+    "K2. AI / LLM — exciting breakthroughs: major new model releases (GPT-5, Claude 4, "
+    "Gemini 3, Llama 4, etc.), AI research that solves a hard problem ('first ever', "
+    "'surpasses human at X'), impressive open-source releases (DeepSeek, Mistral), "
+    "genuinely cool AI demos or capabilities.\n"
+    "DO NOT keep: minor updates, AI tips, chatbot releases, regulation/safety concerns.\n\n"
 
-    "K3. SIGNIFICANT IT INDUSTRY NEWS — major events only: large tech company layoffs (1000+ people), "
-    "major acquisitions (>$1B), significant open-source project releases (Linux kernel, Kubernetes, "
-    "PostgreSQL major version), important cybersecurity incidents (large breaches, critical 0-day), "
-    "new programming language major version (Python 4, Rust 2.0, Go 2, etc.).\n"
-    "DO NOT keep: minor product updates, startup funding rounds, conference announcements, "
-    "developer surveys, opinion pieces.\n\n"
+    "K3. INSPIRING TECH — stories that make tech people excited: viral GitHub projects "
+    "(100k+ stars), amazing new tools or frameworks, hardware breakthroughs "
+    "(new CPU/GPU architecture, quantum computing milestone), impressive open-source "
+    "projects, 'robot does X for first time', surprising positive benchmarks, "
+    "new programming language major version.\n\n"
 
-    "K4. UKRAINE IT — significant news about Ukrainian IT industry specifically: "
-    "major Ukrainian IT company news, Ukrainian developer achievements at international competitions, "
-    "IT education initiatives in Ukraine, tech companies investing in or leaving Ukraine.\n"
-    "DO NOT keep: generic Ukrainian job market stats, salary surveys.\n\n"
+    "K4. SIGNIFICANT POSITIVE RELEASES — major open-source milestones: Linux kernel major, "
+    "PostgreSQL/MySQL major, Kubernetes major, Node.js LTS, browser engine new feature, "
+    "major acquisitions that expand capabilities (>$5B, clearly positive for developers).\n\n"
 
-    "REJECT: job ads, tutorials, courses, career advice, salary surveys, company profiles, "
-    "minor product updates, opinion pieces, podcasts, meetup announcements.\n\n"
+    "K5. UKRAINE IT — positive only: Ukrainian developers winning competitions, "
+    "Ukrainian tech product reaching global fame, major tech company investing in Ukraine.\n\n"
 
-    "If in doubt → REJECT."
+    "If in doubt → REJECT. Default is to drop."
 )
 
 

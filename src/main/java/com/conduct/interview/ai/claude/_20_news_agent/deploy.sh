@@ -40,7 +40,7 @@ rsync -avz \
   "$REMOTE:$REMOTE_DIR/"
 
 # Видаляємо застарілі файли і кеш класифікації (prompts змінилися → стара класифікація хибна).
-ssh "$REMOTE" "rm -f '$REMOTE_DIR/news_agent.py' '$REMOTE_DIR/app.py' '$REMOTE_DIR/classification_cache.json' && find '$REMOTE_DIR' -name '__pycache__' -exec rm -rf {} + 2>/dev/null; true"
+ssh "$REMOTE" "rm -f '$REMOTE_DIR/news_agent.py' '$REMOTE_DIR/app.py' '$REMOTE_DIR/classification_cache.json' '$REMOTE_DIR/tech_cache.json' && find '$REMOTE_DIR' -name '__pycache__' -exec rm -rf {} + 2>/dev/null; true"
 
 if [ -f "$KEY_FILE" ]; then
   rsync -avz "$KEY_FILE" "$REMOTE:$REMOTE_DIR/key.txt"
