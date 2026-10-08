@@ -17,12 +17,8 @@ from .providers import call_llm
 log = logging.getLogger("news_agent.tech")
 
 TECH_RSS_SOURCES = [
-    ("dou",         "https://dou.ua/lenta/news/feed/",                      30),
-    ("ain",         "https://ain.ua/feed/",                                  30),
-    ("hn",          "https://hnrss.org/frontpage",                           30),
-    ("theverge",    "https://www.theverge.com/rss/index.xml",                30),
-    ("arstechnica", "https://feeds.arstechnica.com/arstechnica/index",       30),
-    ("techcrunch",  "https://techcrunch.com/feed/",                          30),
+    ("dou",  "https://dou.ua/lenta/news/feed/",  30),
+    ("ain",  "https://ain.ua/feed/",              50),
 ]
 TECH_FETCH_LIMIT = 80
 TECH_CACHE_FILE  = APP_DIR / "tech_cache.json"
@@ -34,9 +30,9 @@ TECH_RULES = (
     "Be strict. Most items should be REJECTED.\n\n"
 
     "STEP 1 — REJECT immediately if ANY of these is true:\n"
-    "L0. The article is written in Russian. "
-    "Russian signals: 'который', 'они', 'нужно', 'можно', 'после', 'против', 'своей', "
-    "'будет', 'стал', 'был', 'это', 'также', 'только', 'когда', 'между'. → REJECT.\n"
+    "L0. The article is NOT written in Ukrainian. Reject English, Russian, or any other language. "
+    "Ukrainian signals: 'та', 'що', 'як', 'але', 'для', 'від', 'про', 'або', 'вже', 'нові', 'це'. "
+    "If the title and description are in English or Russian → REJECT.\n"
     "L1. NEGATIVE content: hacks, breaches, leaks, cyberattacks, data theft, outages, "
     "failures, layoffs, fines, lawsuits, bans, scandals, vulnerabilities, zero-days, "
     "ransomware, phishing, fraud, monopoly abuse, privacy violations. → REJECT.\n"
