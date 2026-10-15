@@ -121,11 +121,11 @@ EOF
 
 ssh "$REMOTE" sudo tee "/etc/systemd/system/$BROADCAST_SERVICE_NAME.timer" > /dev/null <<EOF
 [Unit]
-Description=Run the Telegram broadcaster every 15 minutes
+Description=Run the Telegram broadcaster every 30 minutes
 
 [Timer]
 OnBootSec=2min
-OnUnitActiveSec=15min
+OnUnitActiveSec=30min
 Unit=$BROADCAST_SERVICE_NAME.service
 
 [Install]

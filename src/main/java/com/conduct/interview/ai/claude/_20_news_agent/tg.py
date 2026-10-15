@@ -95,7 +95,7 @@ def _format_digest(mood: str, hours: float, entries: list[dict]) -> str:
     if not entries:
         return (
             f"{period.capitalize()} новин під твій настрій ще не назбиралось.\n\n"
-            "Дайджест будується поступово (раз на 15 хв) — зачекай трохи."
+            "Дайджест будується поступово (раз на 3 год) — зачекай трохи."
         )
 
     lines = [f"📊 Дайджест {period} ({len(entries)} новин):"]

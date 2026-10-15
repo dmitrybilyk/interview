@@ -1,4 +1,4 @@
-"""Запускається кожні 15 хв (systemd timer). Пушить нові новини підписникам у Telegram.
+"""Запускається кожні 30 хв (systemd timer). Пушить нові новини підписникам у Telegram.
 
 sent_state.json — які посилання вже надіслані per mood (щоб не слати двічі).
 Перший запуск для mood тільки записує baseline — нові підписники не отримують бекло.
@@ -22,6 +22,15 @@ log = logging.getLogger("news_agent.broadcaster")
 STATE_FILE = Path(__file__).resolve().parent / "sent_state.json"
 MAX_TRACKED_LINKS_PER_MOOD = 300
 
+# Новини не термінові — опитуємо рідко, щоб вкластися в денний ліміт токенів Groq (200k TPD).
+# Кожен виклик LLM коштує ~1.8k токенів лише на правила, тож рідші запуски = менше викликів.
+# Censor RSS тримає ~19 год новин, IT-фіди — кілька днів.
+# Спорт не рідше ніж раз на ~2 год: RSS sport.ua тримає лише 20 останніх новин.
+MOODS_INTERVAL_MIN  = 180
+SPORTS_INTERVAL_MIN = 90
+TECH_INTERVAL_MIN   = 360
+_TIMER_SLACK_SEC    = 5 * 60  # таймер стартує не секунда в секунду
+
 
 def _load_state() -> dict:
     if STATE_FILE.exists():
@@ -31,6 +40,15 @@ def _load_state() -> dict:
 
 def _save_state(state: dict) -> None:
     STATE_FILE.write_text(json.dumps(state, ensure_ascii=False, indent=2))
+
+
+def _is_due(state: dict, section: str, interval_min: int) -> bool:
+    last = state.get("last_run", {}).get(section, 0)
+    return time.time() - last >= interval_min * 60 - _TIMER_SLACK_SEC
+
+
+def _mark_run(state: dict, section: str) -> None:
+    state.setdefault("last_run", {})[section] = time.time()
 
 
 def main():
@@ -49,7 +67,10 @@ def main():
     state = _load_state()
     blocked_ids: set[str] = set()
 
-    for mood in moods_needed:
+    moods_due = _is_due(state, "moods", MOODS_INTERVAL_MIN)
+    if moods_due:
+        _mark_run(state, "moods")
+    for mood in (moods_needed if moods_due else ()):
         items = get_filtered_news(mood)
         history.record(mood, items)  # for /digest — independent of who's due a push below
 
@@ -84,9 +105,10 @@ def main():
         state[mood] = all_links[-MAX_TRACKED_LINKS_PER_MOOD:]
 
     # ── Спортивні новини ────────────────────────────────────────────────────────
-    time.sleep(5)  # пауза після основних новин щоб не вичерпати Groq rate limit
     sports_subs = [cid for cid, sub in subscribers.items() if sub.get("sports")]
-    if sports_subs:
+    if sports_subs and _is_due(state, "sports", SPORTS_INTERVAL_MIN):
+        _mark_run(state, "sports")
+        time.sleep(5)  # пауза після основних новин щоб не вичерпати Groq rate limit
         sports_items = get_sports_news()
         already_seen_sports = set(state.get("sports", []))
         is_first_sports = not already_seen_sports
@@ -117,7 +139,8 @@ def main():
 
     # ── IT-новини ────────────────────────────────────────────────────────────────
     tech_subs = [cid for cid, sub in subscribers.items() if sub.get("tech")]
-    if tech_subs:
+    if tech_subs and _is_due(state, "tech", TECH_INTERVAL_MIN):
+        _mark_run(state, "tech")
         time.sleep(5)
         tech_items = get_tech_news()
         already_seen_tech = set(state.get("tech", []))

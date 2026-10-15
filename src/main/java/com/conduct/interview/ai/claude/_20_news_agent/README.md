@@ -8,7 +8,7 @@
 RSS → fetch.py → classify.py ──[LLM]──► відфільтровані новини
                       │                        │
                classification_cache.json    app.py (веб)
-                                            broadcaster.py (Telegram, кожні 15 хв)
+                                            broadcaster.py (Telegram, таймер кожні 30 хв)
 ```
 
 ## Структура
@@ -61,7 +61,7 @@ LLM_PROVIDER=groq ./deploy.sh  # Groq
 
 Rsync коду на `92.5.42.35`, venv, два systemd unit:
 - `news-agent.service` — Flask на `127.0.0.1:8600`
-- `news-agent-broadcast.timer` — broadcaster кожні 15 хв
+- `news-agent-broadcast.timer` — broadcaster кожні 30 хв (новини раз на 3 год, спорт — 1.5 год, IT — 6 год; див. broadcaster.py)
 
 Доступ: **https://cozy-planner.duckdns.org/news-agent/**
 
