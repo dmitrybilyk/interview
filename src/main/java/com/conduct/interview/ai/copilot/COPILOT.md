@@ -165,3 +165,92 @@ Output per file: 🔴 Critical / 🟡 Warning / 🟢 Suggestion
 ```
 
 Перевага промпту над кнопкою: враховує `copilot-instructions.md` — знає стиль коду, конвенції команди.
+
+Додати для кожного аспекту додатку якийсь контекст з описом як працює, які класи задіяні, бібліотеки і тд
+
+---
+
+## `.github/instructions/*.instructions.md` — автопідхоплення per-aspect
+
+На відміну від `.github/prompts/*.prompt.md` (викликаєш вручну через `/` чи `#prompt:`), файли в `.github/instructions/` мають frontmatter з `applyTo`, і Copilot **сам** вирішує, який файл підключити — залежно від того, з якими файлами ти зараз працюєш у чаті. Ручний виклик не потрібен.
+
+```markdown
+---
+applyTo: "src/main/java/.../payments/**"
+---
+Payments module: обробляє транзакції через Stripe SDK.
+Класи: PaymentService, PaymentGateway, WebhookHandler.
+Інваріант: кожна транзакція логується в audit_log перед commit.
+```
+
+Коли відкриваєш/згадуєш файл з `payments/`, Copilot автоматично додає цей інструкційний файл у контекст. Можна мати скільки завгодно таких файлів, по одному на "аспект":
+
+```
+.github/instructions/
+  payments.instructions.md          (applyTo: "**/payments/**")
+  auth.instructions.md              (applyTo: "**/auth/**")
+  mongo-migrations.instructions.md  (applyTo: "migrations/mongo/**")
+```
+
+### Важливі нюанси
+
+- **Це matching по шляху (glob), не семантичний.** Copilot не "розуміє", що файл релевантний за змістом — він перевіряє, чи шлях файлу в контексті підпадає під `applyTo`. Якщо структура проекту відповідає аспектам (кожен аспект = своя папка) — працює ідеально автоматично.
+- Якщо аспект **cross-cutting** (не прив'язаний до папки, напр. "як ми обробляємо idempotency" у всьому проекті) — glob не допоможе. Тоді або клади правило в `copilot-instructions.md` (завжди активний), або підключай вручну через `#file:path/to/aspect.md`.
+- `copilot-instructions.md` — завжди в кожному запиті (весь текст, без розбору на секції). Якщо напхати туди описи всіх аспектів — це роздуває кожен промпт контекстом, який часто не потрібен. Розбиття на `*.instructions.md` з `applyTo` — спосіб підвантажувати контекст тільки коли він релевантний.
+- **Той самий файл можна підключити і вручну** — `#file:.github/instructions/payments.instructions.md` у чаті, незалежно від того, чи співпадає `applyTo` з поточним контекстом. Тобто пишеш контекст (класи, бібліотеки, інваріанти) один раз — і далі отримуєш його або автоматично (коли glob підходить), або вручну одним `#file:` замість передруковування пояснень у кожному промпті.
+
+### Реальні приклади для цього проекту
+
+У цьому репо `.github/instructions/` ще не створено (зараз є тільки `copilot-instructions.md` + `prompts/*.prompt.md`). Ось як виглядали б конкретні файли під реальну структуру `src/main/java/com/conduct/interview/`:
+
+```markdown
+File: .github/instructions/leetcode.instructions.md
+---
+applyTo: "src/main/java/com/conduct/interview/coding/leetcode/**"
+---
+LeetCode розв'язки. Структура: `_<N>_<категорія>/<задача>/<Задача><Варіант>.java`
+(наприклад `_1_arrays_and_hashing/two_sum/TwoSumHashMapIndicesCheck2.java`).
+
+- Кожен файл — окремий варіант розв'язку з `main()`, що друкує результат на тестовому вході.
+- Classic підходи для масивів/хешингу: HashMap one-pass, two-pointer на сортованому масиві, bucket sort для top-K.
+- При рев'ю: трасуй на прикладі з `main()`, перевіряй edge cases (дублікати, порожній масив, k > розмір).
+- Не виправляй стиль на "production" — навмисна мінімалістичність для повторення перед інтерв'ю.
+```
+
+```markdown
+File: .github/instructions/reactive.instructions.md
+---
+applyTo: "src/main/java/com/conduct/interview/_9_reactive_programming/**"
+---
+Project Reactor демо (Mono/Flux). Теми за підпапками: cold vs hot, backpressure,
+schedulers & threading, context propagation, testing reactive streams (StepVerifier).
+
+- Пояснюючи код — завжди вказуй, на якому Scheduler виконується кожен крок.
+- Якщо приклад з `block()` — зауваж, що це антипаттерн і де так робити не можна (в WebFlux-хендлерах).
+- Для тестів реактивних стрімів — пропонуй `StepVerifier`, не `.block()` + assert.
+```
+
+```markdown
+File: .github/instructions/kafka.instructions.md
+---
+applyTo: "src/main/java/com/conduct/interview/_6_message_brokers/kafka/**"
+---
+Kafka демо: producer/consumer, partitioning, consumer groups, offsets, idempotency.
+
+- Середовище: Kafka піднімається через Docker (див. docker-compose в корені, якщо є) — порт 9092.
+- При діагностиці проблем з доставкою — перше питання: consumer group id той самий? offset reset policy?
+- Ідемпотентність на стороні consumer — через унікальний key в БД, не через Kafka exactly-once гарантії.
+```
+
+```markdown
+File: .github/instructions/spring-security.instructions.md
+---
+applyTo: "src/main/java/com/conduct/interview/_3_spring/_13_spring_security/**"
+---
+Spring Security демо: автентифікація, авторизація, фільтри, JWT.
+
+- Явно показуй порядок filter chain, якщо йдеться про `SecurityFilterChain`.
+- OWASP-релевантні зауваження (CSRF, session fixation) — лінкуй з `security/owasp/` де релевантно.
+```
+
+Принцип для будь-якого нового модуля: `applyTo` = реальний шлях папки з твоєї структури, тіло — 3-5 речень про те, що там за тема, конвенція найменування файлів, і 1-2 правила специфічні саме для рев'ю/пояснення коду в цій папці (не загальні з `copilot-instructions.md`, а те, що стосується лише цього аспекту).

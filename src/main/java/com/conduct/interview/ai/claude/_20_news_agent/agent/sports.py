@@ -67,7 +67,8 @@ SPORTS_RULES = (
 
 def _fetch_sports(limit: int = SPORTS_FETCH_LIMIT) -> list[dict]:
     log.info("Fetching sports RSS (limit=%d): %s", limit, SPORTS_RSS_URL)
-    resp = requests.get(SPORTS_RSS_URL, headers=_HEADERS, timeout=10)
+    # sport.ua кешує RSS на своєму боці: без унікального параметра віддає фід, що завис годинами
+    resp = requests.get(SPORTS_RSS_URL, params={"_": int(time.time())}, headers=_HEADERS, timeout=10)
     resp.raise_for_status()
     root = ET.fromstring(resp.content)
     items = []

@@ -17,7 +17,7 @@ public class TwoSumTwoPointerSorted {
         int right = nums.length - 1;
         // два вказівники з обох кінців масиву
 
-        for (int i = 0; i < nums.length; i++) {
+        for (int i: nums) {
             int result = nums[left] + nums[right];
             if (result == target) {
                 return nums[left] + ", " + nums[right];

@@ -35,12 +35,20 @@ ssh "$REMOTE" "sudo mkdir -p '$REMOTE_DIR' && sudo chown \$(whoami) '$REMOTE_DIR
 rsync -avz \
   --exclude 'venv' --exclude '__pycache__' --exclude '*.pyc' \
   "$PROJECT_DIR/web.py" "$PROJECT_DIR/tg.py" "$PROJECT_DIR/telegram_bot.py" "$PROJECT_DIR/broadcaster.py" \
-  "$PROJECT_DIR/cli.py" "$PROJECT_DIR/fb_agent.py" "$PROJECT_DIR/product_info.txt" "$PROJECT_DIR/agent" \
+  "$PROJECT_DIR/cli.py" "$PROJECT_DIR/fb_agent.py" "$PROJECT_DIR/agent" \
   "$PROJECT_DIR/requirements.txt" "$PROJECT_DIR/templates" \
   "$REMOTE:$REMOTE_DIR/"
 
 # Видаляємо застарілі файли і кеш класифікації (prompts змінилися → стара класифікація хибна).
 ssh "$REMOTE" "rm -f '$REMOTE_DIR/news_agent.py' '$REMOTE_DIR/app.py' '$REMOTE_DIR/classification_cache.json' '$REMOTE_DIR/tech_cache.json' && find '$REMOTE_DIR' -name '__pycache__' -exec rm -rf {} + 2>/dev/null; true"
+
+# product_info.txt у .gitignore — може не бути локально; тоді лишаємо серверну копію.
+if [ -f "$PROJECT_DIR/product_info.txt" ]; then
+  rsync -avz "$PROJECT_DIR/product_info.txt" "$REMOTE:$REMOTE_DIR/product_info.txt"
+  echo "📄 product_info.txt uploaded"
+else
+  echo "ℹ️  No local product_info.txt — keeping the server copy."
+fi
 
 if [ -f "$KEY_FILE" ]; then
   rsync -avz "$KEY_FILE" "$REMOTE:$REMOTE_DIR/key.txt"
