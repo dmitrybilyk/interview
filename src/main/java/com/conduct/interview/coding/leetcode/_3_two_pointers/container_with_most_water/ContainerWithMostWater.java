@@ -21,13 +21,16 @@ public class ContainerWithMostWater {
             int minHeight = Math.min(height[left], height[right]);
             maxArea = Math.max(maxArea, width * minHeight);
 
-            if (height[left] < height[right]) {
-                left++;
-                // ліва стінка нижча -> вона обмежує площу, рухаємо left вправо
-            } else {
-                right--;
-                // права стінка нижча (або рівна) -> рухаємо right вліво
-            }
+
+            while (left < right && height[left] <= minHeight) left++;
+            while (left < right && height[right] <= minHeight) right--;
+//            if (height[left] < height[right]) {
+//                left++;
+//                 ліва стінка нижча -> вона обмежує площу, рухаємо left вправо
+//            } else {
+//                right--;
+//                 права стінка нижча (або рівна) -> рухаємо right вліво
+//            }
         }
 
         return maxArea;
