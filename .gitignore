@@ -51,3 +51,13 @@ src/main/java/com/conduct/interview/ai/claude/_20_news_agent/facebook_token.txt
 src/main/java/com/conduct/interview/ai/claude/_20_news_agent/facebook_verify_token.txt
 src/main/java/com/conduct/interview/ai/claude/_20_news_agent/email_config.json
 src/main/java/com/conduct/interview/ai/claude/_20_news_agent/product_info.txt
+
+# shahed monitor secrets
+shahed_config.py
+shahed.session
+shahed_bot/token.txt
+shahed_bot/subscribers.json
+shahed_bot/poll_state.json
+kyiv_bot/token.txt
+kyiv_bot/subscribers.json
+kyiv_bot/poll_state.json

@@ -21,6 +21,7 @@ REMOTE="ubuntu@92.5.42.35"
 REMOTE_DIR="/opt/news-agent"
 SERVICE_NAME="news-agent"
 BROADCAST_SERVICE_NAME="news-agent-broadcast"
+SHAHED_SERVICE_NAME="shahed-monitor"
 PORT=8600
 NGINX_CONF="/etc/nginx/sites-enabled/apps.conf"   # the file nginx actually loads on this box
 URL_PATH="/news-agent/"
@@ -37,7 +38,18 @@ rsync -avz \
   "$PROJECT_DIR/web.py" "$PROJECT_DIR/tg.py" "$PROJECT_DIR/telegram_bot.py" "$PROJECT_DIR/broadcaster.py" \
   "$PROJECT_DIR/cli.py" "$PROJECT_DIR/fb_agent.py" "$PROJECT_DIR/agent" \
   "$PROJECT_DIR/requirements.txt" "$PROJECT_DIR/templates" \
+  "$PROJECT_DIR/shahed_monitor.py" \
+  "$PROJECT_DIR/shahed_poll.py" \
   "$REMOTE:$REMOTE_DIR/"
+
+# shahed_config.py — містить секрети, копіюємо окремо якщо є
+SHAHED_CONFIG="$PROJECT_DIR/shahed_config.py"
+if [ -f "$SHAHED_CONFIG" ]; then
+  rsync -avz "$SHAHED_CONFIG" "$REMOTE:$REMOTE_DIR/shahed_config.py"
+  echo "🔑 shahed_config.py uploaded"
+else
+  echo "⚠️  No shahed_config.py found — shahed-monitor will not start."
+fi
 
 # Видаляємо застарілі файли і кеш класифікації (prompts змінилися → стара класифікація хибна).
 ssh "$REMOTE" "rm -f '$REMOTE_DIR/news_agent.py' '$REMOTE_DIR/app.py' '$REMOTE_DIR/classification_cache.json' '$REMOTE_DIR/tech_cache.json' && find '$REMOTE_DIR' -name '__pycache__' -exec rm -rf {} + 2>/dev/null; true"
@@ -134,7 +146,166 @@ EOF
 
 ssh "$REMOTE" "sudo systemctl daemon-reload && sudo systemctl enable --now $BROADCAST_SERVICE_NAME.timer"
 
-# ── 5. Add an nginx location for it, if not already there ──────────────────
+# ── 5. Shahed monitor service ────────────────────────────────────────────────
+echo "🚨 Configuring shahed-monitor service..."
+ssh "$REMOTE" sudo tee "/etc/systemd/system/$SHAHED_SERVICE_NAME.service" > /dev/null <<EOF
+[Unit]
+Description=Shahed Monitor — Lviv channel keyword alerts
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=$REMOTE_DIR
+ExecStart=$REMOTE_DIR/venv/bin/python $REMOTE_DIR/shahed_monitor.py
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+ssh "$REMOTE" "sudo systemctl daemon-reload && sudo systemctl enable $SHAHED_SERVICE_NAME"
+# Не стартуємо автоматично — потрібна ручна авторизація першого разу (shahed.session)
+echo "⚠️  shahed-monitor НЕ запущено автоматично."
+echo "   Зайди на сервер і виконай:"
+echo "   ssh ubuntu@92.5.42.35"
+echo "   cd /opt/news-agent && venv/bin/python shahed_monitor.py"
+echo "   (введи номер телефону і код — створить shahed.session)"
+echo "   Потім: sudo systemctl start shahed-monitor"
+
+# ── shahed-poll (HTTP polling, без авторизації) ──────────────────────────────
+echo "📡 Configuring shahed-poll service..."
+ssh "$REMOTE" sudo tee "/etc/systemd/system/shahed-poll.service" > /dev/null <<EOF
+[Unit]
+Description=Shahed Poll — Lviv channel HTTP polling alerts
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=$REMOTE_DIR
+ExecStart=$REMOTE_DIR/venv/bin/python $REMOTE_DIR/shahed_poll.py
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+echo "ℹ️  shahed-poll вимкнено — використовується окремий @LvyvDistrictAlertBot"
+
+# ── shahed-bot (окремий бот з вибором зони) ──────────────────────────────────
+echo "🤖 Syncing shahed_bot..."
+ssh "$REMOTE" "mkdir -p $REMOTE_DIR/shahed_bot"
+rsync -avz \
+  --exclude '__pycache__' --exclude '*.pyc' \
+  "$PROJECT_DIR/shahed_bot/bot.py" \
+  "$PROJECT_DIR/shahed_bot/zones.py" \
+  "$REMOTE:$REMOTE_DIR/shahed_bot/"
+
+SHAHED_BOT_TOKEN="$PROJECT_DIR/shahed_bot/token.txt"
+if [ -f "$SHAHED_BOT_TOKEN" ]; then
+  rsync -avz "$SHAHED_BOT_TOKEN" "$REMOTE:$REMOTE_DIR/shahed_bot/token.txt"
+  echo "🔑 shahed_bot/token.txt uploaded"
+else
+  echo "⚠️  Немає shahed_bot/token.txt — створи бота у @BotFather і поклади токен туди"
+fi
+
+ssh "$REMOTE" sudo tee "/etc/systemd/system/shahed-bot.service" > /dev/null <<EOF
+[Unit]
+Description=Shahed Alert Bot — Lviv zones
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=$REMOTE_DIR/shahed_bot
+ExecStart=$REMOTE_DIR/venv/bin/python $REMOTE_DIR/shahed_bot/bot.py
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+ssh "$REMOTE" "sudo systemctl daemon-reload && sudo systemctl enable shahed-bot"
+if [ -f "$SHAHED_BOT_TOKEN" ]; then
+  ssh "$REMOTE" "sudo systemctl restart shahed-bot"
+  echo "✅ shahed-bot запущено!"
+else
+  echo "⚠️  shahed-bot не запущено — потрібен token.txt"
+fi
+
+# ── kyiv-bot ─────────────────────────────────────────────────────────────────
+echo "🤖 Syncing kyiv_bot..."
+ssh "$REMOTE" "mkdir -p $REMOTE_DIR/kyiv_bot"
+rsync -avz \
+  --exclude '__pycache__' --exclude '*.pyc' \
+  "$PROJECT_DIR/kyiv_bot/bot.py" \
+  "$PROJECT_DIR/kyiv_bot/zones.py" \
+  "$REMOTE:$REMOTE_DIR/kyiv_bot/"
+
+KYIV_BOT_TOKEN="$PROJECT_DIR/kyiv_bot/token.txt"
+if [ -f "$KYIV_BOT_TOKEN" ]; then
+  rsync -avz "$KYIV_BOT_TOKEN" "$REMOTE:$REMOTE_DIR/kyiv_bot/token.txt"
+  echo "🔑 kyiv_bot/token.txt uploaded"
+fi
+
+ssh "$REMOTE" sudo tee "/etc/systemd/system/kyiv-bot.service" > /dev/null <<EOF
+[Unit]
+Description=Shahed Alert Bot — Kyiv zones
+After=network.target
+
+[Service]
+Type=simple
+User=ubuntu
+WorkingDirectory=$REMOTE_DIR/kyiv_bot
+ExecStart=$REMOTE_DIR/venv/bin/python $REMOTE_DIR/kyiv_bot/bot.py
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+ssh "$REMOTE" "sudo systemctl daemon-reload && sudo systemctl enable kyiv-bot"
+if [ -f "$KYIV_BOT_TOKEN" ]; then
+  ssh "$REMOTE" "sudo systemctl restart kyiv-bot"
+  echo "✅ kyiv-bot запущено!"
+fi
+
+# ── donate-reminder (щотижнево) ───────────────────────────────────────────────
+echo "💛 Configuring donate-reminder timer..."
+rsync -avz "$PROJECT_DIR/donate_reminder.py" "$REMOTE:$REMOTE_DIR/donate_reminder.py"
+
+ssh "$REMOTE" sudo tee "/etc/systemd/system/donate-reminder.service" > /dev/null <<EOF
+[Unit]
+Description=Weekly donate reminder to all bot subscribers
+
+[Service]
+Type=oneshot
+User=ubuntu
+WorkingDirectory=$REMOTE_DIR
+ExecStart=$REMOTE_DIR/venv/bin/python $REMOTE_DIR/donate_reminder.py
+EOF
+
+ssh "$REMOTE" sudo tee "/etc/systemd/system/donate-reminder.timer" > /dev/null <<EOF
+[Unit]
+Description=Run donate reminder daily (script decides if it's time to send)
+
+[Timer]
+OnCalendar=daily
+Persistent=true
+
+[Install]
+WantedBy=timers.target
+EOF
+
+ssh "$REMOTE" "sudo systemctl daemon-reload && sudo systemctl enable --now donate-reminder.timer"
+echo "✅ donate-reminder timer запущено (щонеділі о 12:00)"
+
+# ── 6. Add an nginx location for it, if not already there ──────────────────
 echo "🌐 Wiring up nginx at $URL_PATH ..."
 ssh "$REMOTE" bash -s <<EOF
 set -e
@@ -170,7 +341,7 @@ PYEOF
 fi
 EOF
 
-# ── 6. Point the Telegram bot's webhook at us ───────────────────────────────
+# ── 7. Point the Telegram bot's webhook at us ───────────────────────────────
 if [ -f "$TELEGRAM_TOKEN_FILE" ]; then
   echo "🤖 Registering Telegram webhook..."
   TOKEN="$(tr -d '[:space:]' < "$TELEGRAM_TOKEN_FILE")"

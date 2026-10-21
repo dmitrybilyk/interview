@@ -2,3 +2,6 @@ flask>=3.0
 requests>=2.31
 anthropic>=0.40
 beautifulsoup4>=4.12
+telethon>=1.36
+staticmap>=0.5.4
+Pillow>=10.0
