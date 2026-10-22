@@ -31,8 +31,9 @@ log = logging.getLogger("shahed_bot")
 TOKEN_FILE   = Path(__file__).parent / "token.txt"
 SUBS_FILE    = Path(__file__).parent / "subscribers.json"
 STATE_FILE   = Path(__file__).parent / "poll_state.json"
-CHANNEL      = "lvivych_news"
-POLL_SECONDS = 15
+CHANNEL             = "lvivych_news"
+POLL_SECONDS_NORMAL = 15
+POLL_SECONDS_ALERT  = 3
 
 TOKEN        = TOKEN_FILE.read_text().strip() if TOKEN_FILE.exists() else ""
 API          = f"https://api.telegram.org/bot{TOKEN}"
@@ -188,8 +189,10 @@ def matched_zones(text: str) -> list[str]:
 
 
 def poll_loop() -> None:
-    log.info("Поллінг @%s кожні %ds", CHANNEL, POLL_SECONDS)
-    seen = load_seen()
+    log.info("Поллінг @%s нормально=%ds тривога=%ds",
+             CHANNEL, POLL_SECONDS_NORMAL, POLL_SECONDS_ALERT)
+    seen          = load_seen()
+    alert_active  = False
 
     if not seen:
         msgs = fetch_messages()
@@ -198,17 +201,27 @@ def poll_loop() -> None:
         log.info("Перший запуск — запам'ятовано %d постів", len(seen))
 
     while True:
-        time.sleep(POLL_SECONDS)
+        time.sleep(POLL_SECONDS_ALERT if alert_active else POLL_SECONDS_NORMAL)
         msgs = fetch_messages()
         new  = [m for m in msgs if m["id"] not in seen]
 
         for msg in new:
             seen.add(msg["id"])
-            broadcast  = is_broadcast(msg["text"])
-            hit_zones  = matched_zones(msg["text"])
+            broadcast = is_broadcast(msg["text"])
+            hit_zones = matched_zones(msg["text"])
 
             if not broadcast and not hit_zones:
                 continue
+
+            # Оновлюємо стан тривоги → змінюємо інтервал поллінгу
+            if broadcast:
+                t = msg["text"].lower()
+                if "відбій" in t and alert_active:
+                    alert_active = False
+                    log.info("Відбій — поллінг %ds", POLL_SECONDS_NORMAL)
+                elif "відбій" not in t and not alert_active:
+                    alert_active = True
+                    log.info("Тривога — поллінг %ds", POLL_SECONDS_ALERT)
 
             log.info("broadcast=%s zones=%s | %s", broadcast, hit_zones, msg["text"][:80])
             subs     = load_subs()

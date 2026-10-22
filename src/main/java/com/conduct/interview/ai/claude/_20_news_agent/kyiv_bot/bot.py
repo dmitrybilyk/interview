@@ -32,7 +32,7 @@ TOKEN_FILE   = Path(__file__).parent / "token.txt"
 SUBS_FILE    = Path(__file__).parent / "subscribers.json"
 STATE_FILE   = Path(__file__).parent / "poll_state.json"
 CHANNEL      = "kyiv_nebo"
-POLL_SECONDS = 15
+POLL_SECONDS = 3
 
 TOKEN        = TOKEN_FILE.read_text().strip() if TOKEN_FILE.exists() else ""
 API          = f"https://api.telegram.org/bot{TOKEN}"
