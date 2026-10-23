@@ -28,15 +28,19 @@ log = logging.getLogger("shahed_bot")
 
 # ── Config ────────────────────────────────────────────────────────────────────
 
-TOKEN_FILE    = Path(__file__).parent / "token.txt"
-GROQ_KEY_FILE = Path(__file__).parent / "groq_key.txt"
-SUBS_FILE     = Path(__file__).parent / "subscribers.json"
-STATE_FILE    = Path(__file__).parent / "poll_state.json"
-DONATE_TS_FILE = Path(__file__).parent / "donate_ts.json"
-CHANNEL             = "lvivych_news"
-POLL_SECONDS_NORMAL = 15
-POLL_SECONDS_ALERT  = 3
-DONATE_COOLDOWN     = 3 * 24 * 3600  # 3 days
+TOKEN_FILE         = Path(__file__).parent / "token.txt"
+GROQ_KEY_FILE      = Path(__file__).parent / "groq_key.txt"
+SUBS_FILE          = Path(__file__).parent / "subscribers.json"
+STATE_FILE         = Path(__file__).parent / "poll_state.json"
+DONATE_TS_FILE     = Path(__file__).parent / "donate_ts.json"
+POSITIVE_SENT_FILE = Path(__file__).parent / "positive_sent.json"
+HISTORY_FILE       = Path(__file__).parent.parent / "history.json"  # news-agent shared file
+CHANNEL              = "lvivych_news"
+POLL_SECONDS_NORMAL  = 15
+POLL_SECONDS_ALERT   = 3
+DONATE_COOLDOWN      = 3 * 24 * 3600   # 3 days
+POSITIVE_INTERVAL    = 10 * 60         # check positive news every 10 min
+POSITIVE_MAX_AGE     = 24 * 3600       # only news from last 24h
 
 TOKEN        = TOKEN_FILE.read_text().strip() if TOKEN_FILE.exists() else ""
 GROQ_KEY     = GROQ_KEY_FILE.read_text().strip() if GROQ_KEY_FILE.exists() else ""
@@ -191,14 +195,27 @@ def load_donate_ts() -> float:
 def save_donate_ts() -> None:
     DONATE_TS_FILE.write_text(json.dumps({"last": time.time()}))
 
+
+def load_positive_sent() -> set:
+    if POSITIVE_SENT_FILE.exists():
+        return set(json.loads(POSITIVE_SENT_FILE.read_text()))
+    return set()
+
+
+def save_positive_sent(sent: set) -> None:
+    links = list(sent)[-2000:]  # keep last 2000 to avoid unbounded growth
+    POSITIVE_SENT_FILE.write_text(json.dumps(links))
+
 # ── Keyboards ─────────────────────────────────────────────────────────────────
 
-def zone_keyboard(current_zone: str | None = None) -> dict:
+def zone_keyboard(current_zone: str | None = None, positive: bool = False) -> dict:
     rows = []
     for key, zone in ZONES.items():
         mark = " ✅" if key == current_zone else ""
         rows.append([{"text": zone["name"] + mark, "callback_data": f"zone:{key}"}])
     rows.append([{"text": "🔕 Відписатися", "callback_data": "zone:off"}])
+    pos_text = "💥 Втрати і удари по рф ✅" if positive else "💥 Показувати втрати ворога і удари по рф"
+    rows.append([{"text": pos_text, "callback_data": "positive:toggle"}])
     rows.append([{"text": "☕ Підтримати розробника", "callback_data": "donate"}])
     return {"inline_keyboard": rows}
 
@@ -212,6 +229,53 @@ def load_seen() -> set:
 
 def save_seen(seen: set) -> None:
     STATE_FILE.write_text(json.dumps(list(seen)))
+
+
+def send_positive_news() -> None:
+    if not HISTORY_FILE.exists():
+        return
+    try:
+        history = json.loads(HISTORY_FILE.read_text())
+    except Exception as e:
+        log.warning("history.json read error: %s", e)
+        return
+
+    cutoff = time.time() - POSITIVE_MAX_AGE
+    fresh = [
+        e for e in history.values()
+        if e.get("moods", {}).get("positive")
+        and e.get("category") in ("strike", "losses")
+        and e.get("first_seen", 0) >= cutoff
+    ]
+    if not fresh:
+        return
+
+    sent = load_positive_sent()
+    new_items = [e for e in fresh if e["link"] not in sent]
+    if not new_items:
+        return
+
+    subs = load_subs()
+    positive_subs = [cid for cid, sub in subs.items() if sub.get("positive") and sub.get("zone")]
+    if not positive_subs:
+        for item in new_items:
+            sent.add(item["link"])
+        save_positive_sent(sent)
+        return
+
+    new_items.sort(key=lambda e: e.get("first_seen", 0))
+    for item in new_items:
+        title = item.get("title", "").strip()
+        desc  = item.get("description", "").strip()
+        text  = f"💥 Втрати і удари по рф\n\n{title}"
+        if desc and desc != title:
+            text += f"\n{desc[:300]}"
+        for chat_id in positive_subs:
+            send(int(chat_id), text)
+        sent.add(item["link"])
+
+    save_positive_sent(sent)
+    log.info("Positive news: sent %d item(s) to %d subs", len(new_items), len(positive_subs))
 
 
 def fetch_messages() -> list[dict]:
@@ -292,8 +356,9 @@ def matched_zones(text: str) -> list[str]:
 def poll_loop() -> None:
     log.info("Поллінг @%s нормально=%ds тривога=%ds groq=%s",
              CHANNEL, POLL_SECONDS_NORMAL, POLL_SECONDS_ALERT, "✅" if GROQ_KEY else "❌")
-    seen          = load_seen()
-    alert_active  = False
+    seen               = load_seen()
+    alert_active       = False
+    last_positive_check = 0.0
 
     if not seen:
         msgs = fetch_messages()
@@ -303,6 +368,14 @@ def poll_loop() -> None:
 
     while True:
         time.sleep(POLL_SECONDS_ALERT if alert_active else POLL_SECONDS_NORMAL)
+
+        now = time.time()
+        if now - last_positive_check >= POSITIVE_INTERVAL:
+            last_positive_check = now
+            try:
+                send_positive_news()
+            except Exception as e:
+                log.warning("positive news check failed: %s", e)
         msgs = fetch_messages()
         new  = [m for m in msgs if m["id"] not in seen]
 
@@ -373,6 +446,7 @@ def handle_update(update: dict) -> None:
             subs     = load_subs()
             sub      = subs.get(str(chat_id), {})
             current  = sub.get("zone")
+            positive = sub.get("positive", False)
             greeting = (
                 "🚨 Сповіщення по районах — Львів\n\n"
                 "Обери свій район — надішлю сповіщення щойно з'явиться "
@@ -387,7 +461,7 @@ def handle_update(update: dict) -> None:
                 "⚠️ Це не офіційне джерело. Завжди орієнтуйся на сигнал "
                 "повітряної тривоги та офіційні канали ДСНС."
             )
-            send(chat_id, greeting, reply_markup=zone_keyboard(current))
+            send(chat_id, greeting, reply_markup=zone_keyboard(current, positive))
 
     if cq := update.get("callback_query"):
         chat_id = cq["message"]["chat"]["id"]
@@ -412,7 +486,9 @@ def handle_update(update: dict) -> None:
                 answer(cq["id"], "Відписано")
                 send(chat_id, "🔕 Відписався. /start — підписатися знову.")
             else:
-                subs[str(chat_id)] = {"zone": zone}
+                sub = subs.get(str(chat_id), {})
+                sub["zone"] = zone
+                subs[str(chat_id)] = sub
                 save_subs(subs)
                 zone_name = ZONES[zone]["name"]
                 answer(cq["id"], "✅ Збережено!")
@@ -420,10 +496,32 @@ def handle_update(update: dict) -> None:
                     f"✅ Зону збережено: {zone_name}\n"
                     "Надішлю алерт як тільки твій район з'явиться в новинах.\n\n"
                     "/zone — змінити зону.",
-                    reply_markup=zone_keyboard(zone),
+                    reply_markup=zone_keyboard(zone, sub.get("positive", False)),
                 )
                 send_zone_map(chat_id, zone)
             log.info("chat_id=%s zone=%s", chat_id, zone)
+
+        elif data == "positive:toggle":
+            subs = load_subs()
+            sub  = subs.get(str(chat_id), {})
+            if not sub.get("zone"):
+                answer(cq["id"], "Спочатку обери зону")
+            else:
+                new_val = not sub.get("positive", False)
+                sub["positive"] = new_val
+                subs[str(chat_id)] = sub
+                save_subs(subs)
+                if new_val:
+                    answer(cq["id"], "✅ Увімкнено!")
+                    send(chat_id,
+                        "💥 Увімкнено: Втрати ворога і удари по рф\n\n"
+                        "Нові повідомлення з'являтимуться протягом кількох хвилин після публікації.",
+                        reply_markup=zone_keyboard(sub["zone"], True))
+                else:
+                    answer(cq["id"], "Вимкнено")
+                    send(chat_id, "Вимкнено: Втрати і удари по рф",
+                         reply_markup=zone_keyboard(sub["zone"], False))
+            log.info("chat_id=%s positive=%s", chat_id, sub.get("positive"))
 
 
 def updates_loop() -> None:
