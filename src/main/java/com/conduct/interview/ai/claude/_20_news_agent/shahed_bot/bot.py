@@ -214,7 +214,7 @@ def zone_keyboard(current_zone: str | None = None, positive: bool = False) -> di
         mark = " ✅" if key == current_zone else ""
         rows.append([{"text": zone["name"] + mark, "callback_data": f"zone:{key}"}])
     rows.append([{"text": "🔕 Відписатися", "callback_data": "zone:off"}])
-    pos_text = "💥 Втрати і удари по рф ✅" if positive else "💥 Показувати втрати ворога і удари по рф"
+    pos_text = "💥 Втрати ворога і удари по рф ✅" if positive else "💥 Показувати втрати ворога і удари по рф"
     rows.append([{"text": pos_text, "callback_data": "positive:toggle"}])
     rows.append([{"text": "☕ Підтримати розробника", "callback_data": "donate"}])
     return {"inline_keyboard": rows}
