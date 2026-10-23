@@ -28,18 +28,24 @@ log = logging.getLogger("kyiv_bot")
 
 # ── Config ────────────────────────────────────────────────────────────────────
 
-TOKEN_FILE    = Path(__file__).parent / "token.txt"
-GROQ_KEY_FILE = Path(__file__).parent / "groq_key.txt"
-SUBS_FILE     = Path(__file__).parent / "subscribers.json"
-STATE_FILE    = Path(__file__).parent / "poll_state.json"
-CHANNEL       = "kyiv_nebo"
-POLL_SECONDS  = 3
+TOKEN_FILE     = Path(__file__).parent / "token.txt"
+GROQ_KEY_FILE  = Path(__file__).parent / "groq_key.txt"
+SUBS_FILE      = Path(__file__).parent / "subscribers.json"
+STATE_FILE     = Path(__file__).parent / "poll_state.json"
+DONATE_TS_FILE = Path(__file__).parent / "donate_ts.json"
+CHANNEL        = "kyiv_nebo"
+POLL_SECONDS   = 3
+DONATE_COOLDOWN = 3 * 24 * 3600  # 3 days
 
 TOKEN     = TOKEN_FILE.read_text().strip() if TOKEN_FILE.exists() else ""
 GROQ_KEY  = GROQ_KEY_FILE.read_text().strip() if GROQ_KEY_FILE.exists() else ""
 API       = f"https://api.telegram.org/bot{TOKEN}"
-DONATE_CARD  = "4441 1110 3446 3160"
-DONATE_TEXT  = f"☕ Підтримати розробника (Monobank):\n<code>{DONATE_CARD}</code>"
+DONATE_CARD     = "4441 1110 3446 3160"
+DONATE_TEXT     = f"☕ Підтримати розробника (Monobank):\n<code>{DONATE_CARD}</code>"
+DONATE_REMINDER = (
+    "☕ Відбій. Якщо бот був корисний — можна підтримати розробника:\n"
+    f"<code>{DONATE_CARD}</code> (Monobank)"
+)
 
 # ── Telegram helpers ──────────────────────────────────────────────────────────
 
@@ -172,6 +178,16 @@ def load_subs() -> dict:
 
 def save_subs(subs: dict) -> None:
     SUBS_FILE.write_text(json.dumps(subs, ensure_ascii=False, indent=2))
+
+
+def load_donate_ts() -> float:
+    if DONATE_TS_FILE.exists():
+        return json.loads(DONATE_TS_FILE.read_text()).get("last", 0.0)
+    return 0.0
+
+
+def save_donate_ts() -> None:
+    DONATE_TS_FILE.write_text(json.dumps({"last": time.time()}))
 
 # ── Keyboards ─────────────────────────────────────────────────────────────────
 
@@ -319,6 +335,15 @@ def poll_loop() -> None:
                 elif "all" in hit_zones or zone == "all" or zone in hit_zones:
                     zone_name = ZONES.get(zone, {}).get("name", zone)
                     send(int(chat_id), f"⚠️ {zone_name}\n\n{msg['text']}")
+
+            # Після відбою — ненав'язливе нагадування про донат (не частіше ніж раз на 3 дні)
+            if broadcast and broadcast_prefix(msg["text"]) == "✅":
+                if time.time() - load_donate_ts() >= DONATE_COOLDOWN:
+                    for chat_id, sub in subs.items():
+                        if sub.get("zone"):
+                            send(int(chat_id), DONATE_REMINDER, parse_mode="HTML")
+                    save_donate_ts()
+                    log.info("Donation reminder sent after відбій")
 
         if new:
             save_seen(seen)
