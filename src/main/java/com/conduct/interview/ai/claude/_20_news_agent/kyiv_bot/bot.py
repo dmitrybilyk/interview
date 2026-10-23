@@ -51,6 +51,7 @@ def tg(method: str, **kwargs) -> dict:
 
 
 def send(chat_id: int, text: str, **kwargs) -> None:
+    kwargs.setdefault("disable_web_page_preview", True)
     tg("sendMessage", chat_id=chat_id, text=text, **kwargs)
 
 
@@ -149,9 +150,33 @@ def fetch_messages() -> list[dict]:
         msg_id  = el.get("data-post", "")
         text_el = el.select_one(".tgme_widget_message_text")
         text    = text_el.get_text(" ", strip=True) if text_el else ""
+        # Прибираємо футер каналу виду "😊 Назва | Підписатися"
+        text = re.sub(r'\s*.{0,30}\|\s*Підписатися', '', text).strip()
         if msg_id and text:
             msgs.append({"id": msg_id, "text": text})
     return msgs
+
+
+# Надсилається ВСІМ підписникам незалежно від зони
+_BROADCAST_RE = re.compile(
+    r"повітряна тривог|повітряній тривоз|\bвідбій\b|дорозвідк"
+    r"|\bппо\b|\bзрк\b|буде гучно|над містом|навколо київ|над київ|біля київ"
+    r"|наразі чисто|\bна центр\b",
+    flags=re.IGNORECASE,
+)
+
+
+def is_broadcast(text: str) -> bool:
+    return bool(_BROADCAST_RE.search(text))
+
+
+def broadcast_prefix(text: str) -> str:
+    t = text.lower()
+    if "відбій" in t or "чисто" in t:
+        return "✅"
+    if "дорозвідк" in t:
+        return "🔍"
+    return "🚨"
 
 
 def matched_zones(text: str) -> list[str]:
@@ -179,31 +204,32 @@ def poll_loop() -> None:
 
     while True:
         time.sleep(POLL_SECONDS)
-        msgs    = fetch_messages()
-        new     = [m for m in msgs if m["id"] not in seen]
+        msgs = fetch_messages()
+        new  = [m for m in msgs if m["id"] not in seen]
 
         for msg in new:
             seen.add(msg["id"])
+            broadcast = is_broadcast(msg["text"])
             hit_zones = matched_zones(msg["text"])
-            if not hit_zones:
+
+            if not broadcast and not hit_zones:
                 continue
 
-            log.info("Тригер зони %s | %s", hit_zones, msg["text"][:80])
+            log.info("broadcast=%s zones=%s | %s", broadcast, hit_zones, msg["text"][:80])
             subs = load_subs()
-            post_url = f"https://t.me/{CHANNEL}/{msg['id'].split('/')[-1]}"
 
             for chat_id, sub in subs.items():
                 zone = sub.get("zone")
                 if not zone:
                     continue
-                # "all" отримує все; решта — тільки свою зону
-                if zone == "all" or zone in hit_zones:
+
+                if broadcast:
+                    prefix = broadcast_prefix(msg["text"])
+                    alert  = f"{prefix} {msg['text']}"
+                    send(int(chat_id), alert)
+                elif "all" in hit_zones or zone == "all" or zone in hit_zones:
                     zone_name = ZONES.get(zone, {}).get("name", zone)
-                    alert = (
-                        f"⚠️ ШАХЕДИ — {zone_name}\n\n"
-                        f"{msg['text']}\n\n"
-                        f"{post_url}"
-                    )
+                    alert = f"⚠️ — {zone_name}\n\n{msg['text']}"
                     send(int(chat_id), alert)
 
         if new:

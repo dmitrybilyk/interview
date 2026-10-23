@@ -52,6 +52,7 @@ def tg(method: str, **kwargs) -> dict:
 
 
 def send(chat_id: int, text: str, **kwargs) -> None:
+    kwargs.setdefault("disable_web_page_preview", True)
     tg("sendMessage", chat_id=chat_id, text=text, **kwargs)
 
 
@@ -150,14 +151,17 @@ def fetch_messages() -> list[dict]:
         msg_id  = el.get("data-post", "")
         text_el = el.select_one(".tgme_widget_message_text")
         text    = text_el.get_text(" ", strip=True) if text_el else ""
+        # Прибираємо футер каналу виду "😊 Назва | Підписатися"
+        text = re.sub(r'\s*.{0,30}\|\s*Підписатися', '', text).strip()
         if msg_id and text:
             msgs.append({"id": msg_id, "text": text})
     return msgs
 
 
-# Повітряна тривога, відбій, дорозвідка — надсилається ВСІМ підписникам незалежно від зони
+# Надсилається ВСІМ підписникам незалежно від зони
 _BROADCAST_RE = re.compile(
-    r"повітряна тривог|повітряній тривоз|відбій тривог|відбій повітр|дорозвідк",
+    r"повітряна тривог|повітряній тривоз|\bвідбій\b|дорозвідк"
+    r"|\bппо\b|\bзрк\b|буде гучно|над містом|навколо львов|над львов",
     flags=re.IGNORECASE,
 )
 
@@ -224,8 +228,7 @@ def poll_loop() -> None:
                     log.info("Тривога — поллінг %ds", POLL_SECONDS_ALERT)
 
             log.info("broadcast=%s zones=%s | %s", broadcast, hit_zones, msg["text"][:80])
-            subs     = load_subs()
-            post_url = f"https://t.me/{CHANNEL}/{msg['id'].split('/')[-1]}"
+            subs = load_subs()
 
             for chat_id, sub in subs.items():
                 zone = sub.get("zone")
@@ -234,15 +237,12 @@ def poll_loop() -> None:
 
                 if broadcast:
                     prefix = broadcast_prefix(msg["text"])
-                    alert  = f"{prefix} {msg['text']}\n\n{post_url}"
+                    alert  = f"{prefix} {msg['text']}"
                     send(int(chat_id), alert)
-                elif zone == "all" or zone in hit_zones:
+                elif "all" in hit_zones or zone == "all" or zone in hit_zones:
+                    # "all" в hit_zones → загальноміська новина → всі підписники
                     zone_name = ZONES.get(zone, {}).get("name", zone)
-                    alert = (
-                        f"⚠️ ШАХЕДИ — {zone_name}\n\n"
-                        f"{msg['text']}\n\n"
-                        f"{post_url}"
-                    )
+                    alert = f"⚠️ ШАХЕДИ — {zone_name}\n\n{msg['text']}"
                     send(int(chat_id), alert)
 
         if new:
