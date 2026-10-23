@@ -101,21 +101,35 @@ def send_zone_map(chat_id: int, zone_key: str) -> None:
 
 # ── Groq AI filter ────────────────────────────────────────────────────────────
 
+# Keyword fallback when Groq key is not configured
+_THREAT_RE = re.compile(
+    r"шахед|дрон|\bбпла\b|ракет|авіац|вибух|\bппо\b|\bзрк\b|обстріл|балістик"
+    r"|відключ.{0,15}світл|знеструм|відключ.{0,15}електр"
+    r"|відключ.{0,15}вод|без.{0,10}води|водопостач|гарячої вод|холодної вод"
+    r"|відключ.{0,15}газ|газопостач|без.{0,10}газ"
+    r"|\bопален\b|відключ.{0,15}тепл"
+    r"|перекрит.{0,20}дорог|\bзатор\b|\bдтп\b",
+    flags=re.IGNORECASE,
+)
+
+
 def groq_is_relevant(text: str) -> bool:
     """Ask Groq if this message is relevant to send.
     Relevant = air threat (drone/rocket/air defense) OR power outage in Lviv district OR major Lviv traffic jam.
-    Falls back to True (send anyway) if Groq is unavailable.
+    Falls back to keyword check if Groq key is not configured or unavailable.
     """
     if not GROQ_KEY:
-        return True
+        return bool(_THREAT_RE.search(text))
 
     prompt = (
         "Повідомлення з новинного каналу Львова. "
-        "Чи стосується воно ХОЧА Б ОДНОГО з: "
+        "Відповідай ТАК лише якщо повідомлення стосується ОДНОГО з: "
         "1) загроза з повітря — шахед, дрон, ракета, авіація, вибух, ппо, зрк, обстріл; "
-        "2) відключення електрики у конкретному районі Львова; "
-        "3) суттєвий затор або перекриття дороги у Львові. "
-        "Відповідь лише одним словом: ТАК або НІ.\n\n"
+        "2) відключення електрики у конкретному районі (де саме немає світла); "
+        "3) відключення або аварія водопостачання у конкретному районі; "
+        "4) відключення газу або опалення у конкретному районі. "
+        "Якщо це новини, протести, кримінал, суд, культура, спорт, реклама — НІ. "
+        "Відповідь одним словом: ТАК або НІ.\n\n"
         f"Повідомлення: {text[:400]}"
     )
 
@@ -147,8 +161,8 @@ def groq_is_relevant(text: str) -> bool:
             if attempt < 2:
                 time.sleep(1)
 
-    log.warning("Groq unavailable — sending message anyway")
-    return True  # safe fallback: don't miss a real threat
+    log.warning("Groq unavailable — falling back to keyword filter")
+    return bool(_THREAT_RE.search(text))
 
 # ── Subscribers ───────────────────────────────────────────────────────────────
 
@@ -214,6 +228,17 @@ def fetch_messages() -> list[dict]:
     return msgs
 
 
+# Fast-path reject: obvious commercial/entertainment content — skip before zone check
+_PROMO_RE = re.compile(
+    r"квитк[иіо]|internet-bilet|concert\.lviv|квиток\b|афіш[аи]",
+    flags=re.IGNORECASE,
+)
+
+
+def is_promo(text: str) -> bool:
+    return bool(_PROMO_RE.search(text))
+
+
 # Fast-path broadcast: air alerts, all-clear, air defense activity — bypass Groq, send to all
 _BROADCAST_RE = re.compile(
     r"повітряна тривог|повітряній тривоз|\bвідбій\b|дорозвідк"
@@ -273,6 +298,10 @@ def poll_loop() -> None:
             if not broadcast and not hit_zones:
                 continue
 
+            if not broadcast and is_promo(msg["text"]):
+                log.info("Promo filtered: %s", msg["text"][:80])
+                continue
+
             # For zone-specific messages: verify with Groq before sending
             if not broadcast and hit_zones:
                 if not groq_is_relevant(msg["text"]):
@@ -326,9 +355,10 @@ def handle_update(update: dict) -> None:
                 "ℹ️ Як це працює:\n"
                 "• Бот моніторить публічні джерела\n"
                 "• Фільтрує повідомлення за назвами населених пунктів і районів\n"
+                "• Використовує ШІ для відсіву нерелевантних новин\n"
                 "• Надсилає тобі лише ті, що стосуються твоєї зони\n\n"
-                "⚡️ Корисно коли відстежуються шахеди або ракети і важливо "
-                "знати чи рухаються вони в бік твого району.\n\n"
+                "⚡️ Сповіщення про загрози з повітря, відключення води, "
+                "електрики, газу та інші важливі події в районі.\n\n"
                 "⚠️ Це не офіційне джерело. Завжди орієнтуйся на сигнал "
                 "повітряної тривоги та офіційні канали ДСНС."
             )
