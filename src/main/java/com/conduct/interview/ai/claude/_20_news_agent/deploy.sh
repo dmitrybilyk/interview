@@ -212,6 +212,12 @@ else
   echo "⚠️  Немає shahed_bot/token.txt — створи бота у @BotFather і поклади токен туди"
 fi
 
+SHAHED_BOT_GROQ="$PROJECT_DIR/shahed_bot/groq_key.txt"
+if [ -f "$SHAHED_BOT_GROQ" ]; then
+  rsync -avz "$SHAHED_BOT_GROQ" "$REMOTE:$REMOTE_DIR/shahed_bot/groq_key.txt"
+  echo "🔑 shahed_bot/groq_key.txt uploaded"
+fi
+
 ssh "$REMOTE" sudo tee "/etc/systemd/system/shahed-bot.service" > /dev/null <<EOF
 [Unit]
 Description=Shahed Alert Bot — Lviv zones
@@ -250,6 +256,12 @@ KYIV_BOT_TOKEN="$PROJECT_DIR/kyiv_bot/token.txt"
 if [ -f "$KYIV_BOT_TOKEN" ]; then
   rsync -avz "$KYIV_BOT_TOKEN" "$REMOTE:$REMOTE_DIR/kyiv_bot/token.txt"
   echo "🔑 kyiv_bot/token.txt uploaded"
+fi
+
+KYIV_BOT_GROQ="$PROJECT_DIR/kyiv_bot/groq_key.txt"
+if [ -f "$KYIV_BOT_GROQ" ]; then
+  rsync -avz "$KYIV_BOT_GROQ" "$REMOTE:$REMOTE_DIR/kyiv_bot/groq_key.txt"
+  echo "🔑 kyiv_bot/groq_key.txt uploaded"
 fi
 
 ssh "$REMOTE" sudo tee "/etc/systemd/system/kyiv-bot.service" > /dev/null <<EOF

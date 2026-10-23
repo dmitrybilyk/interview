@@ -56,8 +56,10 @@ src/main/java/com/conduct/interview/ai/claude/_20_news_agent/product_info.txt
 shahed_config.py
 shahed.session
 shahed_bot/token.txt
+shahed_bot/groq_key.txt
 shahed_bot/subscribers.json
 shahed_bot/poll_state.json
 kyiv_bot/token.txt
+kyiv_bot/groq_key.txt
 kyiv_bot/subscribers.json
 kyiv_bot/poll_state.json

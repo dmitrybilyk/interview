@@ -29,6 +29,7 @@ log = logging.getLogger("shahed_bot")
 # ── Config ────────────────────────────────────────────────────────────────────
 
 TOKEN_FILE   = Path(__file__).parent / "token.txt"
+GROQ_KEY_FILE = Path(__file__).parent / "groq_key.txt"
 SUBS_FILE    = Path(__file__).parent / "subscribers.json"
 STATE_FILE   = Path(__file__).parent / "poll_state.json"
 CHANNEL             = "lvivych_news"
@@ -36,6 +37,7 @@ POLL_SECONDS_NORMAL = 15
 POLL_SECONDS_ALERT  = 3
 
 TOKEN        = TOKEN_FILE.read_text().strip() if TOKEN_FILE.exists() else ""
+GROQ_KEY     = GROQ_KEY_FILE.read_text().strip() if GROQ_KEY_FILE.exists() else ""
 API          = f"https://api.telegram.org/bot{TOKEN}"
 DONATE_CARD  = "4441 1110 3446 3160"
 DONATE_TEXT  = f"☕ Підтримати розробника (Monobank):\n<code>{DONATE_CARD}</code>"
@@ -69,7 +71,6 @@ def send_zone_map(chat_id: int, zone_key: str) -> None:
     try:
         m = StaticMap(600, 600, url_template="https://tile.openstreetmap.org/{z}/{x}/{y}.png")
 
-        # Коло зони — апроксимуємо точками по периметру
         import math
         points = []
         for deg in range(0, 361, 10):
@@ -81,7 +82,6 @@ def send_zone_map(chat_id: int, zone_key: str) -> None:
         line = Line(points, "#FF4444", 3)
         m.add_line(line)
 
-        # Центр зони
         center = CircleMarker((lon, lat), "#FF4444", 10)
         m.add_marker(center)
 
@@ -98,6 +98,57 @@ def send_zone_map(chat_id: int, zone_key: str) -> None:
         )
     except Exception as e:
         log.warning("map generation failed: %s", e)
+
+# ── Groq AI filter ────────────────────────────────────────────────────────────
+
+def groq_is_relevant(text: str) -> bool:
+    """Ask Groq if this message is relevant to send.
+    Relevant = air threat (drone/rocket/air defense) OR power outage in Lviv district OR major Lviv traffic jam.
+    Falls back to True (send anyway) if Groq is unavailable.
+    """
+    if not GROQ_KEY:
+        return True
+
+    prompt = (
+        "Повідомлення з новинного каналу Львова. "
+        "Чи стосується воно ХОЧА Б ОДНОГО з: "
+        "1) загроза з повітря — шахед, дрон, ракета, авіація, вибух, ппо, зрк, обстріл; "
+        "2) відключення електрики у конкретному районі Львова; "
+        "3) суттєвий затор або перекриття дороги у Львові. "
+        "Відповідь лише одним словом: ТАК або НІ.\n\n"
+        f"Повідомлення: {text[:400]}"
+    )
+
+    for attempt in range(3):
+        try:
+            r = requests.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers={"Authorization": f"Bearer {GROQ_KEY}", "Content-Type": "application/json"},
+                json={
+                    "model": "llama-3.1-8b-instant",
+                    "messages": [{"role": "user", "content": prompt}],
+                    "max_tokens": 5,
+                    "temperature": 0,
+                },
+                timeout=10,
+            )
+            if r.status_code == 429:
+                retry_after = float(r.headers.get("retry-after", "1"))
+                log.warning("Groq rate limit, retry in %.1fs (attempt %d)", retry_after, attempt + 1)
+                time.sleep(min(retry_after, 3))
+                continue
+            r.raise_for_status()
+            reply = r.json()["choices"][0]["message"]["content"].strip().upper()
+            result = "ТАК" in reply or "YES" in reply
+            log.debug("Groq: %s → %s", text[:60], result)
+            return result
+        except Exception as e:
+            log.warning("Groq failed (attempt %d): %s", attempt + 1, e)
+            if attempt < 2:
+                time.sleep(1)
+
+    log.warning("Groq unavailable — sending message anyway")
+    return True  # safe fallback: don't miss a real threat
 
 # ── Subscribers ───────────────────────────────────────────────────────────────
 
@@ -150,15 +201,20 @@ def fetch_messages() -> list[dict]:
     for el in soup.select(".tgme_widget_message"):
         msg_id  = el.get("data-post", "")
         text_el = el.select_one(".tgme_widget_message_text")
-        text    = text_el.get_text(" ", strip=True) if text_el else ""
-        # Прибираємо футер каналу виду "😊 Назва | Підписатися"
-        text = re.sub(r'\s*.{0,30}\|\s*Підписатися', '', text).strip()
+        if not text_el:
+            continue
+        for a in text_el.find_all("a"):
+            if "Підписатися" in a.get_text():
+                a.decompose()
+        text = text_el.get_text(" ", strip=True)
+        text = re.sub(r'\s*\S{1,30}\s*\|\s*$', '', text)
+        text = re.sub(r'\s{2,}', ' ', text).strip()
         if msg_id and text:
             msgs.append({"id": msg_id, "text": text})
     return msgs
 
 
-# Надсилається ВСІМ підписникам незалежно від зони
+# Fast-path broadcast: air alerts, all-clear, air defense activity — bypass Groq, send to all
 _BROADCAST_RE = re.compile(
     r"повітряна тривог|повітряній тривоз|\bвідбій\b|дорозвідк"
     r"|\bппо\b|\bзрк\b|буде гучно|над містом|навколо львов|над львов",
@@ -193,8 +249,8 @@ def matched_zones(text: str) -> list[str]:
 
 
 def poll_loop() -> None:
-    log.info("Поллінг @%s нормально=%ds тривога=%ds",
-             CHANNEL, POLL_SECONDS_NORMAL, POLL_SECONDS_ALERT)
+    log.info("Поллінг @%s нормально=%ds тривога=%ds groq=%s",
+             CHANNEL, POLL_SECONDS_NORMAL, POLL_SECONDS_ALERT, "✅" if GROQ_KEY else "❌")
     seen          = load_seen()
     alert_active  = False
 
@@ -217,7 +273,13 @@ def poll_loop() -> None:
             if not broadcast and not hit_zones:
                 continue
 
-            # Оновлюємо стан тривоги → змінюємо інтервал поллінгу
+            # For zone-specific messages: verify with Groq before sending
+            if not broadcast and hit_zones:
+                if not groq_is_relevant(msg["text"]):
+                    log.info("Groq filtered out: %s", msg["text"][:80])
+                    continue
+
+            # Update alert state → change polling interval
             if broadcast:
                 t = msg["text"].lower()
                 if "відбій" in t and alert_active:
@@ -237,13 +299,10 @@ def poll_loop() -> None:
 
                 if broadcast:
                     prefix = broadcast_prefix(msg["text"])
-                    alert  = f"{prefix} {msg['text']}"
-                    send(int(chat_id), alert)
+                    send(int(chat_id), f"{prefix} {msg['text']}")
                 elif "all" in hit_zones or zone == "all" or zone in hit_zones:
-                    # "all" в hit_zones → загальноміська новина → всі підписники
                     zone_name = ZONES.get(zone, {}).get("name", zone)
-                    alert = f"⚠️ ШАХЕДИ — {zone_name}\n\n{msg['text']}"
-                    send(int(chat_id), alert)
+                    send(int(chat_id), f"⚠️ {zone_name}\n\n{msg['text']}")
 
         if new:
             save_seen(seen)
