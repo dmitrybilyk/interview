@@ -322,7 +322,8 @@ def is_promo(text: str) -> bool:
 # Fast-path broadcast: air alerts, all-clear, air defense activity — bypass Groq, send to all
 _BROADCAST_RE = re.compile(
     r"повітряна тривог|повітряній тривоз|\bвідбій\b|дорозвідк"
-    r"|\bппо\b|\bзрк\b|буде гучно|над містом|навколо львов|над львов",
+    r"|\bппо\b|\bзрк\b|буде гучно|над містом|навколо львов|над львов"
+    r"|балістик|загроза.*з (курськ|білорус|крим)|крилат.*ракет",
     flags=re.IGNORECASE,
 )
 
