@@ -244,7 +244,6 @@ def send_positive_news() -> None:
     fresh = [
         e for e in history.values()
         if e.get("moods", {}).get("positive")
-        and e.get("category") in ("strike", "losses")
         and e.get("first_seen", 0) >= cutoff
     ]
     if not fresh:
@@ -267,11 +266,14 @@ def send_positive_news() -> None:
     for item in new_items:
         title = item.get("title", "").strip()
         desc  = item.get("description", "").strip()
+        link  = item.get("link", "")
         text  = f"💥 Втрати і удари по рф\n\n{title}"
         if desc and desc != title:
-            text += f"\n{desc[:300]}"
+            text += f"\n{desc}"
+        if link:
+            text += f"\n{link}"
         for chat_id in positive_subs:
-            send(int(chat_id), text)
+            send(int(chat_id), text, disable_web_page_preview=False)
         sent.add(item["link"])
 
     save_positive_sent(sent)

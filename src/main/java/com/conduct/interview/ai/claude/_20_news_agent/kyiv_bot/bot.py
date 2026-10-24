@@ -35,7 +35,7 @@ STATE_FILE     = Path(__file__).parent / "poll_state.json"
 DONATE_TS_FILE = Path(__file__).parent / "donate_ts.json"
 CHANNEL        = "kyiv_nebo"
 POLL_SECONDS   = 3
-DONATE_COOLDOWN = 3 * 24 * 3600  # 3 days
+DONATE_COOLDOWN = 7 * 24 * 3600  # 1 week
 
 TOKEN     = TOKEN_FILE.read_text().strip() if TOKEN_FILE.exists() else ""
 GROQ_KEY  = GROQ_KEY_FILE.read_text().strip() if GROQ_KEY_FILE.exists() else ""
@@ -43,7 +43,7 @@ API       = f"https://api.telegram.org/bot{TOKEN}"
 DONATE_CARD     = "4441 1110 3446 3160"
 DONATE_TEXT     = f"☕ Підтримати розробника (Monobank):\n<code>{DONATE_CARD}</code>"
 DONATE_REMINDER = (
-    "☕ Відбій. Якщо бот був корисний — можна підтримати розробника:\n"
+    "☕ Бот працює безкоштовно. Якщо він корисний — можна підтримати розробника:\n"
     f"<code>{DONATE_CARD}</code> (Monobank)"
 )
 
@@ -291,7 +291,8 @@ def matched_zones(text: str) -> list[str]:
 
 def poll_loop() -> None:
     log.info("Поллінг @%s кожні %ds groq=%s", CHANNEL, POLL_SECONDS, "✅" if GROQ_KEY else "❌")
-    seen = load_seen()
+    seen            = load_seen()
+    last_donate_check = 0.0
 
     if not seen:
         msgs = fetch_messages()
@@ -301,6 +302,17 @@ def poll_loop() -> None:
 
     while True:
         time.sleep(POLL_SECONDS)
+
+        now = time.time()
+        if now - last_donate_check >= 3600:  # перевіряємо раз на годину
+            last_donate_check = now
+            if now - load_donate_ts() >= DONATE_COOLDOWN:
+                subs = load_subs()
+                for chat_id, sub in subs.items():
+                    if sub.get("zone"):
+                        send(int(chat_id), DONATE_REMINDER, parse_mode="HTML")
+                save_donate_ts()
+                log.info("Donation reminder sent (weekly)")
         msgs = fetch_messages()
         new  = [m for m in msgs if m["id"] not in seen]
 
@@ -337,14 +349,6 @@ def poll_loop() -> None:
                     zone_name = ZONES.get(zone, {}).get("name", zone)
                     send(int(chat_id), f"⚠️ {zone_name}\n\n{msg['text']}")
 
-            # Після відбою — ненав'язливе нагадування про донат (не частіше ніж раз на 3 дні)
-            if broadcast and broadcast_prefix(msg["text"]) == "✅":
-                if time.time() - load_donate_ts() >= DONATE_COOLDOWN:
-                    for chat_id, sub in subs.items():
-                        if sub.get("zone"):
-                            send(int(chat_id), DONATE_REMINDER, parse_mode="HTML")
-                    save_donate_ts()
-                    log.info("Donation reminder sent after відбій")
 
         if new:
             save_seen(seen)
