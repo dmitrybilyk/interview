@@ -52,6 +52,9 @@ src/main/java/com/conduct/interview/ai/claude/_20_news_agent/facebook_verify_tok
 src/main/java/com/conduct/interview/ai/claude/_20_news_agent/email_config.json
 src/main/java/com/conduct/interview/ai/claude/_20_news_agent/product_info.txt
 
+# nova poshta
+src/main/java/com/conduct/interview/ai/claude/_21_nova_poshta/api_key.txt
+
 # shahed monitor secrets
 shahed_config.py
 shahed.session
