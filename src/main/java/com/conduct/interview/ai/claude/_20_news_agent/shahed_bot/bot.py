@@ -300,11 +300,11 @@ def fetch_messages() -> list[dict]:
         if not text_el:
             continue
         for a in text_el.find_all("a"):
-            if "Підписатися" in a.get_text():
+            if re.search(r'Підписати(ся)?', a.get_text(), re.IGNORECASE):
                 a.decompose()
         text = text_el.get_text(" ", strip=True)
-        text = re.sub(r'\s*\S.{0,40}\|\s*Підписатися\s*$', '', text, flags=re.IGNORECASE)
-        text = re.sub(r'\s*\|?\s*Підписатися\s*$', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'\s*\S.{0,40}\|\s*Підписати(ся)?\s*$', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'\s*\|?\s*Підписати(ся)?\s*$', '', text, flags=re.IGNORECASE)
         text = re.sub(r'\s*\S{1,30}\s*\|\s*$', '', text)
         text = re.sub(r'\s{2,}', ' ', text).strip()
         if msg_id and text:
@@ -314,7 +314,8 @@ def fetch_messages() -> list[dict]:
 
 # Fast-path reject: obvious commercial/entertainment content — skip before zone check
 _PROMO_RE = re.compile(
-    r"квитк[иіо]|internet-bilet|concert\.lviv|квиток\b|афіш[аи]",
+    r"квитк[иіо]|internet-bilet|concert\.lviv|квиток\b|афіш[аи]"
+    r"|\bдиктант\b|радіодиктант|фестиваль\b|\bконкурс\b|\bвистав[аи]\b|\bконцерт\b",
     flags=re.IGNORECASE,
 )
 
