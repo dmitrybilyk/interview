@@ -10,7 +10,13 @@ package com.conduct.interview.coding.leetcode._6_linked_list;
 // якщо цикл є — рано чи пізно fast наздожене slow всередині циклу.
 public class LinkedListCycle {
 
-    static class Node { int val; Node next; Node(int v) { val = v; } }
+    static class Node {
+        int val;
+        Node next;
+        Node(int v) {
+            val = v;
+        }
+    }
 
     public static boolean hasCycle(Node head) {
         Node slow = head, fast = head;
@@ -31,7 +37,9 @@ public class LinkedListCycle {
     }
 
     public static void main(String[] args) {
-        Node a = new Node(1), b = new Node(2), c = new Node(3);
+        Node a = new Node(1),
+                b = new Node(2),
+                c = new Node(3);
         a.next = b; b.next = c;
         System.out.println(hasCycle(a)); // false
         c.next = b;                      // create cycle

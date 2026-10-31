@@ -23,10 +23,7 @@ public class MergeLinkedLists {
         l4.next = l5;
         l5.next = l6;
 
-        mergeTwoLists(l1, l2);
-        // УВАГА: тут, схоже, помилка — передано (l1, l2), тобто голову першого списку
-        // і другий вузол ТОГО Ж списку. Мало б бути mergeTwoLists(l1, l4),
-        // щоб об'єднати саме два різні списки.
+        mergeTwoLists(l1, l4);
         System.out.println("dfd");
         // результат злиття тут навіть не виводиться — println друкує просто константний рядок
     }

@@ -1,0 +1,35 @@
+package com.conduct.interview.coding.leetcode._5_binary_search;
+
+// Чернетка / самоперевірка пошуку в оберненому (rotated) масиві.
+// Порівняй з правильною версією в SearchRotatedArray.java — тут є два баги, див. нижче.
+public class SearchRotatedArrayCheck3 {
+    public static void main(String[] args) {
+        System.out.println(searchRotatedArray(new int[]{5, 6, 7, 8, 1, 2, 3, 4}, 3));
+    }
+
+    private static int searchRotatedArray(int[] ints, int target) {
+        int lo = 0, hi = ints.length - 1;
+
+        while (lo <= hi) {
+            int mid = lo + (hi - lo) / 2;
+
+            if (ints[mid] == target) {
+                return mid;
+            }
+            if (ints[lo] <= ints[mid]) {
+                if (ints[lo] <= target && target <= ints[mid]) {
+                    hi = mid - 1;
+                } else {
+                    lo = mid + 1;
+                }
+            } else {
+                if (target >= ints[mid] && target <= ints[hi]) {
+                    lo = mid + 1;
+                } else {
+                    hi = mid - 1;
+                }
+            }
+        }
+        return -1;
+    }
+}
