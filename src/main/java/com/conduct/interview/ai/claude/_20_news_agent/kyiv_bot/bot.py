@@ -143,9 +143,9 @@ def groq_is_relevant(text: str) -> bool:
                 "https://api.groq.com/openai/v1/chat/completions",
                 headers={"Authorization": f"Bearer {GROQ_KEY}", "Content-Type": "application/json"},
                 json={
-                    "model": "llama-3.1-8b-instant",
+                    "model": "qwen/qwen3.8-27b",
                     "messages": [{"role": "user", "content": prompt}],
-                    "max_tokens": 5,
+                    "max_tokens": 200,
                     "temperature": 0,
                 },
                 timeout=10,
