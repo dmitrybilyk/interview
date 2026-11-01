@@ -118,7 +118,8 @@ _THREAT_RE = re.compile(
     r"|відключ.{0,15}вод|без.{0,10}води|водопостач|гарячої вод|холодної вод"
     r"|відключ.{0,15}газ|газопостач|без.{0,10}газ"
     r"|\bопален\b|відключ.{0,15}тепл"
-    r"|перекрит.{0,20}центр.{0,20}дорог|перекрит.{0,20}проспект|перекрит.{0,20}вулиц",
+    r"|перекрит.{0,20}центр.{0,20}дорог|перекрит.{0,20}проспект|перекрит.{0,20}вулиц"
+    r"|\bтривог|\bзбили\b|прямує в бік",
     flags=re.IGNORECASE,
 )
 
@@ -149,9 +150,9 @@ def groq_is_relevant(text: str) -> bool:
                 "https://api.groq.com/openai/v1/chat/completions",
                 headers={"Authorization": f"Bearer {GROQ_KEY}", "Content-Type": "application/json"},
                 json={
-                    "model": "llama-3.1-8b-instant",
+                    "model": "qwen/qwen3.8-27b",
                     "messages": [{"role": "user", "content": prompt}],
-                    "max_tokens": 5,
+                    "max_tokens": 200,
                     "temperature": 0,
                 },
                 timeout=10,
