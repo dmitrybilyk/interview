@@ -23,9 +23,23 @@ public class MergeLinkedLists {
         l4.next = l5;
         l5.next = l6;
 
-        mergeTwoLists(l1, l4);
-        System.out.println("dfd");
-        // результат злиття тут навіть не виводиться — println друкує просто константний рядок
+        printList(l1); // 1 -> 2 -> 4
+        printList(l4); // 1 -> 3 -> 4
+
+        ListNode merged = mergeTwoLists(l1, l4);
+        printList(merged); // 1 -> 1 -> 2 -> 3 -> 4 -> 4
+    }
+
+    private static void printList(ListNode head) {
+        StringBuilder sb = new StringBuilder();
+        for (ListNode node = head; node != null; node = node.next) {
+            sb.append(node.val);
+            if (node.next != null) {
+                sb.append(" -> ");
+            }
+        }
+        System.out.println(sb);
+        // йдемо від голови до кінця (null), між значеннями ставимо стрілку
     }
 
     private static ListNode mergeTwoLists(ListNode l1, ListNode l2) {
