@@ -1,9 +1,6 @@
 """
 District Alert Bot — Львів.
-Підписка на зону → алерт коли в @lvivych_news з'явиться повідомлення про цей район.
-+ Графік відключень від @lvivoblenergo: підписка по групі (1.1–6.2) або весь Львів,
-  попередження за 15 хв до відключення.
-
+Онбординг → вибір зони, позитивних новин, графіку відключень.
 Запуск: venv/bin/python shahed_bot/bot.py
 """
 
@@ -38,34 +35,36 @@ log = logging.getLogger("shahed_bot")
 _DIR               = Path(__file__).parent
 TOKEN_FILE         = _DIR / "token.txt"
 GROQ_KEY_FILE      = _DIR / "groq_key.txt"
-_CLAUDE_KEY_CANDIDATES = [_DIR / "key.txt", _DIR.parent / "key.txt", _DIR.parent.parent / "key.txt"]
-CLAUDE_KEY_FILE    = next((p for p in _CLAUDE_KEY_CANDIDATES if p.exists()), _CLAUDE_KEY_CANDIDATES[1])
+_KEY_CANDIDATES    = [_DIR / "key.txt", _DIR.parent / "key.txt", _DIR.parent.parent / "key.txt"]
+CLAUDE_KEY_FILE    = next((p for p in _KEY_CANDIDATES if p.exists()), _KEY_CANDIDATES[1])
 SUBS_FILE          = _DIR / "subscribers.json"
 STATE_FILE         = _DIR / "poll_state.json"
-DONATE_TS_FILE     = _DIR / "donate_ts.json"
 POSITIVE_SENT_FILE = _DIR / "positive_sent.json"
 OBLEN_STATE_FILE   = _DIR / "oblenergo_state.json"
 OBLEN_WARNED_FILE  = _DIR / "oblenergo_warned.json"
+ALERTS_LOG_FILE    = _DIR / "alerts_log.json"
 HISTORY_FILE       = _DIR.parent / "history.json"
 
-CHANNEL              = "lvivych_news"
-OBLEN_CHANNEL        = "lvivsvitlo"
-POLL_SECONDS_NORMAL  = 15
-POLL_SECONDS_ALERT   = 3
-OBLEN_POLL_SECONDS   = 60
-DONATE_COOLDOWN      = 3 * 24 * 3600
-POSITIVE_INTERVAL    = 10 * 60
-POSITIVE_MAX_AGE     = 24 * 3600
-WARN_MINUTES         = 15
-QUIET_START          = 22   # після цієї години — тихо
-QUIET_END            = 9    # до цієї години — тихо
-_KYIV_TZ             = ZoneInfo("Europe/Kyiv")
+CHANNEL             = "lvivych_news"
+OBLEN_CHANNEL       = "lvivsvitlo"
+POLL_SECONDS_NORMAL = 15
+POLL_SECONDS_ALERT  = 3
+OBLEN_POLL_SECONDS  = 60
+POSITIVE_INTERVAL   = 10 * 60
+POSITIVE_MAX_AGE    = 24 * 3600
+WARN_MINUTES        = 15
+QUIET_START         = 22
+QUIET_END           = 9
+_KYIV_TZ            = ZoneInfo("Europe/Kyiv")
+
+OBLEN_GROUP_ROWS = [["1.1","1.2"],["2.1","2.2"],["3.1","3.2"],
+                    ["4.1","4.2"],["5.1","5.2"],["6.1","6.2"]]
 
 TOKEN      = TOKEN_FILE.read_text().strip() if TOKEN_FILE.exists() else ""
 GROQ_KEY   = GROQ_KEY_FILE.read_text().strip() if GROQ_KEY_FILE.exists() else ""
+
 def _read_key(path: Path) -> str:
     raw = path.read_text().strip()
-    # handle "export VAR=value" or "VAR=value" formats
     if "=" in raw and not raw.startswith("sk-"):
         raw = raw.split("=", 1)[1].strip().strip('"').strip("'")
     return raw
@@ -73,25 +72,24 @@ def _read_key(path: Path) -> str:
 CLAUDE_KEY = _read_key(CLAUDE_KEY_FILE) if CLAUDE_KEY_FILE.exists() else ""
 API        = f"https://api.telegram.org/bot{TOKEN}"
 
-DONATE_CARD     = "4441 1110 3446 3160"
-DONATE_TEXT     = f"☕ Підтримати розробника (Monobank):\n<code>{DONATE_CARD}</code>"
-DONATE_REMINDER = (
-    "☕ Відбій. Якщо бот був корисний — можна підтримати розробника:\n"
-    f"<code>{DONATE_CARD}</code> (Monobank)"
-)
+DONATE_CARD = "4441 1110 3446 3160"
+DONATE_TEXT = f"☕ Підтримати розробника (Monobank):\n<code>{DONATE_CARD}</code>"
 
-SCHEDULE_BTN = "⚡ Графік відключень"
+# Reply keyboard — постійно видима панель кнопок знизу
+BTN_ALERTS   = "🚨 Сповіщення 24"
+BTN_NEWS     = "💥 Новини 24"
+BTN_SCHEDULE = "⚡ Графік"
+BTN_SETTINGS = "⚙️ Налаштування"
+BTN_DONATE   = "☕"
 
-OBLEN_GROUPS = [
-    "1.1", "1.2",
-    "2.1", "2.2",
-    "3.1", "3.2",
-    "4.1", "4.2",
-    "5.1", "5.2",
-    "6.1", "6.2",
-]
-OBLEN_GROUP_ROWS = [["1.1","1.2"],["2.1","2.2"],["3.1","3.2"],
-                    ["4.1","4.2"],["5.1","5.2"],["6.1","6.2"]]
+MAIN_KEYBOARD = {
+    "keyboard": [
+        [{"text": BTN_ALERTS}, {"text": BTN_NEWS}, {"text": BTN_SCHEDULE}],
+        [{"text": BTN_SETTINGS}, {"text": BTN_DONATE}],
+    ],
+    "resize_keyboard": True,
+    "is_persistent": True,
+}
 
 # ── Telegram helpers ──────────────────────────────────────────────────────────
 
@@ -105,6 +103,7 @@ def tg(method: str, **kwargs) -> dict:
 
 
 def send(chat_id: int, text: str, **kwargs) -> None:
+    kwargs.setdefault("parse_mode", "HTML")
     kwargs.setdefault("disable_web_page_preview", True)
     tg("sendMessage", chat_id=chat_id, text=text, **kwargs)
 
@@ -132,77 +131,10 @@ def send_zone_map(chat_id: int, zone_key: str) -> None:
         buf = io.BytesIO()
         img.save(buf, format="PNG")
         buf.seek(0)
-        requests.post(
-            f"{API}/sendPhoto",
-            data={"chat_id": chat_id},
-            files={"photo": ("map.png", buf, "image/png")},
-            timeout=15,
-        )
+        requests.post(f"{API}/sendPhoto", data={"chat_id": chat_id},
+                      files={"photo": ("map.png", buf, "image/png")}, timeout=15)
     except Exception as e:
         log.warning("map generation failed: %s", e)
-
-# ── Groq AI filter ────────────────────────────────────────────────────────────
-
-_THREAT_RE = re.compile(
-    r"шахед|дрон|\bбпла\b|ракет|авіац|вибух|\bппо\b|\bзрк\b|обстріл|балістик"
-    r"|відключ.{0,15}світл|знеструм|відключ.{0,15}електр"
-    r"|відключ.{0,15}вод|без.{0,10}води|водопостач|гарячої вод|холодної вод"
-    r"|відключ.{0,15}газ|газопостач|без.{0,10}газ"
-    r"|\bопален\b|відключ.{0,15}тепл"
-    r"|перекрит.{0,20}центр.{0,20}дорог|перекрит.{0,20}проспект|перекрит.{0,20}вулиц"
-    r"|\bтривог|\bзбили\b|прямує в бік",
-    flags=re.IGNORECASE,
-)
-
-
-def groq_is_relevant(text: str) -> bool:
-    if not GROQ_KEY:
-        return bool(_THREAT_RE.search(text))
-
-    prompt = (
-        "Повідомлення з новинного каналу Львова. "
-        "Відповідай ТАК лише якщо повідомлення стосується ОДНОГО з: "
-        "1) загроза з повітря — шахед, дрон, ракета, авіація, вибух, ппо, зрк, обстріл; "
-        "2) відключення електрики у конкретному районі (де саме немає світла); "
-        "3) відключення або аварія водопостачання у конкретному районі; "
-        "4) відключення газу або опалення у конкретному районі. "
-        "ВАЖЛИВО: подія має стосуватися Львова або Львівської області. "
-        "Якщо подія в іншому регіоні України (Запоріжжя, Харків, Київ тощо) — НІ. "
-        "Якщо це новини, ДТП, аварія на дорозі, протести, кримінал, суд, культура, спорт, реклама — НІ. "
-        "Відповідь одним словом: ТАК або НІ.\n\n"
-        f"Повідомлення: {text[:400]}"
-    )
-
-    for attempt in range(3):
-        try:
-            r = requests.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers={"Authorization": f"Bearer {GROQ_KEY}", "Content-Type": "application/json"},
-                json={
-                    "model": "qwen/qwen3.8-27b",
-                    "messages": [{"role": "user", "content": prompt}],
-                    "max_tokens": 200,
-                    "temperature": 0,
-                },
-                timeout=10,
-            )
-            if r.status_code == 429:
-                retry_after = float(r.headers.get("retry-after", "1"))
-                log.warning("Groq rate limit, retry in %.1fs (attempt %d)", retry_after, attempt + 1)
-                time.sleep(min(retry_after, 3))
-                continue
-            r.raise_for_status()
-            reply = r.json()["choices"][0]["message"]["content"].strip().upper()
-            result = "ТАК" in reply or "YES" in reply
-            log.debug("Groq: %s → %s", text[:60], result)
-            return result
-        except Exception as e:
-            log.warning("Groq failed (attempt %d): %s", attempt + 1, e)
-            if attempt < 2:
-                time.sleep(1)
-
-    log.warning("Groq unavailable — falling back to keyword filter")
-    return bool(_THREAT_RE.search(text))
 
 # ── Subscribers ───────────────────────────────────────────────────────────────
 
@@ -216,14 +148,17 @@ def save_subs(subs: dict) -> None:
     SUBS_FILE.write_text(json.dumps(subs, ensure_ascii=False, indent=2))
 
 
-def load_donate_ts() -> float:
-    if DONATE_TS_FILE.exists():
-        return json.loads(DONATE_TS_FILE.read_text()).get("last", 0.0)
-    return 0.0
+def get_sub(chat_id: int) -> dict:
+    return load_subs().get(str(chat_id), {})
 
 
-def save_donate_ts() -> None:
-    DONATE_TS_FILE.write_text(json.dumps({"last": time.time()}))
+def update_sub(chat_id: int, **fields) -> dict:
+    subs = load_subs()
+    sub  = subs.get(str(chat_id), {})
+    sub.update(fields)
+    subs[str(chat_id)] = sub
+    save_subs(subs)
+    return sub
 
 
 def load_positive_sent() -> set:
@@ -234,6 +169,33 @@ def load_positive_sent() -> set:
 
 def save_positive_sent(sent: set) -> None:
     POSITIVE_SENT_FILE.write_text(json.dumps(list(sent)[-2000:]))
+
+
+# ── Alerts log (24h history) ──────────────────────────────────────────────────
+
+def load_alerts_log() -> list:
+    if ALERTS_LOG_FILE.exists():
+        return json.loads(ALERTS_LOG_FILE.read_text())
+    return []
+
+
+def append_alert_log(text: str, zones: list[str]) -> None:
+    log_entries = load_alerts_log()
+    cutoff = time.time() - 25 * 3600  # зберігаємо трохи більше 24h
+    log_entries = [e for e in log_entries if e["ts"] >= cutoff]
+    log_entries.append({"ts": time.time(), "text": text, "zones": zones})
+    ALERTS_LOG_FILE.write_text(json.dumps(log_entries, ensure_ascii=False))
+
+
+def get_alerts_24h(zone: str) -> list[dict]:
+    cutoff = time.time() - 24 * 3600
+    return [
+        e for e in load_alerts_log()
+        if e["ts"] >= cutoff
+        and (not zone or zone == "all"
+             or "all" in e.get("zones", [])
+             or zone in e.get("zones", []))
+    ]
 
 # ── Oblenergo state ───────────────────────────────────────────────────────────
 
@@ -258,34 +220,46 @@ def save_warned(warned: set) -> None:
 
 # ── Keyboards ─────────────────────────────────────────────────────────────────
 
-def zone_keyboard(current_zone: str | None = None, positive: bool = False,
-                  oblen_group: str | None = None) -> dict:
+def settings_keyboard(sub: dict) -> dict:
+    zone       = sub.get("zone")
+    positive   = sub.get("positive", False)
+    oblen_grp  = sub.get("oblen_group")
+
+    if zone:
+        short = ZONES[zone]["name"].split("(")[0].strip()
+        alerts_lbl = f"🚨 Сповіщення: {short} ✅"
+    else:
+        alerts_lbl = "🚨 Сповіщення про події — вимкнено"
+
+    pos_lbl  = "💥 Позитивні новини ✅" if positive else "💥 Позитивні новини — вимкнено"
+
+    if oblen_grp:
+        g_lbl = "Весь Львів" if oblen_grp == "all" else f"Гр. {oblen_grp}"
+        sched_lbl = f"⚡ Графік відключень: {g_lbl} ✅"
+    else:
+        sched_lbl = "⚡ Графік відключень — вимкнено"
+
+    return {"inline_keyboard": [
+        [{"text": alerts_lbl,  "callback_data": "cfg:alerts"}],
+        [{"text": pos_lbl,     "callback_data": "cfg:positive"}],
+        [{"text": sched_lbl,   "callback_data": "cfg:schedule"}],
+        [{"text": "🔕 Відписатися від усього", "callback_data": "cfg:unsubscribe"}],
+        [{"text": "☕ Подяка розробнику",       "callback_data": "donate"}],
+    ]}
+
+
+def zone_picker_keyboard(current: str | None, back_cb: str) -> dict:
     rows = []
     for key, zone in ZONES.items():
-        mark = " ✅" if key == current_zone else ""
+        mark = " ✅" if key == current else ""
         rows.append([{"text": zone["name"] + mark, "callback_data": f"zone:{key}"}])
-    rows.append([{"text": "🔕 Відписатися", "callback_data": "zone:off"}])
-    pos_text = "💥 Втрати ворога і удари по рф ✅" if positive else "💥 Показувати втрати ворога і удари по рф"
-    rows.append([{"text": pos_text, "callback_data": "positive:toggle"}])
-    if oblen_group:
-        label = "🌍 Весь Львів" if oblen_group == "all" else f"Група {oblen_group}"
-        oblen_btn = f"⚡ Графік відключень: {label} ✅"
-    else:
-        oblen_btn = "⚡ Графік відключень світла"
-    rows.append([{"text": oblen_btn, "callback_data": "oblen:menu"}])
-    rows.append([{"text": "☕ Підтримати розробника", "callback_data": "donate"}])
+    if current:
+        rows.append([{"text": "🔕 Вимкнути сповіщення", "callback_data": "zone:off"}])
+    rows.append([{"text": "🔙 Назад", "callback_data": back_cb}])
     return {"inline_keyboard": rows}
 
 
-def persistent_keyboard() -> dict:
-    return {
-        "keyboard": [[{"text": SCHEDULE_BTN}]],
-        "resize_keyboard": True,
-        "is_persistent": True,
-    }
-
-
-def oblen_keyboard(current: str | None = None) -> dict:
+def group_picker_keyboard(current: str | None, back_cb: str) -> dict:
     rows = []
     for pair in OBLEN_GROUP_ROWS:
         row = []
@@ -295,11 +269,130 @@ def oblen_keyboard(current: str | None = None) -> dict:
         rows.append(row)
     all_mark = " ✅" if current == "all" else ""
     rows.append([{"text": f"🌍 Весь Львів{all_mark}", "callback_data": "oblen:all"}])
-    rows.append([{"text": "❌ Вимкнути графік", "callback_data": "oblen:off"}])
-    rows.append([{"text": "🔙 Назад", "callback_data": "oblen:back"}])
+    if current:
+        rows.append([{"text": "🔕 Вимкнути графік", "callback_data": "oblen:off"}])
+    rows.append([{"text": "🔙 Назад", "callback_data": back_cb}])
     return {"inline_keyboard": rows}
 
-# ── Shahed channel polling helpers ────────────────────────────────────────────
+
+def yes_no_keyboard(yes_cb: str, no_cb: str) -> dict:
+    return {"inline_keyboard": [
+        [{"text": "✅ Так", "callback_data": yes_cb}],
+        [{"text": "❌ Ні, пропустити", "callback_data": no_cb}],
+    ]}
+
+# ── Onboarding steps ──────────────────────────────────────────────────────────
+
+def onboard_welcome(chat_id: int) -> None:
+    send(chat_id,
+        "👋 <b>Привіт! Це Львів Бот.</b>\n\n"
+        "Ось що він вміє:\n\n"
+        "🚨 <b>Сповіщення для твого району</b> — фільтрує новини з @lvivych_news "
+        "і надсилає тільки ті, що стосуються твоєї частини Львова: "
+        "тривоги, відключення, аварії\n\n"
+        "💥 <b>Позитивні новини</b> — перемоги ЗСУ, втрати ворога, удари по рф\n\n"
+        "⚡ <b>Графік відключень світла</b> — актуальний розклад для твоєї групи "
+        "з попередженням за 15 хвилин до відключення\n\n"
+        "Налаштуємо?",
+        reply_markup={"inline_keyboard": [
+            [{"text": "Так, налаштувати →", "callback_data": "onboard:start"}]
+        ]},
+    )
+
+
+def onboard_step_alerts(chat_id: int) -> None:
+    send(chat_id,
+        "🚨 <b>Крок 1 з 3 — Сповіщення по районах</b>\n\n"
+        "Отримувати сповіщення про події у твоєму районі Львова?\n"
+        "(тривоги, відключення, аварії, важливі новини регіону)",
+        reply_markup=yes_no_keyboard("onboard:alerts_yes", "onboard:alerts_no"),
+    )
+
+
+def onboard_step_positive(chat_id: int) -> None:
+    send(chat_id,
+        "💥 <b>Крок 2 з 3 — Позитивні новини</b>\n\n"
+        "Показувати новини про перемоги ЗСУ, втрати ворога і удари по рф?",
+        reply_markup=yes_no_keyboard("onboard:positive_yes", "onboard:positive_no"),
+    )
+
+
+def onboard_step_schedule(chat_id: int) -> None:
+    send(chat_id,
+        "⚡ <b>Крок 3 з 3 — Графік відключень</b>\n\n"
+        "Отримувати графік відключень світла від Львівобленерго?\n\n"
+        "Якщо так — обереш свою групу (є на квитанції або на "
+        "<a href='https://www.loe.lviv.ua/'>loe.lviv.ua</a>). "
+        f"Бот надсилатиме оновлення і попереджатиме за {WARN_MINUTES} хв до відключення.",
+        reply_markup=yes_no_keyboard("onboard:schedule_yes", "onboard:schedule_no"),
+    )
+
+
+def onboard_done(chat_id: int) -> None:
+    update_sub(chat_id, onboarded=True, onboarding_step=None)
+    sub = get_sub(chat_id)
+    # Показуємо постійну панель кнопок — один раз, далі вона просто висить
+    send(chat_id,
+        "✅ <b>Готово!</b> Кнопки внизу — завжди під рукою.\n"
+        "Натисни будь-яку щоб змінити налаштування або побачити графік.",
+        reply_markup=MAIN_KEYBOARD,
+    )
+    send(chat_id, "⚙️ <b>Поточні налаштування:</b>",
+         reply_markup=settings_keyboard(sub))
+
+# ── Groq AI filter ────────────────────────────────────────────────────────────
+
+_THREAT_RE = re.compile(
+    r"шахед|дрон|\bбпла\b|ракет|авіац|вибух|\bппо\b|\bзрк\b|обстріл|балістик"
+    r"|відключ.{0,15}світл|знеструм|відключ.{0,15}електр"
+    r"|відключ.{0,15}вод|без.{0,10}води|водопостач|гарячої вод|холодної вод"
+    r"|відключ.{0,15}газ|газопостач|без.{0,10}газ"
+    r"|\bопален\b|відключ.{0,15}тепл"
+    r"|перекрит.{0,20}центр.{0,20}дорог|перекрит.{0,20}проспект|перекрит.{0,20}вулиц"
+    r"|\bтривог|\bзбили\b|прямує в бік",
+    flags=re.IGNORECASE,
+)
+
+
+def groq_is_relevant(text: str) -> bool:
+    if not GROQ_KEY:
+        return bool(_THREAT_RE.search(text))
+    prompt = (
+        "Повідомлення з новинного каналу Львова. "
+        "Відповідай ТАК лише якщо повідомлення стосується ОДНОГО з: "
+        "1) загроза з повітря — шахед, дрон, ракета, авіація, вибух, ппо, зрк, обстріл; "
+        "2) відключення електрики у конкретному районі (де саме немає світла); "
+        "3) відключення або аварія водопостачання у конкретному районі; "
+        "4) відключення газу або опалення у конкретному районі. "
+        "ВАЖЛИВО: подія має стосуватися Львова або Львівської області. "
+        "Якщо подія в іншому регіоні України — НІ. "
+        "Якщо це новини, ДТП, протести, кримінал, суд, культура, спорт, реклама — НІ. "
+        "Відповідь одним словом: ТАК або НІ.\n\n"
+        f"Повідомлення: {text[:400]}"
+    )
+    for attempt in range(3):
+        try:
+            r = requests.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers={"Authorization": f"Bearer {GROQ_KEY}", "Content-Type": "application/json"},
+                json={"model": "qwen/qwen3.8-27b",
+                      "messages": [{"role": "user", "content": prompt}],
+                      "max_tokens": 200, "temperature": 0},
+                timeout=10,
+            )
+            if r.status_code == 429:
+                time.sleep(min(float(r.headers.get("retry-after", "1")), 3))
+                continue
+            r.raise_for_status()
+            reply = r.json()["choices"][0]["message"]["content"].strip().upper()
+            return "ТАК" in reply or "YES" in reply
+        except Exception as e:
+            log.warning("Groq failed (attempt %d): %s", attempt + 1, e)
+            if attempt < 2:
+                time.sleep(1)
+    return bool(_THREAT_RE.search(text))
+
+# ── Channel polling helpers (@lvivych_news) ───────────────────────────────────
 
 def load_seen() -> set:
     if STATE_FILE.exists():
@@ -319,29 +412,21 @@ def send_positive_news() -> None:
     except Exception as e:
         log.warning("history.json read error: %s", e)
         return
-
-    cutoff = time.time() - POSITIVE_MAX_AGE
-    fresh = [
-        e for e in history.values()
-        if e.get("moods", {}).get("positive")
-        and e.get("first_seen", 0) >= cutoff
-    ]
-    if not fresh:
-        return
-
-    sent = load_positive_sent()
+    cutoff   = time.time() - POSITIVE_MAX_AGE
+    fresh    = [e for e in history.values()
+                if e.get("moods", {}).get("positive") and e.get("first_seen", 0) >= cutoff]
+    sent     = load_positive_sent()
     new_items = [e for e in fresh if e["link"] not in sent]
     if not new_items:
         return
-
     subs = load_subs()
-    positive_subs = [cid for cid, sub in subs.items() if sub.get("positive") and sub.get("zone")]
+    positive_subs = [cid for cid, sub in subs.items()
+                     if sub.get("positive") and sub.get("zone")]
     if not positive_subs:
         for item in new_items:
             sent.add(item["link"])
         save_positive_sent(sent)
         return
-
     new_items.sort(key=lambda e: e.get("first_seen", 0))
     for item in new_items:
         title = item.get("title", "").strip()
@@ -352,26 +437,21 @@ def send_positive_news() -> None:
             text += f"\n{desc}"
         if link:
             text += f"\n{link}"
-        for chat_id in positive_subs:
-            send(int(chat_id), text, disable_web_page_preview=False)
+        for cid in positive_subs:
+            send(int(cid), text, disable_web_page_preview=False)
         sent.add(item["link"])
-
     save_positive_sent(sent)
-    log.info("Positive news: sent %d item(s) to %d subs", len(new_items), len(positive_subs))
+    log.info("Positive news: %d item(s) → %d subs", len(new_items), len(positive_subs))
 
 
 def fetch_messages() -> list[dict]:
     try:
-        r = requests.get(
-            f"https://t.me/s/{CHANNEL}",
-            timeout=10,
-            headers={"User-Agent": "Mozilla/5.0"},
-        )
+        r = requests.get(f"https://t.me/s/{CHANNEL}", timeout=10,
+                         headers={"User-Agent": "Mozilla/5.0"})
         r.raise_for_status()
     except Exception as e:
         log.warning("fetch failed: %s", e)
         return []
-
     soup = BeautifulSoup(r.text, "html.parser")
     msgs = []
     for el in soup.select(".tgme_widget_message"):
@@ -397,18 +477,16 @@ _PROMO_RE = re.compile(
     r"|\bдиктант\b|радіодиктант|фестиваль\b|\bконкурс\b|\bвистав[аи]\b|\bконцерт\b",
     flags=re.IGNORECASE,
 )
-
-
-def is_promo(text: str) -> bool:
-    return bool(_PROMO_RE.search(text))
-
-
 _BROADCAST_RE = re.compile(
     r"повітряна тривог|повітряній тривоз|\bвідбій\b|дорозвідк"
     r"|\bппо\b|\bзрк\b|буде гучно|над містом|навколо львов|над львов"
     r"|балістик|загроза.*з (курськ|білорус|крим)|крилат.*ракет",
     flags=re.IGNORECASE,
 )
+
+
+def is_promo(text: str) -> bool:
+    return bool(_PROMO_RE.search(text))
 
 
 def is_broadcast(text: str) -> bool:
@@ -426,57 +504,37 @@ def broadcast_prefix(text: str) -> str:
 
 def matched_zones(text: str) -> list[str]:
     text_lower = text.lower()
-    matched = []
-    for key, zone in ZONES.items():
-        pattern = re.compile(
-            "|".join(re.escape(s) for s in zone["stems"]),
-            flags=re.IGNORECASE,
-        )
-        if pattern.search(text_lower):
-            matched.append(key)
-    return matched
+    return [key for key, zone in ZONES.items()
+            if re.search("|".join(re.escape(s) for s in zone["stems"]),
+                         text_lower, re.IGNORECASE)]
 
 # ── Oblenergo: Claude Vision parsing ─────────────────────────────────────────
 
-_OBLEN_PARSE_PROMPT = """На зображенні — графік погодинних відключень електроенергії Львівобленерго.
+_OBLEN_PROMPT = """На зображенні — графік погодинних відключень електроенергії Львівобленерго.
 Поверни JSON і нічого більше:
-{
-  "date": "DD.MM.YYYY",
-  "as_of": "HH:MM DD.MM.YYYY",
-  "groups": {
-    "1.1": [["HH:MM", "HH:MM"], ...],
-    "1.2": [...],
-    ...
-  }
-}
-Кожна пара [start, end] — час початку і кінця відключення (коли "Електроенергії немає").
-Якщо "станом на" не вказано — порожній рядок. Включи всі групи з зображення (1.1–6.2).
-Відповідь — тільки JSON, без пояснень."""
+{"date":"DD.MM.YYYY","as_of":"HH:MM DD.MM.YYYY","groups":{"1.1":[["HH:MM","HH:MM"],...],...}}
+Кожна пара — час початку і кінця відключення. Включи всі групи з зображення (1.1–6.2).
+Відповідь — тільки JSON."""
 
 
 def fetch_oblen_page() -> list[dict]:
-    """Scrape t.me/s/lvivoblenergo, return [{id, text, photo_url}]."""
     try:
-        r = requests.get(
-            f"https://t.me/s/{OBLEN_CHANNEL}",
-            timeout=15,
-            headers={"User-Agent": "Mozilla/5.0"},
-        )
+        r = requests.get(f"https://t.me/s/{OBLEN_CHANNEL}", timeout=15,
+                         headers={"User-Agent": "Mozilla/5.0"})
         r.raise_for_status()
     except Exception as e:
         log.warning("oblen fetch failed: %s", e)
         return []
-
     soup = BeautifulSoup(r.text, "html.parser")
     msgs = []
     for el in soup.select(".tgme_widget_message"):
         msg_id = el.get("data-post", "")
         if not msg_id:
             continue
-        text_el = el.select_one(".tgme_widget_message_text")
-        text = text_el.get_text(" ", strip=True) if text_el else ""
+        text_el   = el.select_one(".tgme_widget_message_text")
+        text      = text_el.get_text(" ", strip=True) if text_el else ""
         photo_url = None
-        wrap = el.select_one(".tgme_widget_message_photo_wrap")
+        wrap      = el.select_one(".tgme_widget_message_photo_wrap")
         if wrap:
             m = re.search(r"url\('([^']+)'\)", wrap.get("style", ""))
             if m:
@@ -487,42 +545,37 @@ def fetch_oblen_page() -> list[dict]:
 
 def parse_schedule_image(photo_url: str) -> dict | None:
     if not CLAUDE_KEY:
-        log.warning("No Anthropic key — cannot parse schedule image")
+        log.warning("No Anthropic key")
         return None
     try:
         r = requests.get(photo_url, timeout=20, headers={"User-Agent": "Mozilla/5.0"})
         r.raise_for_status()
-        image_b64 = base64.standard_b64encode(r.content).decode()
+        image_b64  = base64.standard_b64encode(r.content).decode()
         media_type = r.headers.get("content-type", "image/jpeg").split(";")[0]
     except Exception as e:
         log.warning("image download failed: %s", e)
         return None
     try:
         client = anthropic.Anthropic(api_key=CLAUDE_KEY)
-        resp = client.messages.create(
-            model="claude-haiku-4-5-20251001",
-            max_tokens=1024,
-            messages=[{
-                "role": "user",
-                "content": [
-                    {"type": "image", "source": {"type": "base64",
-                                                  "media_type": media_type,
-                                                  "data": image_b64}},
-                    {"type": "text", "text": _OBLEN_PARSE_PROMPT},
-                ],
-            }],
+        resp   = client.messages.create(
+            model="claude-haiku-4-5-20251001", max_tokens=1024,
+            messages=[{"role": "user", "content": [
+                {"type": "image", "source": {"type": "base64",
+                                              "media_type": media_type, "data": image_b64}},
+                {"type": "text", "text": _OBLEN_PROMPT},
+            ]}],
         )
-        raw = resp.content[0].text.strip()
-        raw = re.sub(r"^```[a-z]*\n?", "", raw)
+        raw = re.sub(r"^```[a-z]*\n?", "", resp.content[0].text.strip())
         raw = re.sub(r"\n?```$", "", raw)
         parsed = json.loads(raw)
-        log.info("Schedule parsed: date=%s groups=%s", parsed.get("date"), list(parsed.get("groups", {}).keys()))
+        log.info("Schedule parsed: date=%s groups=%s",
+                 parsed.get("date"), list(parsed.get("groups", {}).keys()))
         return parsed
     except Exception as e:
         log.warning("Claude parse failed: %s", e)
         return None
 
-# ── Oblenergo: format schedule ────────────────────────────────────────────────
+# ── Oblenergo: format & time ──────────────────────────────────────────────────
 
 def fmt_group_block(group_id: str, periods: list) -> str:
     if not periods:
@@ -550,10 +603,9 @@ def fmt_group_schedule(group_id: str, schedule: dict) -> str:
     header = f"⚡ <b>Графік відключень — {date}</b>"
     if as_of:
         header += f"\n<i>Станом на {as_of}</i>"
-    periods = schedule.get("groups", {}).get(group_id, [])
-    return header + "\n\n" + fmt_group_block(group_id, periods)
+    return header + "\n\n" + fmt_group_block(group_id,
+                                              schedule.get("groups", {}).get(group_id, []))
 
-# ── Oblenergo: 15-min warning helpers ────────────────────────────────────────
 
 def next_outages_today(group_id: str, schedule: dict) -> list[tuple[datetime, datetime]]:
     date_str = schedule.get("date", "")
@@ -596,7 +648,7 @@ def group_changed(group_id: str, old_schedule: dict | None, new_schedule: dict) 
     return (old_schedule.get("groups", {}).get(group_id) !=
             new_schedule.get("groups", {}).get(group_id))
 
-# ── Loops ─────────────────────────────────────────────────────────────────────
+# ── Background loops ──────────────────────────────────────────────────────────
 
 def warn_loop(lock: threading.Lock) -> None:
     log.info("Попередження: фоновий цикл запущено")
@@ -618,18 +670,15 @@ def warn_loop(lock: threading.Lock) -> None:
                 for start_dt, end_dt in next_outages_today(g, schedule):
                     mins = (start_dt - now).total_seconds() / 60
                     wkey = _warn_key(int(chat_id_s), g,
-                                     start_dt.strftime("%H:%M"),
-                                     schedule.get("date", ""))
+                                     start_dt.strftime("%H:%M"), schedule.get("date", ""))
                     if 13 <= mins <= 16 and wkey not in warned:
-                        send(
-                            int(chat_id_s),
-                            f"⏰ <b>Увага! Група {g}</b>\n"
-                            f"За {WARN_MINUTES} хв відключення електрики\n"
-                            f"🕐 <b>{start_dt.strftime('%H:%M')} – {end_dt.strftime('%H:%M')}</b>\n\n"
-                            "Встигни зарядити пристрої!",
-                            parse_mode="HTML",
-                        )
-                        log.info("Попередження: chat=%s group=%s %s", chat_id_s, g, start_dt.strftime("%H:%M"))
+                        send(int(chat_id_s),
+                             f"⏰ <b>Увага! Група {g}</b>\n"
+                             f"За {WARN_MINUTES} хв відключення електрики\n"
+                             f"🕐 <b>{start_dt.strftime('%H:%M')} – {end_dt.strftime('%H:%M')}</b>\n\n"
+                             "Встигни зарядити пристрої!")
+                        log.info("Попередження: chat=%s group=%s %s",
+                                 chat_id_s, g, start_dt.strftime("%H:%M"))
                         warned.add(wkey)
                         changed = True
             if changed:
@@ -640,8 +689,7 @@ def oblen_poll_loop() -> None:
     log.info("Поллінг @%s кожні %ds", OBLEN_CHANNEL, OBLEN_POLL_SECONDS)
     state    = load_oblen_state()
     seen_ids: set = set(state.get("seen_ids", []))
-
-    msgs = fetch_oblen_page()
+    msgs     = fetch_oblen_page()
 
     if not seen_ids:
         seen_ids = {m["id"] for m in msgs}
@@ -656,8 +704,6 @@ def oblen_poll_loop() -> None:
             if schedule:
                 state["schedule"] = schedule
                 log.info("Oblen: графік завантажено — %s", schedule.get("date"))
-            else:
-                log.warning("Oblen: не вдалося розпарсити початковий графік")
 
     save_oblen_state(state)
 
@@ -667,23 +713,20 @@ def oblen_poll_loop() -> None:
         new_msgs = [m for m in msgs if m["id"] not in seen_ids]
         if not new_msgs:
             continue
-
         log.info("Oblen нових: %d", len(new_msgs))
         for msg in new_msgs:
             seen_ids.add(msg["id"])
             if not msg.get("photo_url"):
                 continue
-
             schedule = parse_schedule_image(msg["photo_url"])
             if not schedule:
                 log.warning("Не вдалося розпарсити графік %s", msg["id"])
                 continue
-
             old_schedule = state.get("schedule")
             state["schedule"] = schedule
             state["seen_ids"] = list(seen_ids)
             save_oblen_state(state)
-            save_warned(set())   # скидаємо попередження для нового графіку
+            save_warned(set())
 
             if is_quiet_hours():
                 log.info("Oblen: тихий режим, сповіщення відкладено")
@@ -699,7 +742,7 @@ def oblen_poll_loop() -> None:
                     continue
                 try:
                     text = fmt_full_schedule(schedule) if g == "all" else fmt_group_schedule(g, schedule)
-                    send(int(chat_id_s), text, parse_mode="HTML")
+                    send(int(chat_id_s), text)
                 except Exception as e:
                     log.warning("send oblen failed to %s: %s", chat_id_s, e)
 
@@ -710,8 +753,8 @@ def oblen_poll_loop() -> None:
 def poll_loop() -> None:
     log.info("Поллінг @%s нормально=%ds тривога=%ds groq=%s",
              CHANNEL, POLL_SECONDS_NORMAL, POLL_SECONDS_ALERT, "✅" if GROQ_KEY else "❌")
-    seen               = load_seen()
-    alert_active       = False
+    seen = load_seen()
+    alert_active        = False
     last_positive_check = 0.0
 
     if not seen:
@@ -759,196 +802,278 @@ def poll_loop() -> None:
                     log.info("Тривога — поллінг %ds", POLL_SECONDS_ALERT)
 
             log.info("broadcast=%s zones=%s | %s", broadcast, hit_zones, msg["text"][:80])
-            subs = load_subs()
+            # Логуємо для кнопки "Сповіщення 24"
+            logged_zones = ["all"] if broadcast else hit_zones
+            append_alert_log(msg["text"], logged_zones)
 
+            subs = load_subs()
             for chat_id, sub in subs.items():
                 zone = sub.get("zone")
                 if not zone:
                     continue
                 if broadcast:
-                    prefix = broadcast_prefix(msg["text"])
-                    send(int(chat_id), f"{prefix} {msg['text']}")
+                    send(int(chat_id), f"{broadcast_prefix(msg['text'])} {msg['text']}")
                 elif "all" in hit_zones or zone == "all" or zone in hit_zones:
                     zone_name = ZONES.get(zone, {}).get("name", zone)
                     send(int(chat_id), f"⚠️ {zone_name}\n\n{msg['text']}")
-
-            if broadcast and broadcast_prefix(msg["text"]) == "✅":
-                if time.time() - load_donate_ts() >= DONATE_COOLDOWN:
-                    for chat_id, sub in subs.items():
-                        if sub.get("zone"):
-                            send(int(chat_id), DONATE_REMINDER, parse_mode="HTML")
-                    save_donate_ts()
-                    log.info("Donation reminder sent after відбій")
 
         if new:
             save_seen(seen)
 
 # ── Bot updates (long polling) ────────────────────────────────────────────────
 
+def show_schedule(chat_id: int) -> None:
+    state    = load_oblen_state()
+    schedule = state.get("schedule")
+    if not schedule:
+        send(chat_id, "ℹ️ Графік ще не завантажено. Спробуй пізніше.")
+        return
+    sub = get_sub(chat_id)
+    g   = sub.get("oblen_group")
+    if g and g != "all":
+        send(chat_id, fmt_group_schedule(g, schedule))
+    else:
+        send(chat_id, fmt_full_schedule(schedule))
+
+
 def handle_update(update: dict) -> None:
+    # ── Message ───────────────────────────────────────────────────────────────
     if msg := update.get("message"):
         chat_id = msg["chat"]["id"]
         text    = msg.get("text", "")
 
-        if text.startswith("/start") or text.startswith("/zone"):
-            # Прибираємо reply keyboard якщо була
-            tg("sendMessage", chat_id=chat_id, text="​",
-               reply_markup={"remove_keyboard": True})
-            subs     = load_subs()
-            sub      = subs.get(str(chat_id), {})
-            current  = sub.get("zone")
-            positive = sub.get("positive", False)
-            oblen_g  = sub.get("oblen_group")
-            greeting = (
-                "🚨 Сповіщення по районах — Львів\n\n"
-                "Обери свій район — надішлю сповіщення щойно з'явиться "
-                "повідомлення про твою зону.\n\n"
-                "ℹ️ Як це працює:\n"
-                "• Бот моніторить публічні джерела\n"
-                "• Фільтрує повідомлення за назвами населених пунктів і районів\n"
-                "• Використовує ШІ для відсіву нерелевантних новин\n"
-                "• Надсилає тобі лише ті, що стосуються твоєї зони\n\n"
-                "⚡️ Сповіщення про загрози з повітря, відключення води, "
-                "електрики, газу та інші важливі події в районі.\n\n"
-                "⚠️ Це не офіційне джерело. Завжди орієнтуйся на сигнал "
-                "повітряної тривоги та офіційні канали ДСНС."
-            )
-            send(chat_id, greeting, reply_markup=zone_keyboard(current, positive, oblen_g))
-
-        elif text.startswith("/schedule") or text.startswith("/графік") or text == SCHEDULE_BTN:
-            state    = load_oblen_state()
-            schedule = state.get("schedule")
-            if not schedule:
-                send(chat_id, "ℹ️ Графік ще не завантажено. Спробуй пізніше.", parse_mode="HTML")
+        if text.startswith("/start") or text.startswith("/menu"):
+            sub = get_sub(chat_id)
+            if sub.get("onboarded"):
+                send(chat_id, "⚙️ <b>Налаштування</b>",
+                     reply_markup=MAIN_KEYBOARD)
+                send(chat_id, "⚙️ <b>Поточні налаштування:</b>",
+                     reply_markup=settings_keyboard(sub))
             else:
-                subs = load_subs()
-                g    = subs.get(str(chat_id), {}).get("oblen_group")
-                if g and g != "all":
-                    send(chat_id, fmt_group_schedule(g, schedule), parse_mode="HTML")
-                else:
-                    send(chat_id, fmt_full_schedule(schedule), parse_mode="HTML")
+                onboard_welcome(chat_id)
 
+        elif text.startswith("/schedule") or text.startswith("/графік") or text == BTN_SCHEDULE:
+            show_schedule(chat_id)
+
+        elif text == BTN_ALERTS:
+            sub     = get_sub(chat_id)
+            zone    = sub.get("zone")
+            entries = get_alerts_24h(zone)
+            if not entries:
+                send(chat_id, "🚨 За останні 24 години сповіщень не було.")
+            else:
+                header = f"🚨 <b>Сповіщення за 24 години</b> ({len(entries)} шт.)\n"
+                chunks, cur = [], header
+                for e in entries:
+                    ts  = datetime.fromtimestamp(e["ts"], _KYIV_TZ).strftime("%H:%M")
+                    blk = f"\n<b>{ts}</b> {e['text']}\n"
+                    if len(cur) + len(blk) > 3800:
+                        chunks.append(cur)
+                        cur = blk
+                    else:
+                        cur += blk
+                chunks.append(cur)
+                for chunk in chunks:
+                    send(chat_id, chunk)
+
+        elif text == BTN_NEWS:
+            if not HISTORY_FILE.exists():
+                send(chat_id, "💥 Немає даних про новини.")
+            else:
+                try:
+                    history = json.loads(HISTORY_FILE.read_text())
+                except Exception:
+                    history = {}
+                cutoff = time.time() - 24 * 3600
+                items  = sorted(
+                    [e for e in history.values()
+                     if e.get("moods", {}).get("positive") and e.get("first_seen", 0) >= cutoff],
+                    key=lambda e: e.get("first_seen", 0),
+                )
+                if not items:
+                    send(chat_id, "💥 За останні 24 години позитивних новин не знайдено.")
+                else:
+                    header = f"💥 <b>Позитивні новини за 24 години</b> ({len(items)} шт.)\n"
+                    chunks, cur = [], header
+                    for e in items:
+                        ts    = datetime.fromtimestamp(e["first_seen"], _KYIV_TZ).strftime("%H:%M")
+                        title = e.get("title", "").strip()
+                        link  = e.get("link", "")
+                        blk   = f"\n<b>{ts}</b> {title}"
+                        if link:
+                            blk += f"\n{link}"
+                        blk += "\n"
+                        if len(cur) + len(blk) > 3800:
+                            chunks.append(cur)
+                            cur = blk
+                        else:
+                            cur += blk
+                    chunks.append(cur)
+                    for chunk in chunks:
+                        send(chat_id, chunk, disable_web_page_preview=False)
+
+        elif text == BTN_SETTINGS:
+            sub = get_sub(chat_id)
+            send(chat_id, "⚙️ <b>Налаштування</b>",
+                 reply_markup=settings_keyboard(sub))
+
+        elif text == BTN_DONATE:
+            send(chat_id, DONATE_TEXT,
+                 reply_markup={"inline_keyboard": [
+                     [{"text": "📋 Скопіювати", "callback_data": "copy_card"}]]})
+
+    # ── Callback query ────────────────────────────────────────────────────────
     if cq := update.get("callback_query"):
         chat_id = cq["message"]["chat"]["id"]
         data    = cq.get("data", "")
 
+        # ── Donate ───────────────────────────────────────────────────────────
         if data == "donate":
             answer(cq["id"])
             send(chat_id, DONATE_TEXT,
-                 parse_mode="HTML",
-                 reply_markup={"inline_keyboard": [[{"text": "📋 Скопіювати", "callback_data": "copy_card"}]]})
+                 reply_markup={"inline_keyboard": [
+                     [{"text": "📋 Скопіювати", "callback_data": "copy_card"}]]})
 
         elif data == "copy_card":
             answer(cq["id"], "✅ Скопійовано!")
 
+        # ── Onboarding ───────────────────────────────────────────────────────
+        elif data.startswith("onboard:"):
+            step = data.split(":", 1)[1]
+            answer(cq["id"])
+
+            if step == "start":
+                update_sub(chat_id, onboarding_step="alerts")
+                onboard_step_alerts(chat_id)
+
+            elif step == "alerts_yes":
+                update_sub(chat_id, onboarding_step="zone")
+                send(chat_id, "Обери свій район:",
+                     reply_markup=zone_picker_keyboard(None, "onboard:alerts_no"))
+
+            elif step == "alerts_no":
+                update_sub(chat_id, zone=None, onboarding_step="positive")
+                onboard_step_positive(chat_id)
+
+            elif step == "positive_yes":
+                update_sub(chat_id, positive=True, onboarding_step="schedule")
+                onboard_step_schedule(chat_id)
+
+            elif step == "positive_no":
+                update_sub(chat_id, positive=False, onboarding_step="schedule")
+                onboard_step_schedule(chat_id)
+
+            elif step == "schedule_yes":
+                update_sub(chat_id, onboarding_step="group")
+                send(chat_id,
+                    "Обери свою групу (знайди на квитанції або на "
+                    "<a href='https://www.loe.lviv.ua/'>loe.lviv.ua</a>):",
+                    reply_markup=group_picker_keyboard(None, "onboard:schedule_no"))
+
+            elif step == "schedule_no":
+                update_sub(chat_id, oblen_group=None)
+                onboard_done(chat_id)
+
+        # ── Zone selection ────────────────────────────────────────────────────
         elif data.startswith("zone:"):
             zone = data.split(":", 1)[1]
-            subs = load_subs()
+            answer(cq["id"])
+            sub  = get_sub(chat_id)
+            step = sub.get("onboarding_step")
 
             if zone == "off":
-                subs.pop(str(chat_id), None)
-                save_subs(subs)
-                answer(cq["id"], "Відписано")
-                send(chat_id, "🔕 Відписався. /start — підписатися знову.")
+                update_sub(chat_id, zone=None)
+                sub = get_sub(chat_id)
+                send(chat_id, "🔕 Сповіщення вимкнено.",
+                     reply_markup=settings_keyboard(sub))
             else:
-                sub = subs.get(str(chat_id), {})
-                sub["zone"] = zone
-                subs[str(chat_id)] = sub
-                save_subs(subs)
+                update_sub(chat_id, zone=zone)
                 zone_name = ZONES[zone]["name"]
-                answer(cq["id"], "✅ Збережено!")
-                send(chat_id,
-                    f"✅ Зону збережено: {zone_name}\n"
-                    "Надішлю алерт як тільки твій район з'явиться в новинах.\n\n"
-                    "/zone — змінити зону.",
-                    reply_markup=zone_keyboard(zone, sub.get("positive", False), sub.get("oblen_group")),
-                )
-                send_zone_map(chat_id, zone)
+                if step == "zone":  # onboarding
+                    update_sub(chat_id, onboarding_step="positive")
+                    send(chat_id, f"✅ Район збережено: {zone_name}")
+                    send_zone_map(chat_id, zone)
+                    onboard_step_positive(chat_id)
+                else:               # settings
+                    sub = get_sub(chat_id)
+                    send(chat_id, f"✅ Район: {zone_name}",
+                         reply_markup=settings_keyboard(sub))
+                    send_zone_map(chat_id, zone)
             log.info("chat_id=%s zone=%s", chat_id, zone)
 
-        elif data == "positive:toggle":
-            subs = load_subs()
-            sub  = subs.get(str(chat_id), {})
-            if not sub.get("zone"):
-                answer(cq["id"], "Спочатку обери зону")
-            else:
-                new_val = not sub.get("positive", False)
-                sub["positive"] = new_val
-                subs[str(chat_id)] = sub
-                save_subs(subs)
-                if new_val:
-                    answer(cq["id"], "✅ Увімкнено!")
-                    send(chat_id,
-                        "💥 Увімкнено: Втрати ворога і удари по рф\n\n"
-                        "Нові повідомлення з'являтимуться протягом кількох хвилин після публікації.",
-                        reply_markup=zone_keyboard(sub["zone"], True, sub.get("oblen_group")))
-                else:
-                    answer(cq["id"], "Вимкнено")
-                    send(chat_id, "Вимкнено: Втрати і удари по рф",
-                         reply_markup=zone_keyboard(sub["zone"], False, sub.get("oblen_group")))
-            log.info("chat_id=%s positive=%s", chat_id, sub.get("positive"))
-
+        # ── Oblen group selection ─────────────────────────────────────────────
         elif data.startswith("oblen:"):
             group = data.split(":", 1)[1]
-            subs  = load_subs()
-            sub   = subs.get(str(chat_id), {})
+            answer(cq["id"])
+            sub  = get_sub(chat_id)
+            step = sub.get("onboarding_step")
 
-            if group == "menu":
-                answer(cq["id"])
-                send(chat_id,
-                    "⚡ <b>Графік відключень світла — Львівобленерго</b>\n\n"
-                    "Обери свою групу — знайди її на квитанції або на "
-                    "<a href='https://www.loe.lviv.ua/'>loe.lviv.ua</a>\n\n"
-                    f"🏠 <b>Своя група</b> — тільки свої відключення + ⏰ попередження за {WARN_MINUTES} хв\n"
-                    "🌍 <b>Весь Львів</b> — повний графік усіх груп",
-                    parse_mode="HTML",
-                    reply_markup=oblen_keyboard(sub.get("oblen_group")),
-                )
-
-            elif group == "back":
-                answer(cq["id"])
-                send(chat_id, "Головне меню:",
-                     reply_markup=zone_keyboard(sub.get("zone"), sub.get("positive", False), sub.get("oblen_group")))
-
-            elif group == "off":
-                sub.pop("oblen_group", None)
-                subs[str(chat_id)] = sub
-                save_subs(subs)
-                answer(cq["id"], "Вимкнено")
-                send(chat_id, "Графік відключень вимкнено.",
-                     reply_markup=zone_keyboard(sub.get("zone"), sub.get("positive", False), None))
-
+            if group == "off":
+                update_sub(chat_id, oblen_group=None)
+                sub = get_sub(chat_id)
+                send(chat_id, "🔕 Графік відключень вимкнено.",
+                     reply_markup=settings_keyboard(sub))
             else:
-                sub["oblen_group"] = group
-                subs[str(chat_id)] = sub
-                save_subs(subs)
-
-                if group == "all":
-                    label = "🌍 Весь Львів"
-                    extra = "Надсилатиму повний графік щоразу як вийде новий."
-                else:
-                    label = f"Група {group}"
-                    extra = (
-                        f"Надсилатиму графік для групи <b>{group}</b> щоразу як вийде новий.\n"
-                        f"⏰ Попередження за {WARN_MINUTES} хв до кожного відключення."
-                    )
-
-                answer(cq["id"], "✅ Збережено!")
-                send(chat_id,
-                    f"✅ <b>{label}</b> збережено\n\n{extra}\n\n"
-                    "/schedule — переглянути поточний графік",
-                    parse_mode="HTML",
-                    reply_markup=oblen_keyboard(group),
-                )
-
-                # Показуємо поточний графік одразу
-                state    = load_oblen_state()
-                schedule = state.get("schedule")
-                if schedule:
-                    text = fmt_full_schedule(schedule) if group == "all" else fmt_group_schedule(group, schedule)
-                    send(chat_id, text, parse_mode="HTML")
-
+                update_sub(chat_id, oblen_group=group)
+                label = "🌍 Весь Львів" if group == "all" else f"Група {group}"
+                if step == "group":  # onboarding
+                    send(chat_id, f"✅ {label} збережено")
+                    onboard_done(chat_id)
+                else:                 # settings
+                    sub = get_sub(chat_id)
+                    send(chat_id, f"✅ {label} збережено",
+                         reply_markup=settings_keyboard(sub))
+                    # показуємо поточний графік одразу
+                    state    = load_oblen_state()
+                    schedule = state.get("schedule")
+                    if schedule:
+                        txt = fmt_full_schedule(schedule) if group == "all" \
+                              else fmt_group_schedule(group, schedule)
+                        send(chat_id, txt)
             log.info("chat_id=%s oblen_group=%s", chat_id, group)
+
+        # ── Settings panel ────────────────────────────────────────────────────
+        elif data.startswith("cfg:"):
+            action = data.split(":", 1)[1]
+            answer(cq["id"])
+            sub = get_sub(chat_id)
+
+            if action == "alerts":
+                send(chat_id, "🚨 <b>Сповіщення про події</b>\n\nОбери свій район:",
+                     reply_markup=zone_picker_keyboard(sub.get("zone"), "cfg:back"))
+
+            elif action == "positive":
+                new_val = not sub.get("positive", False)
+                update_sub(chat_id, positive=new_val)
+                sub = get_sub(chat_id)
+                label = "✅ Позитивні новини увімкнено" if new_val else "Позитивні новини вимкнено"
+                send(chat_id, label, reply_markup=settings_keyboard(sub))
+
+            elif action == "schedule":
+                send(chat_id, "⚡ <b>Графік відключень</b>\n\nОбери свою групу:",
+                     reply_markup=group_picker_keyboard(sub.get("oblen_group"), "cfg:back"))
+
+            elif action == "unsubscribe":
+                subs = load_subs()
+                subs.pop(str(chat_id), None)
+                save_subs(subs)
+                send(chat_id, "🔕 Відписано від усього.\n/start — налаштувати знову.")
+
+            elif action == "back":
+                sub = get_sub(chat_id)
+                send(chat_id, "⚙️ <b>Налаштування</b>",
+                     reply_markup=settings_keyboard(sub))
+
+        # ── Positive toggle (legacy path) ─────────────────────────────────────
+        elif data == "positive:toggle":
+            answer(cq["id"])
+            sub     = get_sub(chat_id)
+            new_val = not sub.get("positive", False)
+            update_sub(chat_id, positive=new_val)
+            sub = get_sub(chat_id)
+            send(chat_id,
+                 "✅ Позитивні новини увімкнено" if new_val else "Позитивні новини вимкнено",
+                 reply_markup=settings_keyboard(sub))
 
 
 def updates_loop() -> None:
@@ -956,7 +1081,8 @@ def updates_loop() -> None:
     log.info("Слухаю оновлення бота...")
     while True:
         try:
-            r = requests.post(f"{API}/getUpdates", json={"offset": offset, "timeout": 30}, timeout=35)
+            r = requests.post(f"{API}/getUpdates",
+                              json={"offset": offset, "timeout": 30}, timeout=35)
             for upd in r.json().get("result", []):
                 offset = upd["update_id"] + 1
                 handle_update(upd)
