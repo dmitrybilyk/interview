@@ -791,6 +791,9 @@ def handle_update(update: dict) -> None:
         text    = msg.get("text", "")
 
         if text.startswith("/start") or text.startswith("/zone"):
+            # Прибираємо reply keyboard якщо була
+            tg("sendMessage", chat_id=chat_id, text="​",
+               reply_markup={"remove_keyboard": True})
             subs     = load_subs()
             sub      = subs.get(str(chat_id), {})
             current  = sub.get("zone")
@@ -810,8 +813,7 @@ def handle_update(update: dict) -> None:
                 "⚠️ Це не офіційне джерело. Завжди орієнтуйся на сигнал "
                 "повітряної тривоги та офіційні канали ДСНС."
             )
-            send(chat_id, greeting, reply_markup=persistent_keyboard())
-            send(chat_id, "Оберіть зону:", reply_markup=zone_keyboard(current, positive, oblen_g))
+            send(chat_id, greeting, reply_markup=zone_keyboard(current, positive, oblen_g))
 
         elif text.startswith("/schedule") or text.startswith("/графік") or text == SCHEDULE_BTN:
             state    = load_oblen_state()
