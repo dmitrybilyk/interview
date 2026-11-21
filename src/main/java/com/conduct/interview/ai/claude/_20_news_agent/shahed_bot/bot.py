@@ -17,6 +17,7 @@ import threading
 import time
 from datetime import datetime, timedelta
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 import anthropic
 import requests
@@ -56,6 +57,9 @@ DONATE_COOLDOWN      = 3 * 24 * 3600
 POSITIVE_INTERVAL    = 10 * 60
 POSITIVE_MAX_AGE     = 24 * 3600
 WARN_MINUTES         = 15
+QUIET_START          = 22   # після цієї години — тихо
+QUIET_END            = 9    # до цієї години — тихо
+_KYIV_TZ             = ZoneInfo("Europe/Kyiv")
 
 TOKEN      = TOKEN_FILE.read_text().strip() if TOKEN_FILE.exists() else ""
 GROQ_KEY   = GROQ_KEY_FILE.read_text().strip() if GROQ_KEY_FILE.exists() else ""
@@ -580,6 +584,18 @@ def next_outages_today(group_id: str, schedule: dict) -> list[tuple[datetime, da
 def _warn_key(chat_id: int, group_id: str, start_s: str, date_s: str) -> str:
     return f"{chat_id}:{group_id}:{date_s}:{start_s}"
 
+
+def is_quiet_hours() -> bool:
+    h = datetime.now(_KYIV_TZ).hour
+    return h >= QUIET_START or h < QUIET_END
+
+
+def group_changed(group_id: str, old_schedule: dict | None, new_schedule: dict) -> bool:
+    if old_schedule is None:
+        return True
+    return (old_schedule.get("groups", {}).get(group_id) !=
+            new_schedule.get("groups", {}).get(group_id))
+
 # ── Loops ─────────────────────────────────────────────────────────────────────
 
 def warn_loop(lock: threading.Lock) -> None:
@@ -663,15 +679,23 @@ def oblen_poll_loop() -> None:
                 log.warning("Не вдалося розпарсити графік %s", msg["id"])
                 continue
 
+            old_schedule = state.get("schedule")
             state["schedule"] = schedule
             state["seen_ids"] = list(seen_ids)
             save_oblen_state(state)
             save_warned(set())   # скидаємо попередження для нового графіку
 
+            if is_quiet_hours():
+                log.info("Oblen: тихий режим, сповіщення відкладено")
+                continue
+
             subs = load_subs()
             for chat_id_s, sub in subs.items():
                 g = sub.get("oblen_group")
                 if not g:
+                    continue
+                if g != "all" and not group_changed(g, old_schedule, schedule):
+                    log.info("Oblen: без змін для групи %s, chat=%s", g, chat_id_s)
                     continue
                 try:
                     text = fmt_full_schedule(schedule) if g == "all" else fmt_group_schedule(g, schedule)
