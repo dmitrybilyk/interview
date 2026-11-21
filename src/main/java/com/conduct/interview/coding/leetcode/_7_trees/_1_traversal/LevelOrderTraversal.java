@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.leetcode._7_trees;
+package com.conduct.interview.coding.leetcode._7_trees._1_traversal;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;

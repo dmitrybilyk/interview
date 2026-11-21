@@ -1,4 +1,4 @@
-package com.conduct.interview.coding.leetcode._7_trees;
+package com.conduct.interview.coding.leetcode._7_trees._2_dfs_problems;
 
 // LC 104 — Maximum Depth of Binary Tree
 // Pattern: DFS — depth = 1 + max(left depth, right depth)
