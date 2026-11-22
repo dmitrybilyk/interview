@@ -42,8 +42,9 @@ STATE_FILE         = _DIR / "poll_state.json"
 POSITIVE_SENT_FILE = _DIR / "positive_sent.json"
 OBLEN_STATE_FILE   = _DIR / "oblenergo_state.json"
 OBLEN_WARNED_FILE  = _DIR / "oblenergo_warned.json"
-ALERTS_LOG_FILE    = _DIR / "alerts_log.json"
-HISTORY_FILE       = _DIR.parent / "history.json"
+ALERTS_LOG_FILE      = _DIR / "alerts_log.json"
+WEATHER_NOTIFIED_FILE = _DIR / "weather_notified.json"
+HISTORY_FILE         = _DIR.parent / "history.json"
 
 CHANNEL             = "lvivych_news"
 OBLEN_CHANNEL       = "lvivsvitlo"
@@ -55,6 +56,10 @@ POSITIVE_MAX_AGE    = 24 * 3600
 WARN_MINUTES        = 15
 QUIET_START         = 22
 QUIET_END           = 9
+WEATHER_CHECK_SECS  = 1800        # перевірка погоди кожні 30 хв
+RAIN_PROB_THRESHOLD = 40          # % імовірності дощу щоб вважати "буде дощ"
+LVIV_LAT            = 49.8397
+LVIV_LON            = 24.0297
 _KYIV_TZ            = ZoneInfo("Europe/Kyiv")
 
 OBLEN_GROUP_ROWS = [["1.1","1.2"],["2.1","2.2"],["3.1","3.2"],
@@ -79,12 +84,13 @@ DONATE_TEXT = f"☕ Підтримати розробника (Monobank):\n<code
 BTN_ALERTS   = "🚨 Сповіщення 24"
 BTN_NEWS     = "💥 Новини 24"
 BTN_SCHEDULE = "⚡ Графік"
+BTN_WEATHER  = "🌦 Погода"
 BTN_SETTINGS = "⚙️ Налаштування"
 BTN_DONATE   = "☕"
 
 MAIN_KEYBOARD = {
     "keyboard": [
-        [{"text": BTN_ALERTS}, {"text": BTN_NEWS}, {"text": BTN_SCHEDULE}],
+        [{"text": BTN_ALERTS}, {"text": BTN_NEWS}, {"text": BTN_SCHEDULE}, {"text": BTN_WEATHER}],
         [{"text": BTN_SETTINGS}, {"text": BTN_DONATE}],
     ],
     "resize_keyboard": True,
@@ -187,6 +193,135 @@ def append_alert_log(text: str, zones: list[str]) -> None:
     ALERTS_LOG_FILE.write_text(json.dumps(log_entries, ensure_ascii=False))
 
 
+# ── Weather ───────────────────────────────────────────────────────────────────
+
+def load_weather_notified() -> dict:
+    if WEATHER_NOTIFIED_FILE.exists():
+        return json.loads(WEATHER_NOTIFIED_FILE.read_text())
+    return {}
+
+
+def save_weather_notified(data: dict) -> None:
+    WEATHER_NOTIFIED_FILE.write_text(json.dumps(data, ensure_ascii=False))
+
+
+def fetch_weather() -> dict | None:
+    try:
+        r = requests.get(
+            "https://api.open-meteo.com/v1/forecast",
+            params={
+                "latitude": LVIV_LAT, "longitude": LVIV_LON,
+                "hourly": "temperature_2m,precipitation_probability,precipitation,weathercode",
+                "forecast_days": 2,
+                "timezone": "Europe/Kyiv",
+            },
+            timeout=10,
+        )
+        r.raise_for_status()
+        return r.json()
+    except Exception as e:
+        log.warning("weather fetch failed: %s", e)
+        return None
+
+
+# WMO weather code → short Ukrainian label
+_WMO = {
+    0: "ясно ☀️", 1: "малохмарно 🌤", 2: "мінлива хмарність ⛅", 3: "хмарно ☁️",
+    45: "туман 🌫", 48: "туман 🌫",
+    51: "мряка 🌦", 53: "мряка 🌦", 55: "мряка 🌦",
+    61: "невеликий дощ 🌧", 63: "дощ 🌧", 65: "сильний дощ 🌧",
+    71: "сніг 🌨", 73: "сніг 🌨", 75: "сильний сніг 🌨",
+    80: "зливи 🌦", 81: "зливи 🌦", 82: "зливи 🌦",
+    95: "гроза ⛈", 96: "гроза з градом ⛈", 99: "гроза з градом ⛈",
+}
+
+
+def _weather_label(code: int) -> str:
+    return _WMO.get(code, "—")
+
+
+def format_weather_24h(data: dict) -> str:
+    hourly = data.get("hourly", {})
+    times  = hourly.get("time", [])
+    temps  = hourly.get("temperature_2m", [])
+    probs  = hourly.get("precipitation_probability", [])
+    precip = hourly.get("precipitation", [])
+    codes  = hourly.get("weathercode", [])
+
+    now = datetime.now(_KYIV_TZ).replace(minute=0, second=0, microsecond=0)
+    lines = [f"🌦 <b>Погода у Львові — наступні 24 години</b>\n"]
+
+    rain_windows = []
+    rain_start   = None
+
+    for i, t_str in enumerate(times):
+        t = datetime.fromisoformat(t_str).replace(tzinfo=_KYIV_TZ)
+        if t < now or t >= now + timedelta(hours=24):
+            continue
+
+        prob = probs[i] if i < len(probs) else 0
+        mm   = precip[i] if i < len(precip) else 0
+        temp = temps[i] if i < len(temps) else None
+        code = codes[i] if i < len(codes) else 0
+
+        # collect rain windows
+        if prob >= RAIN_PROB_THRESHOLD:
+            if rain_start is None:
+                rain_start = t
+            rain_end = t + timedelta(hours=1)
+        else:
+            if rain_start is not None:
+                rain_windows.append((rain_start, rain_end))
+                rain_start = None
+
+        # first hour = current weather
+        if t == now and temp is not None:
+            lines.append(f"Зараз: {temp:.0f}°C, {_weather_label(code)}\n")
+
+    if rain_start is not None:
+        rain_windows.append((rain_start, rain_end))
+
+    if rain_windows:
+        lines.append("🌧 <b>Очікується дощ:</b>")
+        for start, end in rain_windows:
+            lines.append(f"  • {start.strftime('%H:%M')} – {end.strftime('%H:%M')}")
+    else:
+        lines.append("☀️ Дощу не очікується протягом 24 годин")
+
+    return "\n".join(lines)
+
+
+def rain_expected_24h(data: dict) -> list[tuple[datetime, datetime]]:
+    """Повертає вікна дощу в наступні 24h."""
+    hourly = data.get("hourly", {})
+    times  = hourly.get("time", [])
+    probs  = hourly.get("precipitation_probability", [])
+
+    now    = datetime.now(_KYIV_TZ).replace(minute=0, second=0, microsecond=0)
+    windows, rain_start, rain_end = [], None, None
+
+    for i, t_str in enumerate(times):
+        t    = datetime.fromisoformat(t_str).replace(tzinfo=_KYIV_TZ)
+        prob = probs[i] if i < len(probs) else 0
+        if t < now or t >= now + timedelta(hours=24):
+            if rain_start:
+                windows.append((rain_start, rain_end))
+                rain_start = None
+            continue
+        if prob >= RAIN_PROB_THRESHOLD:
+            if rain_start is None:
+                rain_start = t
+            rain_end = t + timedelta(hours=1)
+        else:
+            if rain_start:
+                windows.append((rain_start, rain_end))
+                rain_start = None
+
+    if rain_start:
+        windows.append((rain_start, rain_end))
+    return windows
+
+
 def get_alerts_24h(zone: str) -> list[dict]:
     cutoff = time.time() - 24 * 3600
     return [
@@ -239,10 +374,14 @@ def settings_keyboard(sub: dict) -> dict:
     else:
         sched_lbl = "⚡ Графік відключень — вимкнено"
 
+    weather_lbl = "🌦 Сповіщення про дощ ✅" if sub.get("weather") \
+                  else "🌦 Сповіщення про дощ — вимкнено"
+
     return {"inline_keyboard": [
         [{"text": alerts_lbl,  "callback_data": "cfg:alerts"}],
         [{"text": pos_lbl,     "callback_data": "cfg:positive"}],
         [{"text": sched_lbl,   "callback_data": "cfg:schedule"}],
+        [{"text": weather_lbl, "callback_data": "cfg:weather"}],
         [{"text": "🔕 Відписатися від усього", "callback_data": "cfg:unsubscribe"}],
         [{"text": "☕ Подяка розробнику",       "callback_data": "donate"}],
     ]}
@@ -317,9 +456,18 @@ def onboard_step_positive(chat_id: int) -> None:
     )
 
 
+def onboard_step_weather(chat_id: int) -> None:
+    send(chat_id,
+        "🌦 <b>Крок 4 з 4 — Погода</b>\n\n"
+        "Отримувати сповіщення коли у Львові очікується дощ?\n\n"
+        "Бот перевіряє прогноз кожні 30 хвилин і попереджає раз на добу.",
+        reply_markup=yes_no_keyboard("onboard:weather_yes", "onboard:weather_no"),
+    )
+
+
 def onboard_step_schedule(chat_id: int) -> None:
     send(chat_id,
-        "⚡ <b>Крок 3 з 3 — Графік відключень</b>\n\n"
+        "⚡ <b>Крок 3 з 4 — Графік відключень</b>\n\n"
         "Отримувати графік відключень світла від Львівобленерго?\n\n"
         "Якщо так — обереш свою групу (є на квитанції або на "
         "<a href='https://www.loe.lviv.ua/'>loe.lviv.ua</a>). "
@@ -685,6 +833,47 @@ def warn_loop(lock: threading.Lock) -> None:
                 save_warned(warned)
 
 
+def weather_loop() -> None:
+    log.info("Погода: фоновий цикл запущено (кожні %ds)", WEATHER_CHECK_SECS)
+    while True:
+        time.sleep(WEATHER_CHECK_SECS)
+        if is_quiet_hours():
+            continue
+
+        data = fetch_weather()
+        if not data:
+            continue
+
+        windows = rain_expected_24h(data)
+        if not windows:
+            continue
+
+        today    = datetime.now(_KYIV_TZ).strftime("%Y-%m-%d")
+        notified = load_weather_notified()
+        subs     = load_subs()
+        changed  = False
+
+        for chat_id_s, sub in subs.items():
+            if not sub.get("weather"):
+                continue
+            if notified.get(chat_id_s) == today:
+                continue
+
+            times_str = ", ".join(
+                f"{s.strftime('%H:%M')}–{e.strftime('%H:%M')}" for s, e in windows
+            )
+            send(int(chat_id_s),
+                 f"🌧 <b>Дощ у Львові сьогодні</b>\n\n"
+                 f"Очікується: {times_str}\n\n"
+                 "Не забудь парасолю ☔")
+            notified[chat_id_s] = today
+            changed = True
+
+        if changed:
+            save_weather_notified(notified)
+            log.info("Погода: надіслано сповіщення про дощ")
+
+
 def oblen_poll_loop() -> None:
     log.info("Поллінг @%s кожні %ds", OBLEN_CHANNEL, OBLEN_POLL_SECONDS)
     state    = load_oblen_state()
@@ -912,6 +1101,13 @@ def handle_update(update: dict) -> None:
                     for chunk in chunks:
                         send(chat_id, chunk, disable_web_page_preview=False)
 
+        elif text == BTN_WEATHER:
+            data = fetch_weather()
+            if not data:
+                send(chat_id, "🌦 Не вдалося отримати прогноз погоди.")
+            else:
+                send(chat_id, format_weather_24h(data))
+
         elif text == BTN_SETTINGS:
             sub = get_sub(chat_id)
             send(chat_id, "⚙️ <b>Налаштування</b>",
@@ -971,7 +1167,15 @@ def handle_update(update: dict) -> None:
                     reply_markup=group_picker_keyboard(None, "onboard:schedule_no"))
 
             elif step == "schedule_no":
-                update_sub(chat_id, oblen_group=None)
+                update_sub(chat_id, oblen_group=None, onboarding_step="weather")
+                onboard_step_weather(chat_id)
+
+            elif step == "weather_yes":
+                update_sub(chat_id, weather=True)
+                onboard_done(chat_id)
+
+            elif step == "weather_no":
+                update_sub(chat_id, weather=False)
                 onboard_done(chat_id)
 
         # ── Zone selection ────────────────────────────────────────────────────
@@ -1016,9 +1220,10 @@ def handle_update(update: dict) -> None:
             else:
                 update_sub(chat_id, oblen_group=group)
                 label = "🌍 Весь Львів" if group == "all" else f"Група {group}"
-                if step == "group":  # onboarding
+                if step == "group":  # onboarding → далі погода
+                    update_sub(chat_id, onboarding_step="weather")
                     send(chat_id, f"✅ {label} збережено")
-                    onboard_done(chat_id)
+                    onboard_step_weather(chat_id)
                 else:                 # settings
                     sub = get_sub(chat_id)
                     send(chat_id, f"✅ {label} збережено",
@@ -1052,6 +1257,13 @@ def handle_update(update: dict) -> None:
             elif action == "schedule":
                 send(chat_id, "⚡ <b>Графік відключень</b>\n\nОбери свою групу:",
                      reply_markup=group_picker_keyboard(sub.get("oblen_group"), "cfg:back"))
+
+            elif action == "weather":
+                new_val = not sub.get("weather", False)
+                update_sub(chat_id, weather=new_val)
+                sub = get_sub(chat_id)
+                label = "✅ Сповіщення про дощ увімкнено" if new_val else "🔕 Сповіщення про дощ вимкнено"
+                send(chat_id, label, reply_markup=settings_keyboard(sub))
 
             elif action == "unsubscribe":
                 subs = load_subs()
@@ -1100,4 +1312,5 @@ if __name__ == "__main__":
         threading.Thread(target=poll_loop,       daemon=True).start()
         threading.Thread(target=oblen_poll_loop, daemon=True).start()
         threading.Thread(target=warn_loop, args=(warn_lock,), daemon=True).start()
+        threading.Thread(target=weather_loop,    daemon=True).start()
         updates_loop()
