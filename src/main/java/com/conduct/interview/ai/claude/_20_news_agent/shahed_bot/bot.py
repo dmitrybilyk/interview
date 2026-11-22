@@ -56,7 +56,7 @@ POSITIVE_MAX_AGE    = 24 * 3600
 WARN_MINUTES        = 15
 QUIET_START         = 22
 QUIET_END           = 9
-WEATHER_CHECK_SECS  = 1800        # перевірка погоди кожні 30 хв
+WEATHER_SEND_HOURS  = (10, 21)    # Kyiv time: надсилаємо прогноз о 10:00 і 21:00
 RAIN_PROB_THRESHOLD = 40          # % імовірності дощу щоб вважати "буде дощ"
 LVIV_LAT            = 49.8397
 LVIV_LON            = 24.0297
@@ -84,7 +84,7 @@ DONATE_TEXT = f"☕ Підтримати розробника (Monobank):\n<code
 BTN_ALERTS   = "🚨 Сповіщення 24"
 BTN_NEWS     = "💥 Новини 24"
 BTN_SCHEDULE = "⚡ Графік"
-BTN_WEATHER  = "🌦 Погода"
+BTN_WEATHER  = "🌧 Опади"
 BTN_SETTINGS = "⚙️ Налаштування"
 BTN_DONATE   = "☕"
 
@@ -236,8 +236,24 @@ _WMO = {
 }
 
 
+_SNOW_CODES   = {71, 73, 75, 77, 85, 86}
+_PRECIP_EMOJI = {"rain": "🌧", "snow": "🌨", "mixed": "🌨"}
+_PRECIP_UA    = {"rain": "дощ", "snow": "сніг", "mixed": "дощ зі снігом"}
+
+
 def _weather_label(code: int) -> str:
     return _WMO.get(code, "—")
+
+
+def _precip_type(window_codes: list[int]) -> str:
+    if not window_codes:
+        return "rain"
+    snow = sum(1 for c in window_codes if c in _SNOW_CODES)
+    if snow == len(window_codes):
+        return "snow"
+    if snow > 0:
+        return "mixed"
+    return "rain"
 
 
 def format_weather_24h(data: dict) -> str:
@@ -245,80 +261,81 @@ def format_weather_24h(data: dict) -> str:
     times  = hourly.get("time", [])
     temps  = hourly.get("temperature_2m", [])
     probs  = hourly.get("precipitation_probability", [])
-    precip = hourly.get("precipitation", [])
     codes  = hourly.get("weathercode", [])
 
     now = datetime.now(_KYIV_TZ).replace(minute=0, second=0, microsecond=0)
-    lines = [f"🌦 <b>Погода у Львові — наступні 24 години</b>\n"]
+    lines = ["🌦 <b>Погода у Львові — наступні 24 години</b>\n"]
 
-    rain_windows = []
-    rain_start   = None
-
-    for i, t_str in enumerate(times):
-        t = datetime.fromisoformat(t_str).replace(tzinfo=_KYIV_TZ)
-        if t < now or t >= now + timedelta(hours=24):
-            continue
-
-        prob = probs[i] if i < len(probs) else 0
-        mm   = precip[i] if i < len(precip) else 0
-        temp = temps[i] if i < len(temps) else None
-        code = codes[i] if i < len(codes) else 0
-
-        # collect rain windows
-        if prob >= RAIN_PROB_THRESHOLD:
-            if rain_start is None:
-                rain_start = t
-            rain_end = t + timedelta(hours=1)
-        else:
-            if rain_start is not None:
-                rain_windows.append((rain_start, rain_end))
-                rain_start = None
-
-        # first hour = current weather
-        if t == now and temp is not None:
-            lines.append(f"Зараз: {temp:.0f}°C, {_weather_label(code)}\n")
-
-    if rain_start is not None:
-        rain_windows.append((rain_start, rain_end))
-
-    if rain_windows:
-        lines.append("🌧 <b>Очікується дощ:</b>")
-        for start, end in rain_windows:
-            lines.append(f"  • {start.strftime('%H:%M')} – {end.strftime('%H:%M')}")
-    else:
-        lines.append("☀️ Дощу не очікується протягом 24 годин")
-
-    return "\n".join(lines)
-
-
-def rain_expected_24h(data: dict) -> list[tuple[datetime, datetime]]:
-    """Повертає вікна дощу в наступні 24h."""
-    hourly = data.get("hourly", {})
-    times  = hourly.get("time", [])
-    probs  = hourly.get("precipitation_probability", [])
-
-    now    = datetime.now(_KYIV_TZ).replace(minute=0, second=0, microsecond=0)
-    windows, rain_start, rain_end = [], None, None
+    windows, w_start, w_end, w_codes = [], None, None, []
 
     for i, t_str in enumerate(times):
         t    = datetime.fromisoformat(t_str).replace(tzinfo=_KYIV_TZ)
         prob = probs[i] if i < len(probs) else 0
+        code = codes[i] if i < len(codes) else 0
+        temp = temps[i] if i < len(temps) else None
+
         if t < now or t >= now + timedelta(hours=24):
-            if rain_start:
-                windows.append((rain_start, rain_end))
-                rain_start = None
+            continue
+
+        if t == now and temp is not None:
+            lines.append(f"Зараз: {temp:.0f}°C, {_weather_label(code)}\n")
+
+        if prob >= RAIN_PROB_THRESHOLD:
+            if w_start is None:
+                w_start = t
+            w_end = t + timedelta(hours=1)
+            w_codes.append(code)
+        else:
+            if w_start is not None:
+                windows.append((w_start, w_end, _precip_type(w_codes)))
+                w_start, w_codes = None, []
+
+    if w_start is not None:
+        windows.append((w_start, w_end, _precip_type(w_codes)))
+
+    if windows:
+        lines.append("<b>Очікуються опади:</b>")
+        for start, end, ptype in windows:
+            emoji = _PRECIP_EMOJI[ptype]
+            label = _PRECIP_UA[ptype]
+            lines.append(f"  • {emoji} {label}: {start.strftime('%H:%M')}–{end.strftime('%H:%M')}")
+    else:
+        lines.append("☀️ Опадів не очікується протягом 24 годин")
+
+    return "\n".join(lines)
+
+
+def precip_expected_24h(data: dict) -> list[tuple[datetime, datetime, str]]:
+    """Повертає вікна опадів (start, end, type) в наступні 24h."""
+    hourly = data.get("hourly", {})
+    times  = hourly.get("time", [])
+    probs  = hourly.get("precipitation_probability", [])
+    codes  = hourly.get("weathercode", [])
+
+    now    = datetime.now(_KYIV_TZ).replace(minute=0, second=0, microsecond=0)
+    windows, w_start, w_end, w_codes = [], None, None, []
+
+    for i, t_str in enumerate(times):
+        t    = datetime.fromisoformat(t_str).replace(tzinfo=_KYIV_TZ)
+        prob = probs[i] if i < len(probs) else 0
+        code = codes[i] if i < len(codes) else 0
+        if t < now or t >= now + timedelta(hours=24):
+            if w_start:
+                windows.append((w_start, w_end, _precip_type(w_codes)))
+                w_start, w_codes = None, []
             continue
         if prob >= RAIN_PROB_THRESHOLD:
-            if rain_start is None:
-                rain_start = t
-            rain_end = t + timedelta(hours=1)
+            if w_start is None:
+                w_start = t
+            w_end = t + timedelta(hours=1)
+            w_codes.append(code)
         else:
-            if rain_start:
-                windows.append((rain_start, rain_end))
-                rain_start = None
+            if w_start:
+                windows.append((w_start, w_end, _precip_type(w_codes)))
+                w_start, w_codes = None, []
 
-    if rain_start:
-        windows.append((rain_start, rain_end))
+    if w_start:
+        windows.append((w_start, w_end, _precip_type(w_codes)))
     return windows
 
 
@@ -374,8 +391,8 @@ def settings_keyboard(sub: dict) -> dict:
     else:
         sched_lbl = "⚡ Графік відключень — вимкнено"
 
-    weather_lbl = "🌦 Сповіщення про дощ ✅" if sub.get("weather") \
-                  else "🌦 Сповіщення про дощ — вимкнено"
+    weather_lbl = "🌧 Сповіщення про опади ✅" if sub.get("weather") \
+                  else "🌧 Сповіщення про опади — вимкнено"
 
     return {"inline_keyboard": [
         [{"text": alerts_lbl,  "callback_data": "cfg:alerts"}],
@@ -458,9 +475,9 @@ def onboard_step_positive(chat_id: int) -> None:
 
 def onboard_step_weather(chat_id: int) -> None:
     send(chat_id,
-        "🌦 <b>Крок 4 з 4 — Погода</b>\n\n"
-        "Отримувати сповіщення коли у Львові очікується дощ?\n\n"
-        "Бот перевіряє прогноз кожні 30 хвилин і попереджає раз на добу.",
+        "🌧 <b>Крок 4 з 4 — Опади</b>\n\n"
+        "Отримувати сповіщення про опади у Львові?\n\n"
+        "Бот надсилатиме прогноз о <b>10:00</b> і <b>21:00</b> — чи буде дощ або сніг.",
         reply_markup=yes_no_keyboard("onboard:weather_yes", "onboard:weather_no"),
     )
 
@@ -834,44 +851,49 @@ def warn_loop(lock: threading.Lock) -> None:
 
 
 def weather_loop() -> None:
-    log.info("Погода: фоновий цикл запущено (кожні %ds)", WEATHER_CHECK_SECS)
+    log.info("Погода: фоновий цикл запущено (о 10:00 і 21:00)")
+    notified = load_weather_notified()
     while True:
-        time.sleep(WEATHER_CHECK_SECS)
-        if is_quiet_hours():
+        time.sleep(60)
+        now      = datetime.now(_KYIV_TZ)
+        hour     = now.hour
+        slot_key = f"{now.strftime('%Y-%m-%d')}-{hour}"
+
+        if hour not in WEATHER_SEND_HOURS:
+            continue
+        if notified.get(slot_key):
             continue
 
         data = fetch_weather()
         if not data:
             continue
 
-        windows = rain_expected_24h(data)
-        if not windows:
-            continue
-
-        today    = datetime.now(_KYIV_TZ).strftime("%Y-%m-%d")
-        notified = load_weather_notified()
-        subs     = load_subs()
-        changed  = False
+        windows = precip_expected_24h(data)
+        subs    = load_subs()
+        sent    = False
 
         for chat_id_s, sub in subs.items():
             if not sub.get("weather"):
                 continue
-            if notified.get(chat_id_s) == today:
-                continue
+            if windows:
+                lines = []
+                for s, e, ptype in windows:
+                    emoji = _PRECIP_EMOJI[ptype]
+                    label = _PRECIP_UA[ptype]
+                    lines.append(f"{emoji} {label}: {s.strftime('%H:%M')}–{e.strftime('%H:%M')}")
+                msg = "🌦 <b>Опади у Львові</b>\n\n" + "\n".join(lines) + "\n\nВіддяки прогнозу на 24 год."
+            else:
+                msg = "☀️ <b>Опади у Львові</b>\n\nОпадів не очікується найближчі 24 години."
+            send(int(chat_id_s), msg)
+            sent = True
 
-            times_str = ", ".join(
-                f"{s.strftime('%H:%M')}–{e.strftime('%H:%M')}" for s, e in windows
-            )
-            send(int(chat_id_s),
-                 f"🌧 <b>Дощ у Львові сьогодні</b>\n\n"
-                 f"Очікується: {times_str}\n\n"
-                 "Не забудь парасолю ☔")
-            notified[chat_id_s] = today
-            changed = True
-
-        if changed:
+        if sent:
+            notified[slot_key] = True
+            if len(notified) > 20:
+                for k in sorted(notified)[:len(notified) - 10]:
+                    del notified[k]
             save_weather_notified(notified)
-            log.info("Погода: надіслано сповіщення про дощ")
+            log.info("Погода: надіслано о %02d:00 (%s)", hour, "опади" if windows else "ясно")
 
 
 def oblen_poll_loop() -> None:
@@ -1104,7 +1126,7 @@ def handle_update(update: dict) -> None:
         elif text == BTN_WEATHER:
             data = fetch_weather()
             if not data:
-                send(chat_id, "🌦 Не вдалося отримати прогноз погоди.")
+                send(chat_id, "🌧 Не вдалося отримати прогноз опадів.")
             else:
                 send(chat_id, format_weather_24h(data))
 
@@ -1262,7 +1284,7 @@ def handle_update(update: dict) -> None:
                 new_val = not sub.get("weather", False)
                 update_sub(chat_id, weather=new_val)
                 sub = get_sub(chat_id)
-                label = "✅ Сповіщення про дощ увімкнено" if new_val else "🔕 Сповіщення про дощ вимкнено"
+                label = "✅ Сповіщення про опади увімкнено" if new_val else "🔕 Сповіщення про опади вимкнено"
                 send(chat_id, label, reply_markup=settings_keyboard(sub))
 
             elif action == "unsubscribe":
