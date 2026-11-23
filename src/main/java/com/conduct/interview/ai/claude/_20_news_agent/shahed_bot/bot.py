@@ -81,7 +81,7 @@ DONATE_CARD = "4441 1110 3446 3160"
 DONATE_TEXT = f"☕ Підтримати розробника (Monobank):\n<code>{DONATE_CARD}</code>"
 
 # Reply keyboard — постійно видима панель кнопок знизу
-BTN_ALERTS   = "🚨 Сповіщення 24"
+BTN_ALERTS   = "Сповіщення 24"
 BTN_NEWS     = "💥 Новини 24"
 BTN_SCHEDULE = "⚡ Графік"
 BTN_WEATHER  = "🌧 Опади"
@@ -678,7 +678,8 @@ def matched_zones(text: str) -> list[str]:
 _OBLEN_PROMPT = """На зображенні — графік погодинних відключень електроенергії Львівобленерго.
 Поверни JSON і нічого більше:
 {"date":"DD.MM.YYYY","as_of":"HH:MM DD.MM.YYYY","groups":{"1.1":[["HH:MM","HH:MM"],...],...}}
-Кожна пара — час початку і кінця відключення. Включи всі групи з зображення (1.1–6.2).
+Кожна пара — час початку і кінця відключення. Включи всі групи 1.1–6.2.
+Якщо для групи немає відключень — порожній список []. Не повертай [["",""]].
 Відповідь — тільки JSON."""
 
 
@@ -743,11 +744,12 @@ def parse_schedule_image(photo_url: str) -> dict | None:
 # ── Oblenergo: format & time ──────────────────────────────────────────────────
 
 def fmt_group_block(group_id: str, periods: list) -> str:
-    if not periods:
+    clean = [(s, e) for s, e in periods if s and e]
+    if not clean:
         return f"<b>Група {group_id}</b>\n✅ Відключень не заплановано"
     lines = [f"<b>Група {group_id}</b>", "⚡ Немає електрики:"]
-    for start, end in periods:
-        lines.append(f"  • {start} – {end}")
+    for start, end in clean:
+        lines.append(f"• {start}–{end}")
     return "\n".join(lines)
 
 
