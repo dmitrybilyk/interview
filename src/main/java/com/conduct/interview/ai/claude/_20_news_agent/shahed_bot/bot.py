@@ -54,8 +54,9 @@ OBLEN_POLL_SECONDS  = 60
 POSITIVE_INTERVAL   = 10 * 60
 POSITIVE_MAX_AGE    = 24 * 3600
 WARN_MINUTES        = 15
-QUIET_START         = 22
-QUIET_END           = 9
+QUIET_START_H       = 23      # тихий режим з 23:00
+QUIET_END_H         = 8       # до 08:30
+QUIET_END_M         = 30
 WEATHER_SEND_HOURS  = (10, 21)    # Kyiv time: надсилаємо прогноз о 10:00 і 21:00
 RAIN_PROB_THRESHOLD = 40          # % імовірності дощу щоб вважати "буде дощ"
 LVIV_LAT            = 49.8397
@@ -570,6 +571,8 @@ def save_seen(seen: set) -> None:
 
 
 def send_positive_news() -> None:
+    if is_quiet_hours():
+        return
     if not HISTORY_FILE.exists():
         return
     try:
@@ -805,8 +808,10 @@ def _warn_key(chat_id: int, group_id: str, start_s: str, date_s: str) -> str:
 
 
 def is_quiet_hours() -> bool:
-    h = datetime.now(_KYIV_TZ).hour
-    return h >= QUIET_START or h < QUIET_END
+    now = datetime.now(_KYIV_TZ)
+    t   = now.hour * 60 + now.minute          # хвилини від опівночі
+    end = QUIET_END_H * 60 + QUIET_END_M      # 08:30 = 510
+    return t >= QUIET_START_H * 60 or t < end  # 23:00–08:30
 
 
 def group_changed(group_id: str, old_schedule: dict | None, new_schedule: dict) -> bool:
@@ -821,6 +826,8 @@ def warn_loop(lock: threading.Lock) -> None:
     log.info("Попередження: фоновий цикл запущено")
     while True:
         time.sleep(60)
+        if is_quiet_hours():
+            continue
         now      = datetime.now()
         state    = load_oblen_state()
         schedule = state.get("schedule")
