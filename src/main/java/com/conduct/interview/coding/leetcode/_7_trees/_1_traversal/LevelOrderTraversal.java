@@ -6,7 +6,7 @@ import java.util.Deque;
 import java.util.List;
 
 // LC 102 — Binary Tree Level Order Traversal
-// Pattern: BFS with a Queue — snapshot level size before processing children
+// Pattern: BFS (Breadth-First Search — пошук у ширину) with a Queue — snapshot level size before processing children
 // Time O(n), Space O(n)
 
 // Задача: обійти бінарне дерево рівень за рівнем і повернути список списків —

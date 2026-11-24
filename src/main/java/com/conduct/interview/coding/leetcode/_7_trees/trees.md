@@ -110,7 +110,7 @@
 | Пам'ять | O(h) — висота | O(w) — найширший рівень |
 | Добре для | майже всіх рекурсивних задач | задач "по рівнях" і найкоротшого шляху |
 
-Код: `_1_traversal/DfsTraversal.java`, `_1_traversal/LevelOrderTraversal.java`.
+Код: `_1_traversal/dfs/` (`PreorderTraversal`, `InorderTraversal`, `PostorderTraversal`), `_1_traversal/LevelOrderTraversal.java`.
 
 ---
 
