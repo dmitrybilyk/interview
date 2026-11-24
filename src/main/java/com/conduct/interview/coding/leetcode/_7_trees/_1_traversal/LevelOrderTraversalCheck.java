@@ -6,7 +6,7 @@ import java.util.Deque;
 import java.util.List;
 
 // LC 102 — Binary Tree Level Order Traversal
-// Pattern: BFS with a Queue — snapshot level size before processing children
+// Pattern: BFS (Breadth-First Search — пошук у ширину) with a Queue — snapshot level size before processing children
 // Time O(n), Space O(n)
 
 // Задача: обійти бінарне дерево рівень за рівнем і повернути список списків —
@@ -16,46 +16,56 @@ import java.util.List;
 // вузлів і додаємо їхніх дітей у хвіст черги (вони стануть наступним рівнем).
 public class LevelOrderTraversalCheck {
 
-    static class TreeNode { int val; TreeNode left, right; TreeNode(int v) { val = v; } }
-
     public static List<List<Integer>> levelOrder(TreeNode root) {
-        List<List<Integer>> result = new ArrayList<>();
+       List<List<Integer>> result = new ArrayList<>();
 
-        if (root == null) {
-            return result;
-        }
+       if (root == null) {
+           return result;
+       }
 
-        Deque<TreeNode> queue = new ArrayDeque<>();
-        queue.offer(root);
+       Deque<TreeNode> queue = new ArrayDeque<>();
+       queue.offer(root);
 
-        while (!queue.isEmpty()) {
+       while (!queue.isEmpty()) {
+           int levelSize = queue.size();
 
-            List<Integer> level = new ArrayList<>();
-            int queueSize = queue.size();
+           List<Integer> level = new ArrayList<>();
 
-            for (int i = 0; i < queueSize; i++) {
-                TreeNode node = queue.poll();
-                level.add(node.val);
+           for(int i = 0; i < levelSize; i++) {
+               TreeNode node = queue.poll();
+               level.add(node.val);
 
-                if (node.left != null) {
-                    queue.offer(node.left);
-                }
-                if (node.right != null) {
-                    queue.offer(node.right);
-                }
-            }
-            result.add(level);
-        }
+               if (node.left != null) {
+                   queue.offer(node.left);
+               }
+               if (node.right != null) {
+                   queue.offer(node.right);
+               }
+           }
+           result.add(level);
+       }
 
-        return result;
+       return result;
     }
 
     public static void main(String[] args) {
-        TreeNode root = new TreeNode(3);
-        root.left = new TreeNode(9);
-        root.right = new TreeNode(20);
-        root.right.left = new TreeNode(15);
-        root.right.right = new TreeNode(7);
-        System.out.println(levelOrder(root)); // [[3], [9, 20], [15, 7]]
+        TreeNode tree = new TreeNode(3);
+        tree.left = new TreeNode(2);
+        tree.right = new TreeNode(5);
+        tree.left.left = new TreeNode(2);
+        tree.left.right = new TreeNode(8);
+        tree.right.left = new TreeNode(2);
+        tree.right.right = new TreeNode(2);
+
+        System.out.println(levelOrder(tree));
+    }
+
+    static class TreeNode {
+        int val;
+        TreeNode(int val) {
+            this.val = val;
+        }
+
+        TreeNode left, right;
     }
 }
