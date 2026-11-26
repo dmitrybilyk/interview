@@ -26,23 +26,21 @@ public class OrderDemo {
 
         System.out.println("\n=== 3. Заборонені дії ===");
         Order notPaid = new Order();
-        tryAction("ship before pay", notPaid::ship);
-        // NEW не дозволяє ship -> виняток, замовлення лишається NEW
+        try {
+            notPaid.ship();
+            // NEW не дозволяє ship -> виняток, замовлення лишається NEW
+        } catch (IllegalStateException e) {
+            System.out.println("  " + e.getMessage());
+        }
 
         Order shipped = new Order();
         shipped.pay();
         shipped.ship();
-        tryAction("cancel after ship", shipped::cancel);
-        // SHIPPED не дозволяє cancel -> занадто пізно
-
-        tryAction("pay twice", shipped::pay);
-    }
-
-    private static void tryAction(String description, Runnable action) {
         try {
-            action.run();
+            shipped.cancel();
+            // SHIPPED не дозволяє cancel -> занадто пізно
         } catch (IllegalStateException e) {
-            System.out.println("  " + description + " -> " + e.getMessage());
+            System.out.println("  " + e.getMessage());
         }
     }
 }
