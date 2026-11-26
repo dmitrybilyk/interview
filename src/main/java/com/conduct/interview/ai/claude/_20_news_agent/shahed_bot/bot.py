@@ -782,7 +782,7 @@ def next_outages_today(group_id: str, schedule: dict) -> list[tuple[datetime, da
     if not date_str:
         return []
     try:
-        base = datetime.strptime(date_str, "%d.%m.%Y")
+        base = datetime.strptime(date_str, "%d.%m.%Y").replace(tzinfo=_KYIV_TZ)
     except ValueError:
         return []
     result = []
@@ -828,7 +828,7 @@ def warn_loop(lock: threading.Lock) -> None:
         time.sleep(60)
         if is_quiet_hours():
             continue
-        now      = datetime.now()
+        now      = datetime.now(_KYIV_TZ)
         state    = load_oblen_state()
         schedule = state.get("schedule")
         if not schedule:
