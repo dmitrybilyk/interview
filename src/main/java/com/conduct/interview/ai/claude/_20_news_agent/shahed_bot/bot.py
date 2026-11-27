@@ -890,7 +890,7 @@ def weather_loop() -> None:
                     emoji = _PRECIP_EMOJI[ptype]
                     label = _PRECIP_UA[ptype]
                     lines.append(f"{emoji} {label}: {s.strftime('%H:%M')}–{e.strftime('%H:%M')}")
-                msg = "🌦 <b>Опади у Львові</b>\n\n" + "\n".join(lines) + "\n\nВіддяки прогнозу на 24 год."
+                msg = "🌦 <b>Опади у Львові</b>\n\n" + "\n".join(lines)
             else:
                 msg = "☀️ <b>Опади у Львові</b>\n\nОпадів не очікується найближчі 24 години."
             send(int(chat_id_s), msg)
